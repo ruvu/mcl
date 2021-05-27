@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mcl</name>
+  <version>0.0.0</version>
+  <description>The mcl package</description>
+
+  <maintainer email="ramon@todo.todo">ramon</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>pf</depend>
+</package>
