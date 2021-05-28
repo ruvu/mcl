@@ -1,5 +1,5 @@
-#include <gnuplot-iostream.h>
 #include <pf/rv_samp.h>
+#include <ros/ros.h>
 
 #include <Eigen/Eigen>
 #include <cstdio>
@@ -55,41 +55,41 @@ private:
   const double sigma = 1;
 };
 
-int main()
+class Gps
 {
+public:
+  Gps(const ros::NodeHandle & nh, const ros::NodeHandle & private_nh)
+  {
+    for (int i = 0; i < 10; ++i) {
+      particles_.emplace_back(distribution.sample(), distribution.sample());
+    }
+  }
+
+private:
+  void update(const ros::Time & dt)
+  {
+    model_.update(0.1);
+
+    for (auto & particle : particles_) {
+      particle.update(0.1);
+    }
+
+    double measurement = distribution.sample() * model_.height;
+    sensor_model_.update(particles_, measurement);
+  }
+
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
-  Model m;
-  SensorModel s;
+  std::vector<Particle> particles_;
+  Model model_ = {};
+  SensorModel sensor_model_ = {};
+};
 
-  std::vector<Particle> particles;
-  for (int i = 0; i < 10; ++i) {
-    particles.emplace_back(distribution.sample(), distribution.sample());
-  }
-
-  std::vector<double> model_history;
-
-  const double dt = 0.1;
-  for (double t = 0; t < 3; t += dt) {
-    m.update(dt);
-
-    for (auto & particle : particles) {
-      particle.update(dt);
-    }
-
-    double measurement = distribution.sample() * m.height;
-    s.update(particles, measurement);
-
-    std::vector<std::vector<Particle>> particle_history;
-    std::vector<Particle> particle_positions;
-    for (auto & particle : particles) {
-      particle_positions.emplace_back(particle);
-    }
-
-    model_history.emplace_back(m.height);
-    particle_history.emplace_back(std::move(particle_positions));
-  }
-
-  Gnuplot gp;
-  gp << "plot" << gp.file1d(model_history, "data.txt") << "with lines title 'ground truth'\n";
-  // gp << "plot" << gp.file1d(particle_history, "particles.txt") << "title 'particles'\n";
+int main(int argc, char ** argv)
+{
+  ros::init(argc, argv, "gps");
+  ros::NodeHandle nh;
+  ros::NodeHandle private_nh{"~"};
+  Gps(nh, private_nh);
+  ros::spin();
+  return EXIT_SUCCESS;
 }
