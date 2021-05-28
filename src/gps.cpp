@@ -113,11 +113,6 @@ private:
   Model model_ = {};
   SensorModel sensor_model_ = {};
   ros::Subscriber scan_sub_;
-
-  tf2_ros::Buffer tf_buffer;
-  tf2_ros::TransformListener tf_listener{tf_buffer};
-  message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
-  tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
 };
 
 int main(int argc, char ** argv)
