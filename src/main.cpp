@@ -11,6 +11,8 @@
 #include <cstdio>
 #include <iostream>
 
+#include "motion_models/differential_motion_model.hpp"
+
 using Input = Eigen::Matrix<double, 2, 1>;
 
 static constexpr double g = 9.81;
@@ -30,37 +32,6 @@ public:
 private:
 };
 
-class Particle
-{
-public:
-  double height;
-  double velocity;
-  double weight = 1;
-
-  explicit Particle(double height, double velocity) : height(height), velocity(velocity) {}
-  void update(double dt)
-  {
-    velocity += -g * dt;
-    height += velocity * dt;
-  }
-};
-
-class SensorModel
-{
-public:
-  void update(std::vector<Particle> & particles, double data)
-  {
-    for (auto & particle : particles) {
-      auto z = particle.height - data;
-      auto p = exp(-z * z / 2 / sigma / sigma);
-      particle.weight *= p;
-    }
-  }
-
-private:
-  const double sigma = 1;
-};
-
 class Gps
 {
 public:
@@ -71,7 +42,7 @@ public:
     laser_scan_filter_.registerCallback(&Gps::scan_cb, this);
 
     for (int i = 0; i < 10; ++i) {
-      particles_.emplace_back(distribution.sample(), distribution.sample());
+      particles_.emplace_back();
     }
   }
 
@@ -84,6 +55,7 @@ private:
     ROS_INFO(
       "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
       tf2::getYaw(diff.getRotation()));
+
     last_odom_pose_ = odom_pose;
   }
 
@@ -101,18 +73,6 @@ private:
     return odom_pose_tf;
   }
 
-  void update(const ros::Time & dt)
-  {
-    model_.update(0.1);
-
-    for (auto & particle : particles_) {
-      particle.update(0.1);
-    }
-
-    double measurement = distribution.sample() * model_.height;
-    sensor_model_.update(particles_, measurement);
-  }
-
   // collecting all the data
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{tf_buffer};
@@ -124,7 +84,6 @@ private:
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
   std::vector<Particle> particles_;
   Model model_ = {};
-  SensorModel sensor_model_ = {};
   ros::Subscriber scan_sub_;
 };
 

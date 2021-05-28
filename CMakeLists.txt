@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(mcl)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(catkin REQUIRED COMPONENTS
   pf
@@ -48,12 +49,20 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(gps
-  src/gps.cpp
+add_library(${PROJECT_NAME}
+  src/motion_models/differential_motion_model.cpp
+  src/particle_filter.cpp
+)
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
 )
 
-target_link_libraries(gps
-  ${catkin_LIBRARIES}
+add_executable(node
+  src/main.cpp
+)
+
+target_link_libraries(node
+  ${PROJECT_NAME}
 )
 
 #############
@@ -86,7 +95,7 @@ target_link_libraries(gps
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_mcl.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
+if(TARGET test_differential_motion_model)
+  target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
+endif()
