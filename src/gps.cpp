@@ -103,6 +103,11 @@ private:
     sensor_model_.update(particles_, measurement);
   }
 
+  tf2_ros::Buffer tf_buffer;
+  tf2_ros::TransformListener tf_listener{tf_buffer};
+  message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
+  tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
+
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
   std::vector<Particle> particles_;
   Model model_ = {};
