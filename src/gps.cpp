@@ -2,6 +2,7 @@
 #include <pf/rv_samp.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/message_filter.h>
 #include <tf2_ros/transform_listener.h>
@@ -77,18 +78,27 @@ public:
 private:
   void scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
   {
+    // TODO: skip the first odom update
+    auto odom_pose = get_odom_pose(scan->header.stamp);
+    auto diff = last_odom_pose_.inverseTimes(odom_pose);
+    ROS_INFO(
+      "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
+      tf2::getYaw(diff.getRotation()));
+    last_odom_pose_ = odom_pose;
+  }
+
+  tf2::Transform get_odom_pose(const ros::Time & time)
+  {
     geometry_msgs::PoseStamped odom_pose;
-    odom_pose.header.stamp = scan->header.stamp;
+    odom_pose.header.stamp = time;
     odom_pose.header.frame_id = "base_link";
     tf2::toMsg(tf2::Transform::getIdentity(), odom_pose.pose);
-    ROS_INFO("lookup at time %f", odom_pose.header.stamp.toSec());
-    try {
-      tf_buffer.transform(odom_pose, odom_pose, "odom");
-    } catch (const tf2::ExtrapolationException & e) {
-      ROS_WARN("laser scan transform failed: (%s)", e.what());
-    }
+    tf_buffer.transform(odom_pose, odom_pose, "odom");
 
     ROS_INFO("%f %f", odom_pose.pose.position.x, odom_pose.pose.position.y);
+    tf2::Stamped<tf2::Transform> odom_pose_tf;
+    tf2::convert(odom_pose, odom_pose_tf);
+    return odom_pose_tf;
   }
 
   void update(const ros::Time & dt)
@@ -103,11 +113,14 @@ private:
     sensor_model_.update(particles_, measurement);
   }
 
+  // collecting all the data
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{tf_buffer};
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
 
+  // internals
+  tf2::Transform last_odom_pose_ = {};
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
   std::vector<Particle> particles_;
   Model model_ = {};
