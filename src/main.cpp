@@ -2,6 +2,8 @@
 #include <pf/rv_samp.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud2_iterator.h>
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/message_filter.h>
@@ -12,25 +14,6 @@
 #include <iostream>
 
 #include "motion_models/differential_motion_model.hpp"
-
-using Input = Eigen::Matrix<double, 2, 1>;
-
-static constexpr double g = 9.81;
-
-class Model
-{
-public:
-  double height = 0;
-  double velocity = 0;
-
-  void update(double dt)
-  {
-    velocity += -g * dt;
-    height += velocity * dt;
-  }
-
-private:
-};
 
 class Gps
 {
@@ -56,6 +39,9 @@ private:
       "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
       tf2::getYaw(diff.getRotation()));
 
+    model_.odometry_update(&particles_, odom_pose, diff);
+    publish_particle_cloud();
+
     last_odom_pose_ = odom_pose;
   }
 
@@ -73,6 +59,33 @@ private:
     return odom_pose_tf;
   }
 
+  void publish_particle_cloud()
+  {
+    sensor_msgs::PointCloud2 cloud;
+    sensor_msgs::PointCloud2Modifier modifier(cloud);
+    modifier.resize(particles_.size());
+    modifier.setPointCloud2Fields(
+      4, "x", 1, sensor_msgs::PointField::FLOAT64, "y", 1, sensor_msgs::PointField::FLOAT64, "z", 1,
+      sensor_msgs::PointField::FLOAT64, "i", 1, sensor_msgs::PointField::INT8);
+    sensor_msgs::PointCloud2Iterator<double> x(cloud, "x");
+    sensor_msgs::PointCloud2Iterator<double> y(cloud, "y");
+    sensor_msgs::PointCloud2Iterator<double> z(cloud, "z");
+    sensor_msgs::PointCloud2Iterator<char> i(cloud, "i");
+
+    for (const auto & particle : particles_) {
+      auto & p = particle.pose.getOrigin();
+      auto q = particle.pose.getRotation();
+      *x = p.getX();
+      *y = p.getY();
+      *z = p.getZ();
+      *i = 1;
+      ++x;
+      ++y;
+      ++z;
+      ++i;
+    }
+  }
+
   // collecting all the data
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{tf_buffer};
@@ -82,8 +95,8 @@ private:
   // internals
   tf2::Transform last_odom_pose_ = {};
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
-  std::vector<Particle> particles_;
-  Model model_ = {};
+  ParticleFilter particles_;
+  DifferentialMotionModel model_ = {0.1, 0.1, 0.1, 0.1};
   ros::Subscriber scan_sub_;
 };
 

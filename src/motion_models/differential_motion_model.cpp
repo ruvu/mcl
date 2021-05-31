@@ -13,7 +13,7 @@ DifferentialMotionModel::DifferentialMotionModel(
   alpha4_ = alpha4;
 }
 
-void DifferentialMotionModel::odometryUpdate(
+void DifferentialMotionModel::odometry_update(
   ParticleFilter * pf, const tf2::Transform pose, const tf2::Transform & delta)
 {
   auto [delta_rot1, delta_trans, delta_rot2] = calculate_deltas(delta);
