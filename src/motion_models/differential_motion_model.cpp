@@ -6,6 +6,7 @@
 
 DifferentialMotionModel::DifferentialMotionModel(
   double alpha1, double alpha2, double alpha3, double alpha4)
+: sampler_()
 {
   alpha1_ = alpha1;
   alpha2_ = alpha2;
@@ -17,6 +18,24 @@ void DifferentialMotionModel::odometry_update(
   ParticleFilter * pf, const tf2::Transform pose, const tf2::Transform & delta)
 {
   auto [delta_rot1, delta_trans, delta_rot2] = calculate_deltas(delta);
+  ROS_DEBUG("delta_rot1: %f", delta_rot1);
+  ROS_DEBUG("delta_trans: %f", delta_trans);
+  ROS_DEBUG("delta_rot2: %f", delta_rot2);
+
+  for (Particle & particle : *pf) {
+    sampler_.setStdDev(alpha1_ * delta_rot1 + alpha2_ * delta_trans);
+    double delta_rot1_hat = delta_rot1 - sampler_.sample();
+    sampler_.setStdDev(alpha3_ * delta_trans + alpha4_ * delta_rot2);
+    double delta_trans_hat = delta_trans - sampler_.sample();
+    sampler_.setStdDev(alpha1_ * delta_rot2 + alpha2_ * delta_trans);
+    double delta_rot2_hat = delta_rot2 - sampler_.sample();
+
+    tf2::Quaternion q;
+    q.setRPY(0, 0, delta_rot1_hat + delta_rot2_hat);
+    tf2::Transform new_delta{q, tf2::Vector3{delta_trans_hat, 0, 0}};
+
+    particle.pose *= new_delta;
+  }
 }
 
 std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Transform & delta)
@@ -34,8 +53,5 @@ std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Trans
   }
 
   double delta_rot2 = tf2::getYaw(delta.getRotation()) - delta_rot1;
-  ROS_INFO("delta_rot1: %f", delta_rot1);
-  ROS_INFO("delta_trans: %f", delta_trans);
-  ROS_INFO("delta_rot2: %f", delta_rot2);
   return {delta_rot1, delta_trans, delta_rot2};
 }

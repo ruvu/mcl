@@ -1,6 +1,7 @@
 #include <array>
 
 #include "motion_model.hpp"
+#include "pf/rv_samp.h"
 
 class DifferentialMotionModel : public MotionModel
 {
@@ -30,4 +31,6 @@ private:
   double alpha2_;
   double alpha3_;
   double alpha4_;
+
+  pf::rvsamp::UnivNormSampler<double> sampler_;
 };

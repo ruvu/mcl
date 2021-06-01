@@ -2,12 +2,11 @@
 #include <pf/rv_samp.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/point_cloud2_iterator.h>
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/message_filter.h>
 #include <tf2_ros/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
 #include <Eigen/Eigen>
 #include <cstdio>
@@ -23,6 +22,7 @@ public:
     laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh)
   {
     laser_scan_filter_.registerCallback(&Gps::scan_cb, this);
+    cloud_pub_ = private_nh.advertise<visualization_msgs::Marker>("cloud", 1);
 
     for (int i = 0; i < 10; ++i) {
       particles_.emplace_back();
@@ -40,7 +40,7 @@ private:
       tf2::getYaw(diff.getRotation()));
 
     model_.odometry_update(&particles_, odom_pose, diff);
-    publish_particle_cloud();
+    publish_particle_cloud(scan->header.stamp);
 
     last_odom_pose_ = odom_pose;
   }
@@ -59,31 +59,38 @@ private:
     return odom_pose_tf;
   }
 
-  void publish_particle_cloud()
+  void publish_particle_cloud(const ros::Time & time)
   {
-    sensor_msgs::PointCloud2 cloud;
-    sensor_msgs::PointCloud2Modifier modifier(cloud);
-    modifier.resize(particles_.size());
-    modifier.setPointCloud2Fields(
-      4, "x", 1, sensor_msgs::PointField::FLOAT64, "y", 1, sensor_msgs::PointField::FLOAT64, "z", 1,
-      sensor_msgs::PointField::FLOAT64, "i", 1, sensor_msgs::PointField::INT8);
-    sensor_msgs::PointCloud2Iterator<double> x(cloud, "x");
-    sensor_msgs::PointCloud2Iterator<double> y(cloud, "y");
-    sensor_msgs::PointCloud2Iterator<double> z(cloud, "z");
-    sensor_msgs::PointCloud2Iterator<char> i(cloud, "i");
+    constexpr double length = 0.1;
+    constexpr double width = 0.02;
 
+    visualization_msgs::Marker m;
+    m.header.stamp = time;
+    m.header.frame_id = "map";
+    m.ns = "particles";
+    m.id = 0;
+    m.type = visualization_msgs::Marker::LINE_LIST;
+    m.action = visualization_msgs::Marker::MODIFY;
+    m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
+    m.scale.x = width;
+    m.color.a = 1;
+    m.color.b = 1;
+
+    tf2::Vector3 p1{length / 2, 0, 0};
     for (const auto & particle : particles_) {
-      auto & p = particle.pose.getOrigin();
-      auto q = particle.pose.getRotation();
-      *x = p.getX();
-      *y = p.getY();
-      *z = p.getZ();
-      *i = 1;
-      ++x;
-      ++y;
-      ++z;
-      ++i;
+      {
+        geometry_msgs::Point tmp;
+        tf2::toMsg(particle.pose * p1, tmp);
+        m.points.push_back(std::move(tmp));
+      }
+      {
+        geometry_msgs::Point tmp;
+        tf2::toMsg(particle.pose * -p1, tmp);
+        m.points.push_back(std::move(tmp));
+      }
     }
+
+    cloud_pub_.publish(std::move(m));
   }
 
   // collecting all the data
@@ -91,6 +98,7 @@ private:
   tf2_ros::TransformListener tf_listener{tf_buffer};
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
+  ros::Publisher cloud_pub_;
 
   // internals
   tf2::Transform last_odom_pose_ = {};
@@ -106,11 +114,11 @@ int main(int argc, char ** argv)
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
     ros::console::notifyLoggerLevelsChanged();
   }
-  ROS_INFO("hello world");
 
   ros::NodeHandle nh;
   ros::NodeHandle private_nh{"~"};
   Gps gps{nh, private_nh};
+  ROS_INFO("%s started", private_nh.getNamespace().c_str());
   ros::spin();
   return EXIT_SUCCESS;
 }
