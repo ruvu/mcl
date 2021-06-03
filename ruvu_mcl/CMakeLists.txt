@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -60,7 +60,6 @@ target_link_libraries(${PROJECT_NAME}
 add_executable(node
   src/main.cpp
 )
-
 target_link_libraries(node
   ${PROJECT_NAME}
 )
@@ -93,6 +92,21 @@ target_link_libraries(node
 #############
 ## Testing ##
 #############
+
+## Manual tests
+if(CATKIN_ENABLE_TESTING)
+  add_executable(plot_motion_models
+    test/plot_motion_models.cpp
+  )
+  target_include_directories(plot_motion_models
+    PRIVATE
+      ${Boost_INCLUDE_DIRS}
+  )
+  target_link_libraries(plot_motion_models
+    ${PROJECT_NAME}
+    ${Boost_LIBRARIES}
+  )
+endif()
 
 ## Add gtest based cpp test target and link libraries
 catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
