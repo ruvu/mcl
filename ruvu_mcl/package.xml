@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mcl</name>
+  <name>ruvu_mcl</name>
   <version>0.0.0</version>
-  <description>The mcl package</description>
+  <description>The ruvu_mcl package</description>
 
   <maintainer email="ramon@todo.todo">ramon</maintainer>
 

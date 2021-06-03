@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<package format="2">
+  <name>turtlebot3_mcl</name>
+  <version>1.0.0</version>
+  <description>Demonstrates ruvu_mcl running on a turtlebot in simulation.</description>
+
+  <maintainer email="paul@ruvu.nl">Paul Verhoeckx</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>map_server</exec_depend>
+  <exec_depend>ruvu_mcl</exec_depend>
+  <exec_depend>rviz</exec_depend>
+  <exec_depend>turtlebot3_bringup</exec_depend>
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+  <exec_depend>turtlebot3_navigation</exec_depend>
+
+  <test_depend>ruvu_lint</test_depend>
+</package>

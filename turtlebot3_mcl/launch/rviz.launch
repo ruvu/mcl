@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find turtlebot3_mcl)/param/config.rviz"/>
+</launch>
