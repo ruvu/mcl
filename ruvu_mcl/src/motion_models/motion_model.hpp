@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../particle_filter.hpp"
 #include "tf2/LinearMath/Transform.h"
 

@@ -50,8 +50,11 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
+  src/map.cpp
   src/motion_models/differential_motion_model.cpp
   src/particle_filter.cpp
+  src/sensor_models/beam_model.cpp
+  src/sensor_models/laser.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

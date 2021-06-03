@@ -1,4 +1,5 @@
 #include <message_filters/subscriber.h>
+#include <nav_msgs/OccupancyGrid.h>
 #include <pf/rv_samp.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
@@ -12,17 +13,21 @@
 #include <cstdio>
 #include <iostream>
 
-#include "motion_models/differential_motion_model.hpp"
+#include "./map.hpp"
+#include "./motion_models/differential_motion_model.hpp"
+#include "./sensor_models/beam_model.hpp"
 
 class Gps
 {
 public:
   Gps(ros::NodeHandle nh, ros::NodeHandle private_nh)
   : laser_scan_sub_(nh, "scan", 100),
-    laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh)
+    laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh),
+    map_sub_(nh.subscribe<nav_msgs::OccupancyGrid>("map", 1, &Gps::map_cb, this)),
+    cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+    laser_(std::make_unique<BeamModel>(0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10, map_))
   {
     laser_scan_filter_.registerCallback(&Gps::scan_cb, this);
-    cloud_pub_ = private_nh.advertise<visualization_msgs::Marker>("cloud", 1);
 
     for (int i = 0; i < 10; ++i) {
       particles_.emplace_back();
@@ -43,6 +48,18 @@ private:
     publish_particle_cloud(scan->header.stamp);
 
     last_odom_pose_ = odom_pose;
+
+    // TODO: convert scan to LaserData
+    LaserData data;
+    laser_->sensorUpdate(&particles_, data);
+  }
+
+  void map_cb(const nav_msgs::OccupancyGrid::ConstPtr & map)
+  {
+    ROS_INFO("map received");
+
+    // TODO: convert OccupancyGrid to map
+    // map_ = convert(map);
   }
 
   tf2::Transform get_odom_pose(const ros::Time & time)
@@ -93,11 +110,14 @@ private:
     cloud_pub_.publish(std::move(m));
   }
 
-  // collecting all the data
+  // data input
   tf2_ros::Buffer tf_buffer;
   tf2_ros::TransformListener tf_listener{tf_buffer};
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
+  ros::Subscriber map_sub_;
+
+  // data output
   ros::Publisher cloud_pub_;
 
   // internals
@@ -105,7 +125,8 @@ private:
   pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
   ParticleFilter particles_;
   DifferentialMotionModel model_ = {0.1, 0.1, 0.1, 0.1};
-  ros::Subscriber scan_sub_;
+  Map map_;
+  std::unique_ptr<Laser> laser_;
 };
 
 int main(int argc, char ** argv)

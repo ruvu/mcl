@@ -30,10 +30,6 @@ void DifferentialMotionModel::odometry_update(
     sampler_.setStdDev(alpha1_ * delta_rot2 + alpha2_ * delta_trans);
     double delta_rot2_hat = delta_rot2 - sampler_.sample();
 
-    ROS_DEBUG("delta_rot1_hat: %f", delta_rot1_hat);
-    ROS_DEBUG("delta_trans_hat: %f", delta_trans_hat);
-    ROS_DEBUG("delta_rot2_hat: %f", delta_rot2_hat);
-
     // first rotate with delta_rot1_hat
     tf2::Quaternion q;
     q.setRPY(0, 0, delta_rot1_hat);
@@ -45,11 +41,7 @@ void DifferentialMotionModel::odometry_update(
     q.setRPY(0, 0, delta_rot2_hat);
     new_delta *= tf2::Transform{q};
 
-    ROS_DEBUG(
-      "old pose: %f %f", particle.pose.getOrigin().getX(), particle.pose.getOrigin().getY());
     particle.pose *= new_delta;
-    ROS_DEBUG(
-      "new pose: %f %f", particle.pose.getOrigin().getX(), particle.pose.getOrigin().getY());
   }
 }
 
