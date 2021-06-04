@@ -1,5 +1,8 @@
 #include "./node.hpp"
 
+#include "./map.hpp"
+#include "./motion_models/differential_motion_model.hpp"
+#include "./sensor_models/beam_model.hpp"
 #include "ros/node_handle.h"
 #include "tf2/utils.h"
 
@@ -8,7 +11,11 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh),
   map_sub_(nh.subscribe<nav_msgs::OccupancyGrid>("map", 1, &Node::map_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
-  laser_(std::make_unique<BeamModel>(0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10, map_))
+  last_odom_pose_(),
+  distribution_(0, 0.1),
+  particles_(),
+  model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1)),
+  lasers_()
 {
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
 
@@ -16,6 +23,8 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
     particles_.emplace_back();
   }
 }
+
+Node::~Node() = default;
 
 void Node::scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
 {
@@ -26,20 +35,29 @@ void Node::scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
     "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
     tf2::getYaw(diff.getRotation()));
 
-  model_.odometry_update(&particles_, odom_pose, diff);
+  model_->odometry_update(&particles_, odom_pose, diff);
   publish_particle_cloud(scan->header.stamp);
 
   last_odom_pose_ = odom_pose;
 
+  if (lasers_.find(scan->header.frame_id) == lasers_.end()) {
+    ROS_INFO("new laser found, adding a sensor model");
+    auto sensor = std::make_unique<BeamModel>(0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10, map_);
+    lasers_.insert({scan->header.frame_id, std::move(sensor)});
+  }
+
   // TODO: convert scan to LaserData
   LaserData data;
-  laser_->sensorUpdate(&particles_, data);
+  auto laser = lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
 }
 
 void Node::map_cb(const nav_msgs::OccupancyGrid::ConstPtr & map)
 {
   ROS_INFO("map received");
-  map_ = Map{*map};
+  if (!map_)
+    map_ = std::make_unique<Map>(*map);
+  else
+    *map_ = Map{*map};
 }
 
 tf2::Transform Node::get_odom_pose(const ros::Time & time)

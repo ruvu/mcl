@@ -1,19 +1,25 @@
-#include "./map.hpp"
-#include "./motion_models/differential_motion_model.hpp"
+#pragma once
+
 #include "./particle_filter.hpp"
-#include "./sensor_models/beam_model.hpp"
 #include "message_filters/subscriber.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "pf/rv_samp.h"
 #include "sensor_msgs/LaserScan.h"
+#include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/message_filter.h"
 #include "tf2_ros/transform_listener.h"
 #include "visualization_msgs/Marker.h"
+
+// forward declare
+class MotionModel;
+struct Map;
+class Laser;
 
 class Node
 {
 public:
   Node(ros::NodeHandle nh, ros::NodeHandle private_nh);
+  ~Node();  // to handle forward declares
 
 private:
   void scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan);
@@ -33,9 +39,9 @@ private:
 
   // internals
   tf2::Transform last_odom_pose_ = {};
-  pf::rvsamp::UnivNormSampler<double> distribution{0, 0.1};
-  ParticleFilter particles_;
-  DifferentialMotionModel model_ = {0.1, 0.1, 0.1, 0.1};
-  Map map_;
-  std::unique_ptr<Laser> laser_;
+  pf::rvsamp::UnivNormSampler<double> distribution_;
+  ParticleFilter particles_ = {};
+  std::unique_ptr<MotionModel> model_;
+  std::shared_ptr<Map> map_ = nullptr;
+  std::map<std::string, std::unique_ptr<Laser>> lasers_;
 };
