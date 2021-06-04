@@ -110,6 +110,18 @@ if(CATKIN_ENABLE_TESTING)
     ${PROJECT_NAME}
     ${Boost_LIBRARIES}
   )
+
+  add_executable(plot_resampling
+    test/plot_resampling.cpp
+  )
+  target_include_directories(plot_resampling
+    PRIVATE
+      ${Boost_INCLUDE_DIRS}
+  )
+  target_link_libraries(plot_resampling
+    ${PROJECT_NAME}
+    ${Boost_LIBRARIES}
+  )
 endif()
 
 ## Add gtest based cpp test target and link libraries

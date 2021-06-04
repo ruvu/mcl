@@ -10,6 +10,7 @@ public:
   tf2::Transform pose;
 
   Particle() : pose(tf2::Transform::getIdentity()) {}
+  Particle(const tf2::Transform & pose) : pose(pose) {}
 };
 
 using ParticleFilter = std::vector<Particle>;
