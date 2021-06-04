@@ -8,9 +8,11 @@ class Particle
 {
 public:
   tf2::Transform pose;
+  double_t weight;
 
-  Particle() : pose(tf2::Transform::getIdentity()) {}
-  Particle(const tf2::Transform & pose) : pose(pose) {}
+  Particle() : pose(tf2::Transform::getIdentity()), weight(1) {}
+  Particle(const tf2::Transform & pose, double weight) : pose(pose), weight(weight) {}
+
 };
 
 using ParticleFilter = std::vector<Particle>;
