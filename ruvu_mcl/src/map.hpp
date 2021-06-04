@@ -20,5 +20,7 @@ struct Map
   explicit Map() {}
   explicit Map(const nav_msgs::OccupancyGrid & msg);
 
+  bool is_valid(int i, int j);
+  double calc_range(int x0, int y0, int x1, int y1);
   void render(const tf2::Transform & pose);
 };

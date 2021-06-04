@@ -39,9 +39,7 @@ void Node::scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
 void Node::map_cb(const nav_msgs::OccupancyGrid::ConstPtr & map)
 {
   ROS_INFO("map received");
-
-  // TODO: convert OccupancyGrid to map
-  // map_ = convert(map);
+  map_ = Map{*map};
 }
 
 tf2::Transform Node::get_odom_pose(const ros::Time & time)
