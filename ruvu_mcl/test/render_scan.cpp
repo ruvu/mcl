@@ -10,7 +10,8 @@
 Magick::Image cells_to_image(const Map::CellsType cells)
 {
   Magick::Image img;
-  img.size(Magick::Geometry{cells.rows(), cells.cols()});
+  img.size(Magick::Geometry{
+    static_cast<unsigned int>(cells.rows()), static_cast<unsigned int>(cells.cols())});
 
   for (std::size_t x = 0; x < cells.rows(); ++x) {
     for (std::size_t y = 0; y < cells.cols(); ++y) {
