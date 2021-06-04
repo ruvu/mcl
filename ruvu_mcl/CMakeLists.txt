@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
+
 find_package(catkin REQUIRED COMPONENTS
   pf
   roscpp
@@ -14,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system iostreams)
+
+find_package(GRAPHICSMAGICKCPP REQUIRED)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -98,12 +102,13 @@ target_link_libraries(node
 #############
 
 ## Manual tests
+
 if(CATKIN_ENABLE_TESTING)
   add_executable(plot_motion_models
     test/plot_motion_models.cpp
   )
   target_include_directories(plot_motion_models
-    PRIVATE
+    SYSTEM PRIVATE
       ${Boost_INCLUDE_DIRS}
   )
   target_link_libraries(plot_motion_models
@@ -111,21 +116,41 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
   )
 
+  message("GRAPHICSMAGICKCPP_LIBRARIES: ${GRAPHICSMAGICKCPP_LIBRARIES}")
   add_executable(plot_resampling
     test/plot_resampling.cpp
   )
   target_include_directories(plot_resampling
-    PRIVATE
+    SYSTEM PRIVATE
       ${Boost_INCLUDE_DIRS}
   )
   target_link_libraries(plot_resampling
     ${PROJECT_NAME}
     ${Boost_LIBRARIES}
   )
+
+  add_executable(render_scan
+    test/render_scan.cpp
+  )
+  target_include_directories(render_scan
+    SYSTEM PRIVATE
+      ${Boost_INCLUDE_DIRS}
+      ${GRAPHICSMAGICKCPP_INCLUDE_DIRS}
+  )
+  target_link_libraries(render_scan
+    ${GRAPHICSMAGICKCPP_LIBRARIES}
+    ${PROJECT_NAME}
+  )
 endif()
 
-## Add gtest based cpp test target and link libraries
+## Unit tests
+
 catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
 if(TARGET test_differential_motion_model)
   target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
+endif()
+
+catkin_add_gtest(test_map test/test_map.cpp)
+if(TARGET test_map)
+  target_link_libraries(test_map ${PROJECT_NAME})
 endif()
