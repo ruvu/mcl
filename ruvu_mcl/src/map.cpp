@@ -11,7 +11,18 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
   // copy data
   cells =
     Eigen::Map<const Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
-      msg.data.data(), msg.info.width, msg.info.height);
+      msg.data.data(), msg.info.width, msg.info.height)
+      .unaryExpr([](CellType cell) -> CellType {
+        if (cell == 0) {
+          return -1;
+        } else if (cell == 100) {
+          return +1;
+        } else {
+          return 0;
+        }
+      });
+
+  // modify what the values mean
 }
 
 void Map::render(const tf2::Transform & pose) {}

@@ -14,6 +14,7 @@ struct Map
   // Map scale (m/cell)
   double scale;
 
+  // Occupancy state (-1 = free, 0 = unknown, +1 = occ)
   CellsType cells;
 
   explicit Map() {}

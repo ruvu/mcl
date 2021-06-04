@@ -21,7 +21,15 @@ int main(int argc, char ** argv)
   for (std::size_t x = 0; x < map.cells.rows(); ++x) {
     for (std::size_t y = 0; y < map.cells.cols(); ++y) {
       auto occ = map.cells(x, y);
-      img.pixelColor(x, y, Magick::ColorGray{occ});
+      Magick::Color color;
+      if (occ < 0) {  // free
+        color = Magick::ColorGray(254 / 255.0);
+      } else if (occ == 0) {  // unknown
+        color = Magick::ColorGray(205 / 255.0);
+      } else {  // occ
+        color = Magick::ColorGray(0 / 255.0);
+      }
+      img.pixelColor(x, y, color);
     }
   }
 
