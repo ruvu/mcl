@@ -3,8 +3,11 @@
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./sensor_models/beam_model.hpp"
+#include "nav_msgs/OccupancyGrid.h"
 #include "ros/node_handle.h"
+#include "sensor_msgs/LaserScan.h"
 #include "tf2/utils.h"
+#include "visualization_msgs/Marker.h"
 
 Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 : laser_scan_sub_(nh, "scan", 100),
@@ -26,7 +29,7 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 
 Node::~Node() = default;
 
-void Node::scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
+void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
   // TODO: skip the first odom update
   auto odom_pose = get_odom_pose(scan->header.stamp);
@@ -51,7 +54,7 @@ void Node::scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan)
   auto laser = lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
 }
 
-void Node::map_cb(const nav_msgs::OccupancyGrid::ConstPtr & map)
+void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
   ROS_INFO("map received");
   if (!map_)

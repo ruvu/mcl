@@ -1,3 +1,3 @@
 #include "./laser.hpp"
 
-Laser::~Laser() {}
+Laser::~Laser() = default;

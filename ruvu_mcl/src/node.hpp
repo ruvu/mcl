@@ -2,18 +2,25 @@
 
 #include "./particle_filter.hpp"
 #include "message_filters/subscriber.h"
-#include "nav_msgs/OccupancyGrid.h"
 #include "pf/rv_samp.h"
-#include "sensor_msgs/LaserScan.h"
+#include "ros/message_forward.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/message_filter.h"
 #include "tf2_ros/transform_listener.h"
-#include "visualization_msgs/Marker.h"
 
 // forward declare
 class MotionModel;
 struct Map;
 class Laser;
+
+namespace sensor_msgs
+{
+ROS_DECLARE_MESSAGE(LaserScan)
+}
+namespace nav_msgs
+{
+ROS_DECLARE_MESSAGE(OccupancyGrid)
+}
 
 class Node
 {
@@ -22,8 +29,8 @@ public:
   ~Node();  // to handle forward declares
 
 private:
-  void scan_cb(const sensor_msgs::LaserScan::ConstPtr & scan);
-  void map_cb(const nav_msgs::OccupancyGrid::ConstPtr & map);
+  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   tf2::Transform get_odom_pose(const ros::Time & time);
   void publish_particle_cloud(const ros::Time & time);
 

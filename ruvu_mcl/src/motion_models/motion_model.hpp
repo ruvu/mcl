@@ -6,7 +6,7 @@
 class MotionModel
 {
 public:
-  virtual ~MotionModel() = default;
+  virtual ~MotionModel();
 
   /**
    * @brief Update on new odometry data

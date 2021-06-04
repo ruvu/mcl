@@ -1,8 +1,14 @@
 #pragma once
 
 #include "Eigen/Eigen"
-#include "nav_msgs/OccupancyGrid.h"
+#include "ros/message_forward.h"
 #include "tf2/LinearMath/Transform.h"
+
+// forward declare
+namespace nav_msgs
+{
+ROS_DECLARE_MESSAGE(OccupancyGrid)
+}
 
 struct Map
 {

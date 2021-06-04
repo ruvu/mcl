@@ -56,6 +56,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/map.cpp
   src/motion_models/differential_motion_model.cpp
+  src/motion_models/motion_model.cpp
   src/node.cpp
   src/particle_filter.cpp
   src/sensor_models/beam_model.cpp

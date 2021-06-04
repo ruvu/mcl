@@ -1,5 +1,6 @@
 #include "./map.hpp"
 
+#include "nav_msgs/OccupancyGrid.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 Map::Map(const nav_msgs::OccupancyGrid & msg)
