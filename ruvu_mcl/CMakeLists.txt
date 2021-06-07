@@ -106,6 +106,8 @@ install(TARGETS ${PROJECT_NAME}
 
 ## Linting
 
+# set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use,-whitespace/braces,-runtime/references")
+set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
 ruvu_lint_add_test()
 
 ## Manual tests

@@ -12,7 +12,10 @@ ROS_DECLARE_MESSAGE(OccupancyGrid)
 
 struct Map
 {
+  // Occupancy state (-1 = free, 0 = unknown, +1 = occ)
   using CellType = int8_t;
+
+  // rows = x, cols = y
   using CellsType = Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic>;
 
   tf2::Transform origin;
@@ -20,7 +23,6 @@ struct Map
   // Map scale (m/cell)
   double scale;
 
-  // Occupancy state (-1 = free, 0 = unknown, +1 = occ)
   CellsType cells;
 
   explicit Map() {}
@@ -30,5 +32,4 @@ struct Map
   double calc_range(const tf2::Vector3 & v1, const tf2::Vector3 & v2) const;
   double calc_range(int x0, int y0, int x1, int y1) const;
   std::pair<int, int> world2map(const tf2::Vector3 & v) const;
-  void render(const tf2::Transform & pose) const;
 };
