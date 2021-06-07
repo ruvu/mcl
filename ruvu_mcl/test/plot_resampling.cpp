@@ -1,10 +1,9 @@
 #include <gnuplot-iostream.h>
-#include <math.h>
-
-#include <random>
 
 #include "../src/particle_filter.hpp"
 #include "ros/console.h"
+#include <math.h>
+#include <random>
 
 auto convert_to_gnuplot(const ParticleFilter & pf)
 {
@@ -16,15 +15,14 @@ auto convert_to_gnuplot(const ParticleFilter & pf)
   return points;
 }
 
-auto normalize_weights(ParticleFilter & pf)
-{
-  double total_weight = 0;
-  for (const auto & particle : pf) {
-    total_weight += particle.weight;
-  }
-  for (auto & particle : pf) {
-    particle.weight /= total_weight;
-  }
+auto normalize_weights(ParticleFilter & pf){
+    double total_weight = 0;
+    for (const auto & particle : pf) {
+        total_weight += particle.weight;
+    }
+    for (auto & particle : pf) {
+        particle.weight /= total_weight;
+    }
 }
 
 int main()
@@ -47,8 +45,7 @@ int main()
     double x = initial_dist(gen);
     double y = initial_dist(gen);
     double weight = 1 / hypot(x, y);
-    pf.emplace_back(
-      tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{x, y, 0}}, double{weight});
+    pf.emplace_back(tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{x, y, 0}}, double{weight});
   }
   normalize_weights(pf);
 
@@ -58,21 +55,23 @@ int main()
   double M = pf.size();
   double M_inv = 1. / M;
   std::uniform_real_distribution<> uniform_dist(0, M_inv);
-  for (int j = 0; j < 3; j++) {
+  for (int j=0; j<3; j++){
     ParticleFilter pf_resampled;
     float r = uniform_dist(gen);
     double c = pf.at(0).weight;
     int i = 0;
-    for (int m = 0; m < M; m++) {
-      float u = r + m * M_inv;
-      while (u > c) {
-        i++;
-        c += pf.at(i).weight;
-      }
-      pf_resampled.emplace_back(pf.at(i));
+    for (int m = 0; m < M; m++){
+        float u = r + m * M_inv;
+        while (u > c){
+            i++;
+            c += pf.at(i).weight;
+        }
+        pf_resampled.emplace_back(pf.at(i));
     }
     normalize_weights(pf_resampled);
     pf = pf_resampled;
-    gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'Resampling #: " << j + 1 << "'\n";
+    gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'Resampling #: " << j+1 <<"'\n";
+
   }
+
 }
