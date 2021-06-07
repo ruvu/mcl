@@ -1,12 +1,12 @@
 #include "./low_variance.hpp"
 
-auto normalize_weights(ParticleFilter & pf)
+auto normalize_weights(ParticleFilter * pf)
 {
   double total_weight = 0;
-  for (const auto & particle : pf) {
+  for (const auto & particle : *pf) {
     total_weight += particle.weight;
   }
-  for (auto & particle : pf) {
+  for (auto & particle : *pf) {
     particle.weight /= total_weight;
   }
 }
@@ -32,7 +32,7 @@ bool LowVariance::resample(ParticleFilter * pf)
     }
     pf_resampled.emplace_back(pf->at(i));
   }
-  normalize_weights(pf_resampled);
+  normalize_weights(&pf_resampled);
   *pf = pf_resampled;
   return true;
 }
