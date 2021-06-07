@@ -1,8 +1,10 @@
 #pragma once
 
 #include <gnuplot-iostream.h>
+
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
+
 #include "./resampler.hpp"
 #include "ros/console.h"
 
