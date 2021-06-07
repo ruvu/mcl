@@ -23,8 +23,16 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 {
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
 
-  for (int i = 0; i < 10; ++i) {
-    particles_.emplace_back();
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+  std::normal_distribution<> d{0, 0.2};
+
+  int n = 10;
+  for (int i = 0; i < n; ++i) {
+    tf2::Quaternion q;
+    q.setRPY(0, 0, d(gen));
+    tf2::Vector3 p{d(gen), d(gen), 0};
+    particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
 

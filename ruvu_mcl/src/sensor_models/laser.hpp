@@ -21,6 +21,7 @@ public:
 
   LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose);
 
+  tf2::Quaternion get_angle(std::size_t i) const;
   tf2::Vector3 get_range(std::size_t i) const;
 };
 

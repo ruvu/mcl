@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "./laser.hpp"
+#include "ros/publisher.h"
 
 // forward declare
 class Map;
@@ -38,4 +39,5 @@ public:
 private:
   const Parameters parameters_;
   const std::shared_ptr<const Map> map_;
+  ros::Publisher debug_pub_;
 };

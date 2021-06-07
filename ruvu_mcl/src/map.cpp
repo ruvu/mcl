@@ -37,29 +37,30 @@ bool Map::is_valid(int i, int j) const
 
 double Map::calc_range(const tf2::Vector3 & v1, const tf2::Vector3 & v2) const
 {
-  ROS_INFO("calc_range from %f %f to %f %f", v1.getX(), v1.getY(), v2.getX(), v2.getY());
+  // ROS_INFO("calc_range from %f %f to %f %f", v1.getX(), v1.getY(), v2.getX(), v2.getY());
   auto [i0, j0] = world2map(v1);
   auto [i1, j1] = world2map(v2);
   return calc_range(i0, j0, i1, j1) * scale;
 }
 
-double Map::calc_range(int x, int y, int x1, int y1) const
+double Map::calc_range(int x0, int y0, int x1, int y1) const
 {
-  ROS_INFO("calc_range from %i %i to %i %i", x, y, x1, y1);
+  // ROS_INFO("calc_range from %i %i to %i %i", x0, y0, x1, y1);
+  auto x = x0, y = y0;
   auto dx = abs(x1 - x);
-  auto sx = x < x1 ? 1 : -1;
   auto dy = -abs(y1 - y);
+  auto sx = x < x1 ? 1 : -1;
   auto sy = y < y1 ? 1 : -1;
   auto err = dx + dy; /* error value e_xy */
   while (true) {
-    if (is_valid(x, y)) {
-      ROS_INFO("checking cell %ix%i = %i", x, y, cells(x, y));
-    } else {
-      ROS_INFO("cell not valid");
-    }
-
     if (!is_valid(x, y) || !(cells(x, y) <= 0)) {
-      return sqrt(x * x + y * y);
+      // if (is_valid(x, y)) {
+      //    ROS_INFO("found obstacle at %ix%i = %i", x, y, cells(x, y));
+      //  } else {
+      //    ROS_INFO("cell not valid");
+      //  }
+
+      return sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0));
     }
 
     if (x == x1 && y == y1) break;
@@ -79,7 +80,6 @@ double Map::calc_range(int x, int y, int x1, int y1) const
 template <typename T>
 int floor2int(T v)
 {
-  ROS_INFO("floor: %f", v);
   return static_cast<int>(floor(v));
 }
 
@@ -88,6 +88,6 @@ std::pair<int, int> Map::world2map(const tf2::Vector3 & v) const
   tf2::Vector3 w = origin.inverse() * v;
   int i = floor2int(w.getX() / scale + 0.5);
   int j = floor2int(w.getY() / scale + 0.5);
-  ROS_INFO("world2map: %f %f -> %f %f -> %i %i", v.getX(), v.getY(), w.getX(), w.getY(), i, j);
+  // ROS_INFO("world2map: %f %f -> %f %f -> %i %i", v.getX(), v.getY(), w.getX(), w.getY(), i, j);
   return {i, j};
 }

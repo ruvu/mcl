@@ -4,7 +4,7 @@ project(ruvu_mcl)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(EXTRA_FLAGS -Wno-format-nonliteral) # required for message_filter.h
+set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_filter.h
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 

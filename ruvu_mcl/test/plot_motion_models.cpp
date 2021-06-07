@@ -6,8 +6,9 @@
 ParticleFilter run_differential_motion_model(MotionModel && model)
 {
   ParticleFilter pf;
-  for (int i = 0; i < 100; ++i) {
-    pf.emplace_back();
+  int n = 100;
+  for (int i = 0; i < n; ++i) {
+    pf.emplace_back(tf2::Transform::getIdentity(), 1. / n);
   }
 
   model.odometry_update(
