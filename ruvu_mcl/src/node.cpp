@@ -2,6 +2,7 @@
 
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
+#include "./resamplers/low_variance.hpp"
 #include "./sensor_models/beam_model.hpp"
 #include "nav_msgs/OccupancyGrid.h"
 #include "ros/node_handle.h"

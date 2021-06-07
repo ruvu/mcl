@@ -63,6 +63,8 @@ add_library(${PROJECT_NAME}
   src/motion_models/motion_model.cpp
   src/node.cpp
   src/particle_filter.cpp
+  src/resamplers/low_variance.cpp
+  src/resamplers/resampler.cpp
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
 )
