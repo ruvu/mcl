@@ -26,12 +26,19 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
   // modify what the values mean
 }
 
-bool Map::is_valid(int i, int j)
+bool Map::is_valid(int i, int j) const
 {
   return i >= 0 && i < cells.rows() && j >= 0 && j < cells.cols();
 }
 
-double Map::calc_range(int x, int y, int x1, int y1)
+double Map::calc_range(const tf2::Vector3 & v1, const tf2::Vector3 & v2) const
+{
+  auto [i0, j0] = world2map(v1);
+  auto [i1, j1] = world2map(v1);
+  return calc_range(i0, j0, i1, j1) * scale;
+}
+
+double Map::calc_range(int x, int y, int x1, int y1) const
 {
   auto dx = abs(x1 - x);
   auto sx = x < x1 ? 1 : -1;
@@ -39,7 +46,7 @@ double Map::calc_range(int x, int y, int x1, int y1)
   auto sy = y < y1 ? 1 : -1;
   auto err = dx + dy; /* error value e_xy */
   while (true) {
-    if (!is_valid(x, y) || !cells(x, y) <= 0) {
+    if (!is_valid(x, y) || !(cells(x, y) <= 0)) {
       return sqrt(x * x + y * y);
     }
 
@@ -57,4 +64,12 @@ double Map::calc_range(int x, int y, int x1, int y1)
   return std::numeric_limits<double>::infinity();
 }
 
-void Map::render(const tf2::Transform & pose) {}
+std::pair<int, int> Map::world2map(const tf2::Vector3 & v) const
+{
+  tf2::Vector3 w = origin * v;
+  int i = w.getX() / scale + 0.5;
+  int j = w.getX() / scale + 0.5;
+  return {i, j};
+}
+
+void Map::render(const tf2::Transform & pose) const {}

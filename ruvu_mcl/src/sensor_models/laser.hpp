@@ -3,15 +3,25 @@
 #include <vector>
 
 #include "../particle_filter.hpp"
+#include "ros/message_forward.h"
 
-class Range
+// forward declare
+namespace sensor_msgs
 {
-};
+ROS_DECLARE_MESSAGE(LaserScan)
+}
 
 class LaserData
 {
 public:
-  std::vector<Range> ranges;
+  double angle_min;
+  double angle_increment;
+  std::vector<double> ranges;
+  tf2::Transform pose;  // how the laser is mounted relative to base_link
+
+  LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose);
+
+  tf2::Vector3 get_range(std::size_t i) const;
 };
 
 class Laser

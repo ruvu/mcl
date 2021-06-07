@@ -10,13 +10,22 @@ class Map;
 class BeamModel : public Laser
 {
 public:
+  struct Parameters
+  {
+    double z_hit;
+    double z_short;
+    double z_max;
+    double z_rand;
+    double sigma_hit;
+    double lambda_short;
+    double chi_outlier;
+    size_t max_beams;
+  };
+
   /*
    * @brief BeamModel constructor
    */
-  BeamModel(
-    double z_hit, double z_short, double z_max, double z_rand, double sigma_hit,
-    double lambda_short, double chi_outlier, size_t max_beams,
-    const std::shared_ptr<const Map> & map);
+  BeamModel(const Parameters & parameters, const std::shared_ptr<const Map> & map);
 
   /*
    * @brief Run a sensor update on laser
@@ -27,5 +36,6 @@ public:
   bool sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
+  const Parameters parameters_;
   const std::shared_ptr<const Map> map_;
 };

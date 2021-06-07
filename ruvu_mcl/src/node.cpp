@@ -45,13 +45,29 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   if (lasers_.find(scan->header.frame_id) == lasers_.end()) {
     ROS_INFO("new laser found, adding a sensor model");
-    auto sensor = std::make_unique<BeamModel>(0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 10, map_);
+    BeamModel::Parameters parameters;
+    parameters.lambda_short = 0.1;
+    parameters.sigma_hit = 0.2;
+    parameters.z_hit = 0.5;
+    parameters.z_max = 0.05;
+    parameters.z_rand = 0.5;
+    parameters.z_short = 0.05;
+    parameters.max_beams = 60;
+    auto sensor = std::make_unique<BeamModel>(parameters, map_);
     lasers_.insert({scan->header.frame_id, std::move(sensor)});
   }
 
-  // TODO: convert scan to LaserData
-  LaserData data;
-  auto laser = lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
+  tf2::Transform tf;
+  {
+    auto tfs = tf_buffer.lookupTransform("base_link", scan->header.frame_id, scan->header.stamp);
+    tf2::fromMsg(tfs.transform, tf);
+  }
+  {
+    auto & p = tf.getOrigin();
+    ROS_INFO("laser is mounted at %f %f %f", p.getX(), p.getY(), tf2::getYaw(tf.getRotation()));
+  }
+  LaserData data(*scan, tf);
+  lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
 }
 
 void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)

@@ -11,4 +11,9 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>pf</depend>
+  <depend>roscpp</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <test_depend>ruvu_lint</test_depend>
 </package>

@@ -4,14 +4,16 @@ project(ruvu_mcl)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(EXTRA_FLAGS -Wno-format-nonliteral) # required for message_filter.h
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
 find_package(catkin REQUIRED COMPONENTS
   pf
   roscpp
-  tf2_ros
+  ruvu_lint
   tf2_geometry_msgs
+  tf2_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -43,7 +45,9 @@ find_package(GRAPHICSMAGICKCPP REQUIRED)
 ## catkin specific configuration ##
 ###################################
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS roscpp
+)
 
 ###########
 ## Build ##
@@ -65,6 +69,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
 
 add_executable(node
   src/main.cpp
@@ -72,24 +77,21 @@ add_executable(node
 target_link_libraries(node
   ${PROJECT_NAME}
 )
+target_compile_warnings(node ${EXTRA_FLAGS})
 
 #############
 ## Install ##
 #############
 
-## Mark executables for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-# install(TARGETS ${PROJECT_NAME}_node
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+install(TARGETS node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-## Mark libraries for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
@@ -101,6 +103,10 @@ target_link_libraries(node
 #############
 ## Testing ##
 #############
+
+## Linting
+
+ruvu_lint_add_test()
 
 ## Manual tests
 
@@ -117,7 +123,6 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
   )
 
-  message("GRAPHICSMAGICKCPP_LIBRARIES: ${GRAPHICSMAGICKCPP_LIBRARIES}")
   add_executable(plot_resampling
     test/plot_resampling.cpp
   )
@@ -146,12 +151,10 @@ endif()
 
 ## Unit tests
 
-catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
-if(TARGET test_differential_motion_model)
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
   target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
-endif()
 
-catkin_add_gtest(test_map test/test_map.cpp)
-if(TARGET test_map)
+  catkin_add_gtest(test_map test/test_map.cpp)
   target_link_libraries(test_map ${PROJECT_NAME})
 endif()
