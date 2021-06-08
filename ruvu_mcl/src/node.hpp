@@ -2,7 +2,6 @@
 
 #include "./particle_filter.hpp"
 #include "message_filters/subscriber.h"
-#include "pf/rv_samp.h"
 #include "ros/message_forward.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/message_filter.h"
@@ -12,6 +11,7 @@
 class MotionModel;
 struct Map;
 class Laser;
+class Rng;
 
 namespace geometry_msgs
 {
@@ -51,8 +51,8 @@ private:
   ros::Publisher cloud_pub_;
 
   // internals
+  std::shared_ptr<Rng> rng_;
   tf2::Transform last_odom_pose_ = {};
-  pf::rvsamp::UnivNormSampler<double> distribution_;
   ParticleFilter particles_ = {};
   std::unique_ptr<MotionModel> model_;
   std::shared_ptr<Map> map_ = nullptr;

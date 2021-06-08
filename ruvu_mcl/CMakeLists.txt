@@ -9,7 +9,6 @@ set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_fil
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
 find_package(catkin REQUIRED COMPONENTS
-  pf
   roscpp
   ruvu_lint
   tf2_geometry_msgs
@@ -65,6 +64,7 @@ add_library(${PROJECT_NAME}
   src/particle_filter.cpp
   src/resamplers/low_variance.cpp
   src/resamplers/resampler.cpp
+  src/rng.cpp
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
 )

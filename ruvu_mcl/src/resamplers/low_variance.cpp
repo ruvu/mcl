@@ -1,5 +1,8 @@
 #include "./low_variance.hpp"
 
+#include "../rng.hpp"
+#include "ros/console.h"
+
 auto normalize_weights(ParticleFilter * pf)
 {
   double total_weight = 0;
@@ -11,17 +14,18 @@ auto normalize_weights(ParticleFilter * pf)
   }
 }
 
+LowVariance::LowVariance(std::shared_ptr<Rng> rng) : rng_(rng) {}
+
 bool LowVariance::resample(ParticleFilter * pf)
 {
   ROS_DEBUG("LowVariance::resample");
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   int M = pf->size();
   double M_inv = 1. / M;
-  boost::random::mt19937 gen;
-  boost::random::uniform_real_distribution<> uniform_dist(0, M_inv);
+  auto uniform_dist = [this, M_inv]() { return rng_->sample_uniform_distribution(0, M_inv); };
 
   ParticleFilter pf_resampled;
-  float r = uniform_dist(gen);
+  float r = uniform_dist();
   double c = pf->at(0).weight;
   int i = 0;
   for (int m = 0; m < M; m++) {

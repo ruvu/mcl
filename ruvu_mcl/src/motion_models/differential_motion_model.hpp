@@ -1,9 +1,12 @@
 #pragma once
 
 #include <array>
+#include <memory>
 
 #include "motion_model.hpp"
-#include "pf/rv_samp.h"
+
+// forward declare
+class Rng;
 
 class DifferentialMotionModel : public MotionModel
 {
@@ -15,7 +18,8 @@ public:
    * @param alpha3 error parameters, see documentation
    * @param alpha4 error parameters, see documentation
    */
-  DifferentialMotionModel(double alpha1, double alpha2, double alpha3, double alpha4);
+  DifferentialMotionModel(
+    double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng);
 
   /**
    * @brief Update on new odometry data
@@ -34,5 +38,5 @@ private:
   double alpha3_;
   double alpha4_;
 
-  pf::rvsamp::UnivNormSampler<double> sampler_;
+  std::shared_ptr<Rng> rng_;
 };

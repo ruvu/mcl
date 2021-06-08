@@ -1,20 +1,23 @@
 #pragma once
 
-#include <gnuplot-iostream.h>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
+#include <memory>
 
 #include "./resampler.hpp"
-#include "ros/console.h"
+
+// forward declare
+class Rng;
 
 class LowVariance : public Resampler
 {
 public:
+  LowVariance(std::shared_ptr<Rng> rng);
   /*
    * @brief Resample a particle filter using the low-variance method
    * @param pf Particle filter to use
    * @return if it was succesful
    */
   bool resample(ParticleFilter * pf) override;
+
+private:
+  std::shared_ptr<Rng> rng_;
 };

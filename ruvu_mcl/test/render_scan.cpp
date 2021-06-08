@@ -43,6 +43,5 @@ int main(int argc, char ** argv)
   // Magick::InitializeMagick(nullptr);
   // auto img = cells_to_image(map.cells);
   // img.display();
-  ros::spin();
   return EXIT_SUCCESS;
 }

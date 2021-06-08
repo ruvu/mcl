@@ -1,12 +1,13 @@
 #include "./differential_motion_model.hpp"
 
+#include "../rng.hpp"
 #include "angles/angles.h"
 #include "ros/console.h"
 #include "tf2/utils.h"
 
 DifferentialMotionModel::DifferentialMotionModel(
-  double alpha1, double alpha2, double alpha3, double alpha4)
-: sampler_()
+  double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng)
+: rng_(rng)
 {
   alpha1_ = alpha1;
   alpha2_ = alpha2;
@@ -23,12 +24,12 @@ void DifferentialMotionModel::odometry_update(
   ROS_DEBUG("delta_rot2: %f", delta_rot2);
 
   for (Particle & particle : *pf) {
-    sampler_.setStdDev(alpha1_ * delta_rot1 + alpha2_ * delta_trans);
-    double delta_rot1_hat = delta_rot1 - sampler_.sample();
-    sampler_.setStdDev(alpha3_ * delta_trans + alpha4_ * delta_rot2);
-    double delta_trans_hat = delta_trans - sampler_.sample();
-    sampler_.setStdDev(alpha1_ * delta_rot2 + alpha2_ * delta_trans);
-    double delta_rot2_hat = delta_rot2 - sampler_.sample();
+    double delta_rot1_hat =
+      rng_->sample_normal_distribution(delta_rot1, alpha1_ * delta_rot1 + alpha2_ * delta_trans);
+    double delta_trans_hat =
+      rng_->sample_normal_distribution(delta_trans, alpha3_ * delta_trans + alpha4_ * delta_rot2);
+    double delta_rot2_hat =
+      rng_->sample_normal_distribution(delta_rot2, alpha1_ * delta_rot2 + alpha2_ * delta_trans);
 
     // first rotate with delta_rot1_hat
     tf2::Quaternion q;

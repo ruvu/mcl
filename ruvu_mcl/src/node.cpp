@@ -3,6 +3,7 @@
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
+#include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -18,23 +19,20 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   initial_pose_sub_(nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
     "initialpose", 1, &Node::initial_pose_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+  rng_(std::make_unique<Rng>()),
   last_odom_pose_(),
-  distribution_(0, 0.1),
   particles_(),
-  model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1)),
+  model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
   lasers_()
 {
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
 
-  std::random_device rd{};
-  std::mt19937 gen{rd()};
-  std::normal_distribution<> d{0, 0.2};
-
   int n = 10;
   for (int i = 0; i < n; ++i) {
     tf2::Quaternion q;
-    q.setRPY(0, 0, d(gen));
-    tf2::Vector3 p{d(gen), d(gen), 0};
+    q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
+    tf2::Vector3 p{
+      rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
     particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
@@ -94,20 +92,25 @@ void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
 {
   ROS_INFO("initial pose received");
-  std::random_device rd{};
-  std::mt19937 gen{rd()};
 
   auto & p = initial_pose->pose;
-  std::normal_distribution<> dx{p.pose.position.x, p.covariance[0 * 6 + 0]};
-  std::normal_distribution<> dy{p.pose.position.y, p.covariance[1 * 6 + 1]};
-  std::normal_distribution<> dt{tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]};
+  auto dx = [this, &p]() {
+    return rng_->sample_normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
+  };
+  auto dy = [this, &p]() {
+    return rng_->sample_normal_distribution(p.pose.position.y, p.covariance[1 * 6 + 1]);
+  };
+  auto dt = [this, &p]() {
+    return rng_->sample_normal_distribution(
+      tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
+  };
 
   particles_.clear();
   int n = 10;
   for (int i = 0; i < n; ++i) {
-    tf2::Vector3 p{dx(gen), dy(gen), 0};
+    tf2::Vector3 p{dx(), dy(), 0};
     tf2::Quaternion q;
-    q.setRPY(0, 0, dt(gen));
+    q.setRPY(0, 0, dt());
     particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
