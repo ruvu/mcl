@@ -16,7 +16,9 @@ class LaserData
 public:
   double angle_min;
   double angle_increment;
+  double range_max;
   std::vector<double> ranges;
+  using RangeType = decltype(ranges)::value_type;
   tf2::Transform pose;  // how the laser is mounted relative to base_link
 
   LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose);
@@ -36,5 +38,5 @@ public:
    * @param data Laser data to use
    * @return if it was succesful
    */
-  virtual bool sensor_update(ParticleFilter * pf, const LaserData & data) = 0;
+  virtual double sensor_update(ParticleFilter * pf, const LaserData & data) = 0;
 };

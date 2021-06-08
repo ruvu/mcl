@@ -34,7 +34,7 @@ public:
    * @param data Laser data to use
    * @return if it was succesful
    */
-  bool sensor_update(ParticleFilter * pf, const LaserData & data) override;
+  double sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
   const Parameters parameters_;
