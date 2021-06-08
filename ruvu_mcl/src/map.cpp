@@ -13,9 +13,10 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
   if (msg.info.width * msg.info.height != msg.data.size())
     throw std::runtime_error("msg.info.width * msg.info.height != msg.data.size()");
 
-  // copy data
+  // copy the data from the message
+  // it's strange that the OccupancyGrid talks about row-major order, but loading with ColMajor gives the correct data
   cells =
-    Eigen::Map<const Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
+    Eigen::Map<const Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>>(
       msg.data.data(), msg.info.width, msg.info.height)
       .unaryExpr([](CellType cell) -> CellType {
         if (cell == 0) {
