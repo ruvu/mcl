@@ -9,46 +9,55 @@
 TEST(TestSuite, testCells)
 {
   nav_msgs::OccupancyGrid msg;
-  msg.info.width = 2;
-  msg.info.height = 3;
+  msg.info.width = 3;
+  msg.info.height = 2;
   msg.data = {0, 100, -1, 100, 100, 100};
+  //          -1,  1,  0,   1,   1,   1
   /**
-   * 1 2 3
-   * 4 5 6
+   * This is the storage order of an OccupancyGrid
+   *   y (cols, height) ->
+   * x 0 3
+   *   1 4
+   *   2 5
    */
 
   Map map{msg};
+
+  std::cout << "In memory storage:\n";
+  for (int i = 0; i < map.cells.size(); i++)
+    std::cout << static_cast<int>(map.cells.data()[i]) << "  ";
+  std::cout << '\n';
+
   ASSERT_EQ(map.cells.rows(), msg.info.width);
   ASSERT_EQ(map.cells.cols(), msg.info.height);
 
-  // The map data is in row-major order, so let's check
+  // Let's check the map data
   ASSERT_EQ(map.cells(0, 0), -1);
-  ASSERT_EQ(map.cells(0, 1), 1);
-  ASSERT_EQ(map.cells(0, 2), 0);
   ASSERT_EQ(map.cells(1, 0), 1);
+  ASSERT_EQ(map.cells(2, 0), 0);
+  ASSERT_EQ(map.cells(0, 1), 1);
   ASSERT_EQ(map.cells(1, 1), 1);
-  ASSERT_EQ(map.cells(1, 2), 1);
+  ASSERT_EQ(map.cells(2, 1), 1);
 }
 
-TEST(TestSuite, testOrigin)
+TEST(TestSuite, test_is_valid)
 {
+  // set the origin with an offset and turned 90 degree
   nav_msgs::OccupancyGrid msg;
-  msg.info.resolution = 0.1;  // m/pixel
-  tf2::toMsg(tf2::Transform::getIdentity(), msg.info.origin);
+  msg.info.width = 3;
+  msg.info.height = 2;
+  msg.data.resize(msg.info.width * msg.info.height);
+
   Map map{msg};
-  {
-    auto [i, j] = map.world2map({0, 0, 0});
-    ASSERT_EQ(i, 0);
-    ASSERT_EQ(j, 0);
-  }
-  {
-    auto [i, j] = map.world2map({1, 2, 0});
-    ASSERT_EQ(i, 10);
-    ASSERT_EQ(j, 20);
-  }
+  ASSERT_TRUE(map.is_valid(0, 0));
+  ASSERT_TRUE(map.is_valid(2, 1));  // the corner
+  ASSERT_FALSE(map.is_valid(3, 1));
+  ASSERT_FALSE(map.is_valid(2, 2));
+  ASSERT_FALSE(map.is_valid(-1, 0));
+  ASSERT_FALSE(map.is_valid(0, -1));
 }
 
-TEST(TestSuite, testOrigin2)
+TEST(TestSuite, test_world2map_offset)
 {
   nav_msgs::OccupancyGrid msg;
   msg.info.resolution = 0.1;  // m/pixel
@@ -65,6 +74,25 @@ TEST(TestSuite, testOrigin2)
     auto [i, j] = map.world2map({9, 12, 0});
     ASSERT_EQ(i, 20);
     ASSERT_EQ(j, 10);
+  }
+}
+
+TEST(TestSuite, test_world2map_identity)
+{
+  nav_msgs::OccupancyGrid msg;
+  msg.info.resolution = 0.1;  // m/pixel
+  tf2::toMsg(tf2::Transform::getIdentity(), msg.info.origin);
+
+  Map map{msg};
+  {
+    auto [i, j] = map.world2map({0, 0, 0});
+    ASSERT_EQ(i, 0);
+    ASSERT_EQ(j, 0);
+  }
+  {
+    auto [i, j] = map.world2map({1, 2, 0});
+    ASSERT_EQ(i, 10);
+    ASSERT_EQ(j, 20);
   }
 }
 

@@ -16,7 +16,7 @@ struct Map
   using CellType = int8_t;
 
   // rows = x, cols = y
-  using CellsType = Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic>;
+  using CellsType = Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
 
   tf2::Transform origin;
 

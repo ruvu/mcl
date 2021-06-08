@@ -13,8 +13,20 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
   if (msg.info.width * msg.info.height != msg.data.size())
     throw std::runtime_error("msg.info.width * msg.info.height != msg.data.size()");
 
-  // copy the data from the message
-  // it's strange that the OccupancyGrid talks about row-major order, but loading with ColMajor gives the correct data
+  /**
+   * copy the data from the message
+   * An OccupancyGrid is stored in row-major order, where the first axis is the x axis. This means
+   * that you should access it as `i + width * j`.
+   * We want to access the map later as cells(i, j).
+   * This means rows == x == width, cols == y == height
+   *
+   *   y (cols, height) ->
+   * x 0 3
+   *   1 4
+   *   2 5
+   *
+   * In Eigen this storage order is called col-major
+   */
   cells =
     Eigen::Map<const Eigen::Matrix<CellType, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>>(
       msg.data.data(), msg.info.width, msg.info.height)
