@@ -16,7 +16,7 @@ DifferentialMotionModel::DifferentialMotionModel(
 }
 
 void DifferentialMotionModel::odometry_update(
-  ParticleFilter * pf, const tf2::Transform pose, const tf2::Transform & delta)
+  ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta)
 {
   auto [delta_rot1, delta_trans, delta_rot2] = calculate_deltas(delta);
   ROS_DEBUG("delta_rot1: %f", delta_rot1);

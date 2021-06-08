@@ -3,7 +3,7 @@
 #include <array>
 #include <memory>
 
-#include "motion_model.hpp"
+#include "./motion_model.hpp"
 
 // forward declare
 class Rng;
@@ -28,7 +28,7 @@ public:
    * @param delta change in pose in odometry update
    */
   void odometry_update(
-    ParticleFilter * pf, const tf2::Transform pose, const tf2::Transform & delta) override;
+    ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta) override;
 
   static std::array<double, 3> calculate_deltas(const tf2::Transform & delta);
 

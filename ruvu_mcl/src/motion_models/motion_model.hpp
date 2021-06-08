@@ -1,7 +1,12 @@
 #pragma once
 
 #include "../particle_filter.hpp"
-#include "tf2/LinearMath/Transform.h"
+
+// forward declare
+namespace tf2
+{
+class Transform;
+}
 
 class MotionModel
 {
@@ -15,5 +20,5 @@ public:
    * @param delta change in pose in odometry update
    */
   virtual void odometry_update(
-    ParticleFilter * pf, const tf2::Transform pose, const tf2::Transform & delta) = 0;
+    ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta) = 0;
 };
