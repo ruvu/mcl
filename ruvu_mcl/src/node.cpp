@@ -4,6 +4,7 @@
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
 #include "./sensor_models/beam_model.hpp"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "ros/node_handle.h"
 #include "sensor_msgs/LaserScan.h"
@@ -14,6 +15,8 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 : laser_scan_sub_(nh, "scan", 100),
   laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh),
   map_sub_(nh.subscribe<nav_msgs::OccupancyGrid>("map", 1, &Node::map_cb, this)),
+  initial_pose_sub_(nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
+    "initialpose", 1, &Node::initial_pose_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
   last_odom_pose_(),
   distribution_(0, 0.1),
@@ -86,6 +89,27 @@ void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
     map_ = std::make_unique<Map>(*map);
   else
     *map_ = Map{*map};
+}
+
+void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
+{
+  ROS_INFO("initial pose received");
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+
+  auto & p = initial_pose->pose;
+  std::normal_distribution<> dx{p.pose.position.x, p.covariance[0 * 6 + 0]};
+  std::normal_distribution<> dy{p.pose.position.y, p.covariance[1 * 6 + 1]};
+  std::normal_distribution<> dt{tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]};
+
+  particles_.clear();
+  int n = 10;
+  for (int i = 0; i < n; ++i) {
+    tf2::Vector3 p{dx(gen), dy(gen), 0};
+    tf2::Quaternion q;
+    q.setRPY(0, 0, dt(gen));
+    particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
+  }
 }
 
 tf2::Transform Node::get_odom_pose(const ros::Time & time)

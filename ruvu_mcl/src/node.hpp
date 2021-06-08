@@ -13,13 +13,17 @@ class MotionModel;
 struct Map;
 class Laser;
 
-namespace sensor_msgs
+namespace geometry_msgs
 {
-ROS_DECLARE_MESSAGE(LaserScan)
+ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)
 }
 namespace nav_msgs
 {
 ROS_DECLARE_MESSAGE(OccupancyGrid)
+}
+namespace sensor_msgs
+{
+ROS_DECLARE_MESSAGE(LaserScan)
 }
 
 class Node
@@ -31,6 +35,7 @@ public:
 private:
   void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
+  void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
   tf2::Transform get_odom_pose(const ros::Time & time);
   void publish_particle_cloud(const ros::Time & time);
 
@@ -40,6 +45,7 @@ private:
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
   ros::Subscriber map_sub_;
+  ros::Subscriber initial_pose_sub_;
 
   // data output
   ros::Publisher cloud_pub_;
