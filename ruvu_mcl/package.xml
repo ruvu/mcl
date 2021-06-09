@@ -14,5 +14,7 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
 
+  <exec_depend>graphicsmagick</exec_depend>
+
   <test_depend>ruvu_lint</test_depend>
 </package>
