@@ -23,7 +23,8 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   last_odom_pose_(),
   particles_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
-  lasers_()
+  lasers_(),
+  resampler_(std::make_unique<LowVariance>(rng_))
 {
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
 
@@ -78,6 +79,8 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
+
+  resampler_->resample(&particles_);
 }
 
 void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)

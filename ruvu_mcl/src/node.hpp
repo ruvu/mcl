@@ -11,6 +11,7 @@
 class MotionModel;
 struct Map;
 class Laser;
+class Resampler;
 class Rng;
 
 namespace geometry_msgs
@@ -57,4 +58,5 @@ private:
   std::unique_ptr<MotionModel> model_;
   std::shared_ptr<Map> map_ = nullptr;
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
+  std::unique_ptr<Resampler> resampler_;
 };
