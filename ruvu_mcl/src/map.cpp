@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include "./map.hpp"
 
 #include "nav_msgs/OccupancyGrid.h"

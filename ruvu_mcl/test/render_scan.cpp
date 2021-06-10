@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include <Magick++.h>
 
 #include <iostream>

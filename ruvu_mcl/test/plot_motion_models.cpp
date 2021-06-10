@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include <gnuplot-iostream.h>
 
 #include "../src/motion_models/differential_motion_model.hpp"

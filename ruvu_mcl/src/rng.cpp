@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include "./rng.hpp"
 
 Rng::Rng() : generator(std::random_device{}()) {}

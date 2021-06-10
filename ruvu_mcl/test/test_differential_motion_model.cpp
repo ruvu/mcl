@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include <gtest/gtest.h>
 #include <ros/init.h>
 #include <ros/node_handle.h>

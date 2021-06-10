@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include "./low_variance.hpp"
 
 #include "../rng.hpp"

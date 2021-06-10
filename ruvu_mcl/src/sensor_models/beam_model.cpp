@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include "./beam_model.hpp"
 
 #include "../map.hpp"

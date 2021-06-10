@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
 <package format="2">
   <name>ruvu_mcl</name>
   <version>0.0.0</version>

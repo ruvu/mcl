@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include "./node.hpp"
 #include "ros/console.h"
 #include "ros/init.h"

@@ -1,3 +1,5 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include <gnuplot-iostream.h>
 
 #include "../src/particle_filter.hpp"
