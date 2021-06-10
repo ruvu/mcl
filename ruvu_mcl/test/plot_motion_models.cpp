@@ -6,7 +6,8 @@
 #include "../src/rng.hpp"
 #include "ros/console.h"
 
-ParticleFilter run_differential_motion_model(MotionModel && model)
+ParticleFilter run_differential_motion_model(
+  MotionModel && model, tf2::Vector3 t = tf2::Vector3{1, 0, 0})
 {
   ParticleFilter pf;
   int n = 100;
@@ -15,8 +16,7 @@ ParticleFilter run_differential_motion_model(MotionModel && model)
   }
 
   model.odometry_update(
-    &pf, tf2::Transform::getIdentity(),
-    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
+    &pf, tf2::Transform::getIdentity(), tf2::Transform{tf2::Quaternion::getIdentity(), t});
 
   return pf;
 }
@@ -40,7 +40,7 @@ int main()
   Gnuplot gp;
   gp << "set xrange [-2:2]\n";
   gp << "set yrange [-2:2]\n";
-  gp << "set multiplot layout 2,2 rowsfirst\n";
+  gp << "set multiplot layout 3,2 rowsfirst\n";
   auto rng = std::make_shared<Rng>();
   auto pf = run_differential_motion_model(DifferentialMotionModel{0.5, 0.1, 0.1, 0.1, rng});
   gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'alpha1'\n";
@@ -50,4 +50,10 @@ int main()
   gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'alpha3'\n";
   pf = run_differential_motion_model(DifferentialMotionModel{0.1, 0.1, 0.1, 0.5, rng});
   gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'alpha4'\n";
+  pf = run_differential_motion_model(
+    DifferentialMotionModel{0.1, 0.1, 0.1, 0.1, rng}, tf2::Vector3{-1, 0, 0});
+  gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'backwards alpha 1'\n";
+  pf = run_differential_motion_model(
+    DifferentialMotionModel{0.1, 0.5, 0.1, 0.1, rng}, tf2::Vector3{-1, 0, 0});
+  gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'backwards alpha 2'\n";
 }

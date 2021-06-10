@@ -61,6 +61,12 @@ std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Trans
     delta_rot1 = atan2(delta.getOrigin().getY(), delta.getOrigin().getX());
   }
 
+  // backwards driving
+  if (delta_rot1 >= M_PI || delta_rot1 <= -M_PI) {
+    delta_rot1 = angles::normalize_angle(delta_rot1 + M_PI);
+    delta_trans = -delta_trans;
+  }
+
   double delta_rot2 = tf2::getYaw(delta.getRotation()) - delta_rot1;
   return {delta_rot1, delta_trans, delta_rot2};
 }
