@@ -39,7 +39,7 @@ private:
   void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
-  tf2::Transform get_odom_pose(const ros::Time & time);
+  tf2::Transform get_odom_pose(const ros::Time & time, ros::Duration timeout = ros::Duration(0.0));
   void publish_particle_cloud(const ros::Time & time);
 
   // data input

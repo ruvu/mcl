@@ -22,12 +22,13 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
     "initialpose", 1, &Node::initial_pose_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
   rng_(std::make_unique<Rng>()),
-  last_odom_pose_(),
   particles_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_))
 {
+  last_odom_pose_ = get_odom_pose(ros::Time{0}, ros::Duration{5});
+
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
 
   int n = 10;
@@ -50,6 +51,13 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   ROS_INFO(
     "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
     tf2::getYaw(diff.getRotation()));
+
+  double update_min_d = 0.25;
+  double update_min_a = 0.2;
+  if (diff.getOrigin().length() < update_min_d && tf2::getYaw(diff.getRotation()) < update_min_a) {
+    publish_particle_cloud(scan->header.stamp);
+    return;
+  }
 
   model_->odometry_update(&particles_, odom_pose, diff);
   publish_particle_cloud(scan->header.stamp);
@@ -120,13 +128,13 @@ void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPt
   }
 }
 
-tf2::Transform Node::get_odom_pose(const ros::Time & time)
+tf2::Transform Node::get_odom_pose(const ros::Time & time, ros::Duration timeout)
 {
   geometry_msgs::PoseStamped odom_pose;
   odom_pose.header.stamp = time;
   odom_pose.header.frame_id = "base_link";
   tf2::toMsg(tf2::Transform::getIdentity(), odom_pose.pose);
-  tf_buffer.transform(odom_pose, odom_pose, "odom");
+  tf_buffer.transform(odom_pose, odom_pose, "odom", timeout);
 
   ROS_INFO("%f %f", odom_pose.pose.position.x, odom_pose.pose.position.y);
   tf2::Stamped<tf2::Transform> odom_pose_tf;
