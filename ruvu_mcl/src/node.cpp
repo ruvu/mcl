@@ -21,7 +21,7 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   initial_pose_sub_(nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
     "initialpose", 1, &Node::initial_pose_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
-  pose_pub_(private_nh.advertise<geometry_msgs::PoseStamped>("pose", 1)),
+  pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
   rng_(std::make_unique<Rng>()),
   filter_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
@@ -110,10 +110,11 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     }
   }
   //TODO: Make output PoseWithCovarianceStamped
-  geometry_msgs::PoseStamped pose_msg;
+  geometry_msgs::PoseWithCovarianceStamped pose_msg;
   pose_msg.header.stamp = ros::Time::now();
   pose_msg.header.frame_id = "map";
-  tf2::toMsg(max_weight_particle.pose, pose_msg.pose);
+  filter_.get_2d_covariance_array(&pose_msg.pose.covariance[0]);
+  tf2::toMsg(max_weight_particle.pose, pose_msg.pose.pose);
   pose_pub_.publish(std::move(pose_msg));
 }
 

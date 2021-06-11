@@ -11,3 +11,32 @@ double ParticleFilter::calc_effective_sample_size()
   }
   return 1. / sq_weight;
 }
+
+void ParticleFilter::get_2d_covariance_array(double * cov)
+{
+  double mean[4];
+  for (const auto & particle : particles) {
+    mean[0] += particle.weight * particle.pose.getOrigin().getX();
+    mean[1] += particle.weight * particle.pose.getOrigin().getY();
+    mean[2] += particle.weight * cos(tf2::getYaw(particle.pose.getRotation()));
+    mean[3] += particle.weight * sin(tf2::getYaw(particle.pose.getRotation()));
+
+    // Compute covariance in linear components
+    for (size_t j = 0; j < 2; j++) {
+      for (size_t k = 0; k < 2; k++) {
+        cov[6 * j + k] +=
+          particle.weight * particle.pose.getOrigin()[j] * particle.pose.getOrigin()[k];
+      }
+    }
+  }
+
+  // Normalize
+  for (size_t j = 0; j < 2; j++) {
+    for (size_t k = 0; k < 2; k++) {
+      cov[6 * j + k] = cov[6 * j + k] - mean[j] * mean[k];
+    }
+  }
+
+  // Covariance in angular component
+  cov[35] = -2 * log(sqrt(mean[2] * mean[2] + mean[3] * mean[3]));
+}

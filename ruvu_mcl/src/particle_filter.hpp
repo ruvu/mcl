@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "tf2/LinearMath/Transform.h"
+#include "tf2/utils.h"
 
 class Particle
 {
@@ -20,4 +21,5 @@ class ParticleFilter
 public:
   std::vector<Particle> particles;
   double calc_effective_sample_size();
+  void get_2d_covariance_array(double * cov);
 };
