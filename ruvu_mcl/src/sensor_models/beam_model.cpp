@@ -31,7 +31,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
   auto step = (data.ranges.size() - 1) / (parameters_.max_beams - 1);
-  for (auto & particle : *pf) {
+  for (auto & particle : pf->particles) {
     double p = 1.0;
 
     for (std::size_t i = 0; i < data.ranges.size(); i += step) {
@@ -98,7 +98,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
   }
 
   //Normalize weights
-  for (auto & particle : *pf) {
+  for (auto & particle : pf->particles) {
     particle.weight /= total_weight;
   }
 

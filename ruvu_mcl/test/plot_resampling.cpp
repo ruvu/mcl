@@ -9,7 +9,7 @@
 auto convert_to_gnuplot(const ParticleFilter & pf)
 {
   std::vector<std::pair<double, double>> points;
-  for (const auto & particle : pf) {
+  for (const auto & particle : pf.particles) {
     const auto & o = particle.pose.getOrigin();
     points.emplace_back(o.getX(), o.getY());
   }
@@ -20,10 +20,10 @@ auto normalize_weights(ParticleFilter & pf)
 {
   //TODO (Paul): Remove once normalize_weights() is part of partical_filter
   double total_weight = 0;
-  for (const auto & particle : pf) {
+  for (const auto & particle : pf.particles) {
     total_weight += particle.weight;
   }
-  for (auto & particle : pf) {
+  for (auto & particle : pf.particles) {
     particle.weight /= total_weight;
   }
 }
@@ -43,7 +43,7 @@ int main()
     double x = initial_dist();
     double y = initial_dist();
     double weight = 1 / hypot(x, y);
-    pf.emplace_back(
+    pf.particles.emplace_back(
       tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{x, y, 0}}, double{weight});
   }
   normalize_weights(pf);

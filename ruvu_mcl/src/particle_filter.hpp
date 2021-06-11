@@ -15,4 +15,8 @@ public:
   Particle(const tf2::Transform & pose, double weight) : pose(pose), weight(weight) {}
 };
 
-using ParticleFilter = std::vector<Particle>;
+class ParticleFilter
+{
+public:
+  std::vector<Particle> particles;
+};

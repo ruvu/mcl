@@ -12,7 +12,7 @@ ParticleFilter run_differential_motion_model(
   ParticleFilter pf;
   int n = 100;
   for (int i = 0; i < n; ++i) {
-    pf.emplace_back(tf2::Transform::getIdentity(), 1. / n);
+    pf.particles.emplace_back(tf2::Transform::getIdentity(), 1. / n);
   }
 
   model.odometry_update(
@@ -24,7 +24,7 @@ ParticleFilter run_differential_motion_model(
 auto convert_to_gnuplot(const ParticleFilter & pf)
 {
   std::vector<std::pair<double, double>> points;
-  for (const auto & particle : pf) {
+  for (const auto & particle : pf.particles) {
     const auto & o = particle.pose.getOrigin();
     points.emplace_back(o.getX(), o.getY());
   }

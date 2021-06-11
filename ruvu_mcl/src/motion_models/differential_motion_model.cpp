@@ -25,7 +25,7 @@ void DifferentialMotionModel::odometry_update(
   ROS_DEBUG("delta_trans: %f", delta_trans);
   ROS_DEBUG("delta_rot2: %f", delta_rot2);
 
-  for (Particle & particle : *pf) {
+  for (Particle & particle : pf->particles) {
     double delta_rot1_hat =
       rng_->sample_normal_distribution(delta_rot1, alpha1_ * delta_rot1 + alpha2_ * delta_trans);
     double delta_trans_hat =

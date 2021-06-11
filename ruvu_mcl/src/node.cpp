@@ -23,7 +23,7 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseStamped>("pose", 1)),
   rng_(std::make_unique<Rng>()),
-  particles_(),
+  filter_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_))
@@ -38,7 +38,7 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
     q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
     tf2::Vector3 p{
       rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
-    particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
+    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
 
@@ -62,7 +62,7 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
 
-  model_->odometry_update(&particles_, odom_pose, diff);
+  model_->odometry_update(&filter_, odom_pose, diff);
   publish_particle_cloud(scan->header.stamp);
 
   last_odom_pose_ = odom_pose;
@@ -91,14 +91,14 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     ROS_INFO("laser is mounted at %f %f %f", p.getX(), p.getY(), tf2::getYaw(tf.getRotation()));
   }
   LaserData data(*scan, tf);
-  lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
+  lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
   // TODO: Resemple every x updates, or use selective resampling to reduce particle deprivation
   // https://people.eecs.berkeley.edu/~pabbeel/cs287-fa13/optreadings/GrisettiStachnissBurgard_gMapping_T-RO2006.pdf
-  resampler_->resample(&particles_);
+  resampler_->resample(&filter_);
 
   Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
-  for (const auto & particle : particles_) {
+  for (const auto & particle : filter_.particles) {
     if (particle.weight > max_weight_particle.weight) {
       max_weight_particle = particle;
     }
@@ -136,13 +136,13 @@ void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPt
       tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
   };
 
-  particles_.clear();
   int n = 10;
+  filter_.particles.clear();
   for (int i = 0; i < n; ++i) {
     tf2::Vector3 p{dx(), dy(), 0};
     tf2::Quaternion q;
     q.setRPY(0, 0, dt());
-    particles_.emplace_back(tf2::Transform{q, p}, 1. / n);
+    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
 
@@ -178,7 +178,7 @@ void Node::publish_particle_cloud(const ros::Time & time)
   m.color.b = 1;
 
   tf2::Vector3 p1{length / 2, 0, 0};
-  for (const auto & particle : particles_) {
+  for (const auto & particle : filter_.particles) {
     {
       geometry_msgs::Point tmp;
       tf2::toMsg(particle.pose * p1, tmp);

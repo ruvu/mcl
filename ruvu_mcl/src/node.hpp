@@ -10,6 +10,7 @@
 #include "tf2_ros/transform_listener.h"
 
 // forward declare
+class ParticleFilter;
 class MotionModel;
 struct Map;
 class Laser;
@@ -57,7 +58,7 @@ private:
   // internals
   std::shared_ptr<Rng> rng_;
   tf2::Transform last_odom_pose_ = {};
-  ParticleFilter particles_ = {};
+  ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   std::shared_ptr<Map> map_ = nullptr;
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
