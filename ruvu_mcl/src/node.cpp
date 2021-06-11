@@ -55,7 +55,7 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   double update_min_d = 0.25;
   double update_min_a = 0.2;
-  if (diff.getOrigin().length() < update_min_d && tf2::getYaw(diff.getRotation()) < update_min_a) {
+  if (diff.getOrigin().length() < update_min_d && fabs(tf2::getYaw(diff.getRotation())) < update_min_a) {
     publish_particle_cloud(scan->header.stamp);
     return;
   }
