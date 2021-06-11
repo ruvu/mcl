@@ -55,7 +55,9 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   double update_min_d = 0.25;
   double update_min_a = 0.2;
-  if (diff.getOrigin().length() < update_min_d && fabs(tf2::getYaw(diff.getRotation())) < update_min_a) {
+  if (
+    diff.getOrigin().length() < update_min_d &&
+    fabs(tf2::getYaw(diff.getRotation())) < update_min_a) {
     publish_particle_cloud(scan->header.stamp);
     return;
   }
@@ -97,9 +99,9 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
   for (const auto & particle : particles_) {
-      if (particle.weight > max_weight_particle.weight){
-          max_weight_particle = particle;
-      }
+    if (particle.weight > max_weight_particle.weight) {
+      max_weight_particle = particle;
+    }
   }
   //TODO: Make output PoseWithCovarianceStamped
   geometry_msgs::PoseStamped pose_msg;

@@ -99,7 +99,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
   //Normalize weights
   for (auto & particle : *pf) {
-      particle.weight /= total_weight;
+    particle.weight /= total_weight;
   }
 
   debug_pub_.publish(std::move(marker));
