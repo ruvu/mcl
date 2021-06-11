@@ -19,4 +19,5 @@ class ParticleFilter
 {
 public:
   std::vector<Particle> particles;
+  double calc_effective_sample_size();
 };

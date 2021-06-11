@@ -26,7 +26,8 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   filter_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
   lasers_(),
-  resampler_(std::make_unique<LowVariance>(rng_))
+  resampler_(std::make_unique<LowVariance>(rng_)),
+  resample_count_(0)
 {
   last_odom_pose_ = get_odom_pose(ros::Time{0}, ros::Duration{5});
 
@@ -93,9 +94,14 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
-  // TODO: Resemple every x updates, or use selective resampling to reduce particle deprivation
-  // https://people.eecs.berkeley.edu/~pabbeel/cs287-fa13/optreadings/GrisettiStachnissBurgard_gMapping_T-RO2006.pdf
-  resampler_->resample(&filter_);
+  bool selective_resampling = true;
+  int resample_interval = 2;
+  if (selective_resampling) {
+    if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)
+      resampler_->resample(&filter_);
+  } else {
+    if (!(++resample_count_ % resample_interval)) resampler_->resample(&filter_);
+  }
 
   Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
   for (const auto & particle : filter_.particles) {

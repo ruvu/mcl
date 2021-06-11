@@ -63,4 +63,5 @@ private:
   std::shared_ptr<Map> map_ = nullptr;
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
   std::unique_ptr<Resampler> resampler_;
+  int resample_count_;
 };
