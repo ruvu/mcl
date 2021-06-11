@@ -62,7 +62,7 @@ std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Trans
   }
 
   // backwards driving
-  if (delta_rot1 >= M_PI || delta_rot1 <= -M_PI) {
+  if (delta_rot1 >= M_PI / 2 || delta_rot1 <= -M_PI / 2) {
     delta_rot1 = angles::normalize_angle(delta_rot1 + M_PI);
     delta_trans = -delta_trans;
   }
