@@ -52,6 +52,7 @@ private:
 
   // data output
   ros::Publisher cloud_pub_;
+  ros::Publisher pose_pub_;
 
   // internals
   std::shared_ptr<Rng> rng_;

@@ -21,6 +21,7 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   initial_pose_sub_(nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
     "initialpose", 1, &Node::initial_pose_cb, this)),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+  pose_pub_(private_nh.advertise<geometry_msgs::PoseStamped>("pose", 1)),
   rng_(std::make_unique<Rng>()),
   particles_(),
   model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
@@ -90,7 +91,22 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&particles_, data);
 
+  // TODO: Resemple every x updates, or use selective resampling to reduce particle deprivation
+  // https://people.eecs.berkeley.edu/~pabbeel/cs287-fa13/optreadings/GrisettiStachnissBurgard_gMapping_T-RO2006.pdf
   resampler_->resample(&particles_);
+
+  Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
+  for (const auto & particle : particles_) {
+      if (particle.weight > max_weight_particle.weight){
+          max_weight_particle = particle;
+      }
+  }
+  //TODO: Make output PoseWithCovarianceStamped
+  geometry_msgs::PoseStamped pose_msg;
+  pose_msg.header.stamp = ros::Time::now();
+  pose_msg.header.frame_id = "map";
+  tf2::toMsg(max_weight_particle.pose, pose_msg.pose);
+  pose_pub_.publish(std::move(pose_msg));
 }
 
 void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
