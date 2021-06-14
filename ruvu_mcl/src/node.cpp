@@ -14,6 +14,8 @@
 #include "tf2/utils.h"
 #include "visualization_msgs/Marker.h"
 
+constexpr auto name = "node";
+
 Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 : laser_scan_sub_(nh, "scan", 100),
   laser_scan_filter_(laser_scan_sub_, tf_buffer, "odom", 100, nh),
@@ -50,9 +52,6 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   // TODO: skip the first odom update
   auto odom_pose = get_odom_pose(scan->header.stamp);
   auto diff = last_odom_pose_.inverseTimes(odom_pose);
-  ROS_INFO(
-    "diff: %f %f %f", diff.getOrigin().getX(), diff.getOrigin().getY(),
-    tf2::getYaw(diff.getRotation()));
 
   double update_min_d = 0.25;
   double update_min_a = 0.2;
@@ -62,6 +61,9 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     publish_particle_cloud(scan->header.stamp);
     return;
   }
+  ROS_DEBUG_NAMED(
+    name, "movement: x=%f y=%f t=%f", diff.getOrigin().getX(), diff.getOrigin().getY(),
+    tf2::getYaw(diff.getRotation()));
 
   model_->odometry_update(&filter_, odom_pose, diff);
   publish_particle_cloud(scan->header.stamp);
@@ -69,7 +71,8 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   last_odom_pose_ = odom_pose;
 
   if (lasers_.find(scan->header.frame_id) == lasers_.end()) {
-    ROS_INFO("new laser found, adding a sensor model");
+    ROS_INFO_NAMED(
+      name, "new laser '%s' found, adding a sensor model", scan->header.frame_id.c_str());
     BeamModel::Parameters parameters;
     parameters.lambda_short = 0.1;
     parameters.sigma_hit = 0.2;
@@ -87,10 +90,7 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     auto tfs = tf_buffer.lookupTransform("base_link", scan->header.frame_id, scan->header.stamp);
     tf2::fromMsg(tfs.transform, tf);
   }
-  {
-    auto & p = tf.getOrigin();
-    ROS_INFO("laser is mounted at %f %f %f", p.getX(), p.getY(), tf2::getYaw(tf.getRotation()));
-  }
+
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
@@ -119,7 +119,7 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
 void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
-  ROS_INFO("map received");
+  ROS_INFO_NAMED(name, "map received");
   if (!map_)
     map_ = std::make_unique<Map>(*map);
   else
@@ -128,7 +128,7 @@ void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 
 void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
 {
-  ROS_INFO("initial pose received");
+  ROS_INFO_NAMED(name, "initial pose received");
 
   auto & p = initial_pose->pose;
   auto dx = [this, &p]() {
@@ -160,7 +160,6 @@ tf2::Transform Node::get_odom_pose(const ros::Time & time, ros::Duration timeout
   tf2::toMsg(tf2::Transform::getIdentity(), odom_pose.pose);
   tf_buffer.transform(odom_pose, odom_pose, "odom", timeout);
 
-  ROS_INFO("%f %f", odom_pose.pose.position.x, odom_pose.pose.position.y);
   tf2::Stamped<tf2::Transform> odom_pose_tf;
   tf2::convert(odom_pose, odom_pose_tf);
   return odom_pose_tf;

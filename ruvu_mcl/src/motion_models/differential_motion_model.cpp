@@ -7,6 +7,8 @@
 #include "ros/console.h"
 #include "tf2/utils.h"
 
+constexpr auto name = "differential_motion_model";
+
 DifferentialMotionModel::DifferentialMotionModel(
   double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng)
 : rng_(rng)
@@ -21,9 +23,9 @@ void DifferentialMotionModel::odometry_update(
   ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta)
 {
   auto [delta_rot1, delta_trans, delta_rot2] = calculate_deltas(delta);
-  ROS_DEBUG("delta_rot1: %f", delta_rot1);
-  ROS_DEBUG("delta_trans: %f", delta_trans);
-  ROS_DEBUG("delta_rot2: %f", delta_rot2);
+  ROS_DEBUG_NAMED(name, "delta_rot1: %f", delta_rot1);
+  ROS_DEBUG_NAMED(name, "delta_trans: %f", delta_trans);
+  ROS_DEBUG_NAMED(name, "delta_rot2: %f", delta_rot2);
 
   for (Particle & particle : pf->particles) {
     double delta_rot1_hat =

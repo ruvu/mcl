@@ -5,6 +5,8 @@
 #include "../rng.hpp"
 #include "ros/console.h"
 
+constexpr auto name = "low_variance";
+
 auto normalize_weights(ParticleFilter * pf)
 {
   double total_weight = 0;
@@ -20,7 +22,7 @@ LowVariance::LowVariance(std::shared_ptr<Rng> rng) : rng_(rng) {}
 
 bool LowVariance::resample(ParticleFilter * pf)
 {
-  ROS_DEBUG("LowVariance::resample");
+  ROS_DEBUG_NAMED(name, "resample");
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   int M = pf->particles.size();
   double M_inv = 1. / M;
