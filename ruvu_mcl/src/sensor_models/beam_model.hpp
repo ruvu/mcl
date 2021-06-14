@@ -8,7 +8,7 @@
 #include "ros/publisher.h"
 
 // forward declare
-class Map;
+struct Map;
 
 class BeamModel : public Laser
 {
