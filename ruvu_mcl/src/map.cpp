@@ -11,6 +11,7 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
   scale = msg.info.resolution;
 
   tf2::fromMsg(msg.info.origin, origin);
+  origin = origin.inverse();
 
   if (msg.info.width * msg.info.height != msg.data.size())
     throw std::runtime_error("msg.info.width * msg.info.height != msg.data.size()");
@@ -100,7 +101,7 @@ int floor2int(T v)
 
 std::pair<int, int> Map::world2map(const tf2::Vector3 & v) const
 {
-  tf2::Vector3 w = origin.inverse() * v;
+  tf2::Vector3 w = origin * v;
   int i = floor2int(w.getX() / scale + 0.5);
   int j = floor2int(w.getY() / scale + 0.5);
   // ROS_INFO("world2map: %f %f -> %f %f -> %i %i", v.getX(), v.getY(), w.getX(), w.getY(), i, j);
