@@ -10,9 +10,10 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
-BeamModel::BeamModel(const Parameters & parameters, const std::shared_ptr<const Map> & map)
-: parameters_(parameters), map_(map)
+BeamModel::BeamModel(const BeamModelConfig & config, const std::shared_ptr<const Map> & map)
+: parameters_(config), map_(map)
 {
+  ROS_INFO("config: %f", config.z_hit);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
 }

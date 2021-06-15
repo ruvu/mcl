@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include "./config.hpp"
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
 #include "ros/node_handle.h"
+#include "ruvu_mcl/AMCLConfig.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"
@@ -38,6 +40,8 @@ public:
     const std::shared_ptr<const tf2_ros::Buffer> & buffer);
   ~Filter();  // to handle forward declares
 
+  void configure(const Config & config);
+
   void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
@@ -55,6 +59,7 @@ private:
   tf2_ros::TransformBroadcaster transform_br_;
 
   // internals
+  Config config_;
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
   ParticleFilter filter_;

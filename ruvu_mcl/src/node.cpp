@@ -19,9 +19,14 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   map_sub_(nh.subscribe<nav_msgs::OccupancyGrid>("map", 1, &Node::map_cb, this)),
   initial_pose_sub_(nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
     "initialpose", 1, &Node::initial_pose_cb, this)),
+  reconfigure_server_(private_nh),
   filter_(nh, private_nh, buffer_)
 {
   laser_scan_filter_.registerCallback(&Node::scan_cb, this);
+  reconfigure_server_.setCallback([this](const ruvu_mcl::AMCLConfig & config, uint32_t level) {
+    ROS_INFO_NAMED(name, "reconfigure call");
+    filter_.configure(Config{config});
+  });
 }
 
 Node::~Node() = default;

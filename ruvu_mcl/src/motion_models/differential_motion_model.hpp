@@ -5,6 +5,7 @@
 #include <array>
 #include <memory>
 
+#include "../config.hpp"
 #include "./motion_model.hpp"
 
 // forward declare
@@ -22,6 +23,8 @@ public:
    */
   DifferentialMotionModel(
     double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng);
+  DifferentialMotionModel(
+    const DifferentialMotionModelConfig & config, const std::shared_ptr<Rng> & rng);
 
   /**
    * @brief Update on new odometry data

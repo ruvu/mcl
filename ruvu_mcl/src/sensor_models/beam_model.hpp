@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "../config.hpp"
 #include "./laser.hpp"
 #include "ros/publisher.h"
 
@@ -13,22 +14,10 @@ struct Map;
 class BeamModel : public Laser
 {
 public:
-  struct Parameters
-  {
-    double z_hit;
-    double z_short;
-    double z_max;
-    double z_rand;
-    double sigma_hit;
-    double lambda_short;
-    double chi_outlier;
-    size_t max_beams;
-  };
-
   /*
    * @brief BeamModel constructor
    */
-  BeamModel(const Parameters & parameters, const std::shared_ptr<const Map> & map);
+  BeamModel(const BeamModelConfig & config, const std::shared_ptr<const Map> & map);
 
   /*
    * @brief Run a sensor update on laser
@@ -39,7 +28,7 @@ public:
   double sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
-  const Parameters parameters_;
+  const BeamModelConfig parameters_;
   const std::shared_ptr<const Map> map_;
   ros::Publisher debug_pub_;
 };

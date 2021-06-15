@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "./filter.hpp"
+#include "dynamic_reconfigure/server.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "ros/init.h"
@@ -55,6 +56,12 @@ public:
   Offline(const rosbag::Bag & bag, ros::NodeHandle nh, ros::NodeHandle private_nh)
   : buffer_(std::make_shared<BagBuffer>(bag)), filter_(nh, private_nh, buffer_)
   {
+    dynamic_reconfigure::Server<ruvu_mcl::AMCLConfig> reconfigure_server;
+    reconfigure_server.setCallback([this](const ruvu_mcl::AMCLConfig & config, uint32_t level) {
+      ROS_INFO_NAMED(name, "reconfigure call");
+      filter_.configure(Config{config});
+    });
+
     auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
 

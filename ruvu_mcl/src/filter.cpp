@@ -24,10 +24,11 @@ Filter::Filter(
 : buffer_(buffer),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
+  config_(),
   rng_(std::make_unique<Rng>()),
   last_odom_pose_(),
   filter_(),
-  model_(std::make_unique<DifferentialMotionModel>(0.1, 0.1, 0.1, 0.1, rng_)),
+  model_(nullptr),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0)
@@ -43,10 +44,24 @@ Filter::Filter(
   }
 }
 
+void Filter::configure(const Config & config)
+{
+  ROS_INFO_NAMED(name, "configure call");
+  config_ = config;
+  lasers_.clear();  // they will configure themself on next scan_cb
+
+  if (auto c = std::get_if<DifferentialMotionModelConfig>(&config_.model))
+    model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
+  else
+    throw std::logic_error("no motion model configured");
+}
+
 Filter::~Filter() = default;
 
 void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
+  assert(model_);
+
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first scan_cb, recording the odom pose");
     last_odom_pose_ = get_odom_pose(scan->header.stamp);
@@ -80,15 +95,12 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   if (lasers_.find(scan->header.frame_id) == lasers_.end()) {
     ROS_INFO_NAMED(
       name, "new laser '%s' found, adding a sensor model", scan->header.frame_id.c_str());
-    BeamModel::Parameters parameters;
-    parameters.lambda_short = 0.1;
-    parameters.sigma_hit = 0.2;
-    parameters.z_hit = 0.5;
-    parameters.z_max = 0.05;
-    parameters.z_rand = 0.5;
-    parameters.z_short = 0.05;
-    parameters.max_beams = 60;
-    auto sensor = std::make_unique<BeamModel>(parameters, map_);
+
+    std::unique_ptr<Laser> sensor;
+    if (auto c = std::get_if<BeamModelConfig>(&config_.laser))
+      sensor = std::make_unique<BeamModel>(*c, map_);
+    else
+      throw std::logic_error("no laser model configured");
     lasers_.insert({scan->header.frame_id, std::move(sensor)});
   }
 

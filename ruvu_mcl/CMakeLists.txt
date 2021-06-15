@@ -11,6 +11,7 @@ set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_fil
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
 find_package(catkin REQUIRED COMPONENTS
+  dynamic_reconfigure
   rosbag
   roscpp
   ruvu_lint
@@ -27,28 +28,19 @@ find_package(GRAPHICSMAGICKCPP REQUIRED)
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
 
-## To declare and build dynamic reconfigure parameters within this
-## package, follow these steps:
-## * In the file package.xml:
-##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
-## * In this file (CMakeLists.txt):
-##   * add "dynamic_reconfigure" to
-##     find_package(catkin REQUIRED COMPONENTS ...)
-##   * uncomment the "generate_dynamic_reconfigure_options" section below
-##     and list every .cfg file to be processed
-
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-# generate_dynamic_reconfigure_options(
-#   cfg/DynReconf1.cfg
-#   cfg/DynReconf2.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/AMCL.cfg
+)
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 
 catkin_package(
-  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS
+    dynamic_reconfigure
+    roscpp
 )
 
 ###########
@@ -60,6 +52,7 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
+  src/config.cpp
   src/filter.cpp
   src/map.cpp
   src/motion_models/differential_motion_model.cpp
@@ -75,6 +68,7 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
 
 add_executable(node
@@ -122,6 +116,7 @@ install(TARGETS ${PROJECT_NAME}
 
 # set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use,-whitespace/braces,-runtime/references")
 set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
+set(ROSLINT_PYTHON_OPTS "--max-line-length=305")
 ruvu_lint_add_test()
 
 ## Manual tests

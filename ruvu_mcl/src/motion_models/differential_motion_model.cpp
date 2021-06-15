@@ -21,6 +21,12 @@ DifferentialMotionModel::DifferentialMotionModel(
   alpha4_ = alpha4;
 }
 
+DifferentialMotionModel::DifferentialMotionModel(
+  const DifferentialMotionModelConfig & config, const std::shared_ptr<Rng> & rng)
+: DifferentialMotionModel(config.alpha1, config.alpha2, config.alpha3, config.alpha4, rng)
+{
+}
+
 void DifferentialMotionModel::odometry_update(
   ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta)
 {
