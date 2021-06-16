@@ -1,0 +1,44 @@
+---
+include:
+  - project: ruvu/environment
+    file: ROS.gitlab-ci.yml
+
+variables:
+  WORKSPACE: project-mcl
+  PACKAGES: >
+    ruvu_mcl
+    turtlebot3_mcl
+
+melodic-build-on-schedule:
+  extends: .build-on-schedule
+  variables:
+    ROS_DISTRO: melodic
+melodic-build:
+  extends: .build
+  variables:
+    ROS_DISTRO: melodic
+melodic-test:
+  extends: .test
+  variables:
+    ROS_DISTRO: melodic
+melodic-release:
+  extends: .release
+  variables:
+    ROS_DISTRO: melodic
+
+noetic-build-on-schedule:
+  extends: .build-on-schedule
+  variables:
+    ROS_DISTRO: noetic
+noetic-build:
+  extends: .build
+  variables:
+    ROS_DISTRO: noetic
+noetic-test:
+  extends: .test
+  variables:
+    ROS_DISTRO: noetic
+noetic-release:
+  extends: .release
+  variables:
+    ROS_DISTRO: noetic
