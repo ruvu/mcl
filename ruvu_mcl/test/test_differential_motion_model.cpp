@@ -33,12 +33,12 @@ TEST(TestSuite, testRotateInPlace)
 TEST(TestSuite, testRotate)
 {
   tf2::Quaternion q;
-  q.setRPY(0, 0, M_PI_2);
-  tf2::Transform delta{q, tf2::Vector3{0, 1, 0}};
+  q.setRPY(0, 0, M_PI_4);
+  tf2::Transform delta{q, tf2::Vector3{1, 1, 0}};
 
   auto [delta_rot1, delta_trans, delta_rot2] = DifferentialMotionModel::calculate_deltas(delta);
-  ASSERT_NEAR(delta_rot1, M_PI_2, eps);
-  ASSERT_NEAR(delta_trans, 1, eps);
+  ASSERT_NEAR(delta_rot1, M_PI_4, eps);
+  ASSERT_NEAR(delta_trans, M_SQRT2, eps);
   ASSERT_NEAR(delta_rot2, 0, eps);
 }
 

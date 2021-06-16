@@ -25,9 +25,6 @@ void DifferentialMotionModel::odometry_update(
   ParticleFilter * pf, const tf2::Transform & pose, const tf2::Transform & delta)
 {
   auto [delta_rot1, delta_trans, delta_rot2] = calculate_deltas(delta);
-  ROS_DEBUG_NAMED(name, "delta_rot1: %f", delta_rot1);
-  ROS_DEBUG_NAMED(name, "delta_trans: %f", delta_trans);
-  ROS_DEBUG_NAMED(name, "delta_rot2: %f", delta_rot2);
 
   for (Particle & particle : pf->particles) {
     double delta_rot1_hat =
@@ -72,5 +69,9 @@ std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Trans
   }
 
   double delta_rot2 = tf2::getYaw(delta.getRotation()) - delta_rot1;
+
+  ROS_DEBUG_NAMED(name, "delta_rot1: %f", delta_rot1);
+  ROS_DEBUG_NAMED(name, "delta_trans: %f", delta_trans);
+  ROS_DEBUG_NAMED(name, "delta_rot2: %f", delta_rot2);
   return {delta_rot1, delta_trans, delta_rot2};
 }
