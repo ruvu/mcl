@@ -2,6 +2,8 @@
 
 #include "./low_variance.hpp"
 
+#include <memory>
+
 #include "../rng.hpp"
 #include "ros/console.h"
 

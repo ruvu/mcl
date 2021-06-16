@@ -2,6 +2,10 @@
 
 #include <gnuplot-iostream.h>
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "../src/particle_filter.hpp"
 #include "../src/resamplers/low_variance.hpp"
 #include "../src/rng.hpp"

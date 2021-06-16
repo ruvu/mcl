@@ -2,6 +2,10 @@
 
 #include <gnuplot-iostream.h>
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "../src/motion_models/differential_motion_model.hpp"
 #include "../src/rng.hpp"
 #include "ros/console.h"

@@ -2,6 +2,9 @@
 
 #include "./map.hpp"
 
+#include <limits>
+#include <utility>
+
 #include "nav_msgs/OccupancyGrid.h"
 #include "ros/console.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"

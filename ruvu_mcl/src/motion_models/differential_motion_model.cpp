@@ -2,6 +2,8 @@
 
 #include "./differential_motion_model.hpp"
 
+#include <memory>
+
 #include "../rng.hpp"
 #include "angles/angles.h"
 #include "ros/console.h"

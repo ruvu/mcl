@@ -2,6 +2,9 @@
 
 #include "./beam_model.hpp"
 
+#include <memory>
+#include <utility>
+
 #include "../map.hpp"
 #include "ros/node_handle.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -12,7 +15,6 @@ BeamModel::BeamModel(const Parameters & parameters, const std::shared_ptr<const 
 {
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
-  // TODO: implement
 }
 
 double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
@@ -38,12 +40,12 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
       double obs_range = data.ranges[i];
       auto q = data.get_angle(i);
 
-      if (std::isinf(obs_range)) continue;  // TODO: don't skip infs
+      if (std::isinf(obs_range)) continue;  // TODO(Ramon): don't skip infs
 
       double map_range = map_->calc_range(
         particle.pose * data.pose.getOrigin(),
         particle.pose * data.pose * tf2::quatRotate(q, {data.range_max, 0, 0}));
-      if (std::isinf(map_range)) continue;  // TODO: don't skip infs
+      if (std::isinf(map_range)) continue;  // TODO(Ramon): don't skip infs
 
       double pz = 0.0;
 
@@ -97,7 +99,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
     first = false;
   }
 
-  //Normalize weights
+  // Normalize weights
   for (auto & particle : pf->particles) {
     particle.weight /= total_weight;
   }

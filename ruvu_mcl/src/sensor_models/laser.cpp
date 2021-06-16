@@ -2,6 +2,8 @@
 
 #include "./laser.hpp"
 
+#include <limits>
+
 #include "sensor_msgs/LaserScan.h"
 
 LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose)
@@ -29,7 +31,8 @@ LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform &
       // This is an erroneous, invalid, or missing measurement.
       ranges.push_back(range);
     } else {
-      // The sensor reported these measurements as valid, but they are discarded per the limits defined by minimum_range and maximum_range.
+      // The sensor reported these measurements as valid, but they are discarded per the limits
+      // defined by minimum_range and maximum_range.
       ranges.push_back(std::numeric_limits<RangeType>::quiet_NaN());
     }
   }

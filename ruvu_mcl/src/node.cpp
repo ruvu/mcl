@@ -2,6 +2,9 @@
 
 #include "./node.hpp"
 
+#include <memory>
+#include <utility>
+
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
@@ -49,7 +52,6 @@ Node::~Node() = default;
 
 void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
-  // TODO: skip the first odom update
   auto odom_pose = get_odom_pose(scan->header.stamp);
   auto diff = last_odom_pose_.inverseTimes(odom_pose);
 
