@@ -94,6 +94,7 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
+  // Resample
   bool selective_resampling = true;
   int resample_interval = 2;
   if (selective_resampling) {
@@ -103,19 +104,28 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     if (!(++resample_count_ % resample_interval)) resampler_->resample(&filter_);
   }
 
+  // Find best particle
   Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
   for (const auto & particle : filter_.particles) {
     if (particle.weight > max_weight_particle.weight) {
       max_weight_particle = particle;
     }
   }
-  //TODO: Make output PoseWithCovarianceStamped
+
+  // Publish PoseWithCovarianceStamped
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
   pose_msg.header.stamp = ros::Time::now();
   pose_msg.header.frame_id = "map";
   filter_.get_2d_covariance_array(&pose_msg.pose.covariance[0]);
   tf2::toMsg(max_weight_particle.pose, pose_msg.pose.pose);
   pose_pub_.publish(std::move(pose_msg));
+
+  // Broadcast transform
+  geometry_msgs::TransformStamped transform_msg;
+  transform_msg.header = pose_msg.header;
+  transform_msg.child_frame_id = "odom";
+  transform_msg.transform = tf2::toMsg(max_weight_particle.pose * odom_pose.inverse());
+  transform_br_.sendTransform(std::move(transform_msg));
 }
 
 void Node::map_cb(const nav_msgs::OccupancyGridConstPtr & map)

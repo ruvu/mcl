@@ -7,6 +7,7 @@
 #include "ros/message_forward.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/message_filter.h"
+#include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 
 // forward declare
@@ -54,6 +55,7 @@ private:
   // data output
   ros::Publisher cloud_pub_;
   ros::Publisher pose_pub_;
+  tf2_ros::TransformBroadcaster transform_br_;
 
   // internals
   std::shared_ptr<Rng> rng_;
