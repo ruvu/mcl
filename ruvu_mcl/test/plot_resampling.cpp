@@ -16,18 +16,6 @@ auto convert_to_gnuplot(const ParticleFilter & pf)
   return points;
 }
 
-auto normalize_weights(ParticleFilter & pf)
-{
-  //TODO (Paul): Remove once normalize_weights() is part of partical_filter
-  double total_weight = 0;
-  for (const auto & particle : pf.particles) {
-    total_weight += particle.weight;
-  }
-  for (auto & particle : pf.particles) {
-    particle.weight /= total_weight;
-  }
-}
-
 int main()
 {
   Gnuplot gp;
@@ -46,7 +34,7 @@ int main()
     pf.particles.emplace_back(
       tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{x, y, 0}}, double{weight});
   }
-  normalize_weights(pf);
+  pf.normalize_weights();
 
   gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'before'\n";
 

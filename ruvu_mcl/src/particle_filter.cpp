@@ -2,6 +2,17 @@
 
 #include "./particle_filter.hpp"
 
+void ParticleFilter::normalize_weights()
+{
+  double total_weight = 0;
+  for (const auto & particle : particles) {
+    total_weight += particle.weight;
+  }
+  for (auto & particle : particles) {
+    particle.weight /= total_weight;
+  }
+}
+
 // https://people.eecs.berkeley.edu/~pabbeel/cs287-fa13/optreadings/GrisettiStachnissBurgard_gMapping_T-RO2006.pdf
 double ParticleFilter::calc_effective_sample_size()
 {

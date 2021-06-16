@@ -7,17 +7,6 @@
 
 constexpr auto name = "low_variance";
 
-auto normalize_weights(ParticleFilter * pf)
-{
-  double total_weight = 0;
-  for (const auto & particle : pf->particles) {
-    total_weight += particle.weight;
-  }
-  for (auto & particle : pf->particles) {
-    particle.weight /= total_weight;
-  }
-}
-
 LowVariance::LowVariance(std::shared_ptr<Rng> rng) : rng_(rng) {}
 
 bool LowVariance::resample(ParticleFilter * pf)
@@ -40,7 +29,7 @@ bool LowVariance::resample(ParticleFilter * pf)
     }
     pf_resampled.particles.emplace_back(pf->particles.at(i));
   }
-  normalize_weights(&pf_resampled);
+  pf_resampled.normalize_weights();
   *pf = pf_resampled;
   return true;
 }
