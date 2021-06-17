@@ -101,8 +101,10 @@ TEST(TestSuite, test_world2map_identity)
 // Run all the tests that were declared with TEST()
 int main(int argc, char ** argv)
 {
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+    ros::console::notifyLoggerLevelsChanged();
+  }
+
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "tester");
-  ros::NodeHandle nh;
   return RUN_ALL_TESTS();
 }
