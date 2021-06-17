@@ -23,5 +23,5 @@ public:
 
   void normalize_weights();
   double calc_effective_sample_size();
-  void get_2d_covariance_array(double * cov);
+  std::array<double, 36> get_2d_covariance_array();
 };

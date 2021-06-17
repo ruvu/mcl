@@ -118,8 +118,12 @@ void Node::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
   pose_msg.header.stamp = ros::Time::now();
   pose_msg.header.frame_id = "map";
-  filter_.get_2d_covariance_array(&pose_msg.pose.covariance[0]);
+
   tf2::toMsg(max_weight_particle.pose, pose_msg.pose.pose);
+  auto cov = filter_.get_2d_covariance_array();
+  assert(cov.size() == pose_msg.pose.covariance.size());
+  std::copy(cov.begin(), cov.end(), pose_msg.pose.covariance.begin());
+
   pose_pub_.publish(std::move(pose_msg));
 
   // Broadcast transform
