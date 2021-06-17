@@ -91,7 +91,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
         color.r = 1 - pz;
         marker.colors.push_back(color);
         marker.colors.push_back(std::move(color));
-      } 
+      }
     }
 
     particle.weight *= p;
