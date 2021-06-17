@@ -14,6 +14,7 @@ Copyright 2021 RUVU Robotics B.V.
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>libgnuplot-iostream-dev</depend>
   <depend>roscpp</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
