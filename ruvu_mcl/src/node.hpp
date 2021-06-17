@@ -2,22 +2,15 @@
 
 #pragma once
 
-#include "./particle_filter.hpp"
+#include "./filter.hpp"
 #include "message_filters/subscriber.h"
 #include "ros/message_forward.h"
-#include "tf2/LinearMath/Transform.h"
+#include "ros/node_handle.h"
 #include "tf2_ros/message_filter.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 
 // forward declare
-class ParticleFilter;
-class MotionModel;
-struct Map;
-class Laser;
-class Resampler;
-class Rng;
-
 namespace geometry_msgs
 {
 ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)
@@ -41,29 +34,15 @@ private:
   void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
-  tf2::Transform get_odom_pose(const ros::Time & time, ros::Duration timeout = ros::Duration(0.0));
-  void publish_particle_cloud(const ros::Time & time);
 
   // data input
-  tf2_ros::Buffer tf_buffer;
-  tf2_ros::TransformListener tf_listener{tf_buffer};
+  std::shared_ptr<tf2_ros::Buffer> buffer_;
+  tf2_ros::TransformListener tf_listener_;
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
   ros::Subscriber map_sub_;
   ros::Subscriber initial_pose_sub_;
 
-  // data output
-  ros::Publisher cloud_pub_;
-  ros::Publisher pose_pub_;
-  tf2_ros::TransformBroadcaster transform_br_;
-
   // internals
-  std::shared_ptr<Rng> rng_;
-  tf2::Transform last_odom_pose_ = {};
-  ParticleFilter filter_;
-  std::unique_ptr<MotionModel> model_;
-  std::shared_ptr<Map> map_ = nullptr;
-  std::map<std::string, std::unique_ptr<Laser>> lasers_;
-  std::unique_ptr<Resampler> resampler_;
-  int resample_count_;
+  Filter filter_;
 };

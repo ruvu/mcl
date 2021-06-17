@@ -11,6 +11,7 @@ set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_fil
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
 find_package(catkin REQUIRED COMPONENTS
+  rosbag
   roscpp
   ruvu_lint
   tf2_geometry_msgs
@@ -59,6 +60,7 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
+  src/filter.cpp
   src/map.cpp
   src/motion_models/differential_motion_model.cpp
   src/motion_models/motion_model.cpp
@@ -83,11 +85,19 @@ target_link_libraries(node
 )
 target_compile_warnings(node ${EXTRA_FLAGS})
 
+add_executable(offline
+  src/offline.cpp
+)
+target_link_libraries(offline
+  ${PROJECT_NAME}
+)
+target_compile_warnings(offline ${EXTRA_FLAGS})
+
 #############
 ## Install ##
 #############
 
-install(TARGETS node
+install(TARGETS node offline
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
