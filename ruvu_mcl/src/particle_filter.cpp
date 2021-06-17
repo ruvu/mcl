@@ -23,8 +23,9 @@ double ParticleFilter::calc_effective_sample_size()
   return 1. / sq_weight;
 }
 
-void ParticleFilter::get_2d_covariance_array(double * cov)
+std::array<double, 36> ParticleFilter::get_2d_covariance_array()
 {
+  std::array<double, 36> cov;
   double mean[4];
   for (const auto & particle : particles) {
     mean[0] += particle.weight * particle.pose.getOrigin().getX();
@@ -50,4 +51,5 @@ void ParticleFilter::get_2d_covariance_array(double * cov)
 
   // Covariance in angular component
   cov[35] = -2 * log(sqrt(mean[2] * mean[2] + mean[3] * mean[3]));
+  return cov;
 }
