@@ -43,7 +43,8 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
     tf2::Quaternion q;
     q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
     tf2::Vector3 p{
-      rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
+      rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2),
+      rng_->sample_normal_distribution(0, 0.2)};
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / n);
   }
 }
