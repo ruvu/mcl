@@ -78,7 +78,6 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   if (
     diff.getOrigin().length() < config_.update_min_d &&
     fabs(tf2::getYaw(diff.getRotation())) < config_.update_min_a) {
-    publish_particle_cloud(scan->header.stamp);
     return;
   }
   ROS_DEBUG_NAMED(
@@ -86,7 +85,6 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     tf2::getYaw(diff.getRotation()));
 
   model_->odometry_update(&filter_, odom_pose, diff);
-  publish_particle_cloud(scan->header.stamp);
 
   last_odom_pose_ = odom_pose;
 
@@ -115,6 +113,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
+
+  publish_particle_cloud(scan->header.stamp);
 
   // Resample
   if (config_.selective_resampling) {
@@ -178,7 +178,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   };
 
   filter_.particles.clear();
-  for (int i = 0; i < config_.max_particles; ++i) {
+  for (size_t i = 0; i < config_.max_particles; ++i) {
     tf2::Vector3 p{dx(), dy(), 0};
     tf2::Quaternion q;
     q.setRPY(0, 0, dt());
@@ -215,11 +215,17 @@ void Filter::publish_particle_cloud(const ros::Time & time)
   m.action = visualization_msgs::Marker::MODIFY;
   m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
   m.scale.x = width;
-  m.color.a = 1;
-  m.color.b = 1;
 
   tf2::Vector3 p1{length / 2, 0, 0};
+  double max_weight = 0;
+  for (const auto & p : filter_.particles) max_weight = std::max(max_weight, p.weight);
+
   for (const auto & particle : filter_.particles) {
+    std_msgs::ColorRGBA c;
+    c.a = particle.weight / max_weight;
+    c.b = 1;
+    m.colors.push_back(c);
+    m.colors.push_back(std::move(c));
     {
       geometry_msgs::Point tmp;
       tf2::toMsg(particle.pose * p1, tmp);
