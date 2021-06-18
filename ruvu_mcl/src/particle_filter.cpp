@@ -26,7 +26,7 @@ double ParticleFilter::calc_effective_sample_size()
 std::array<double, 36> ParticleFilter::get_2d_covariance_array()
 {
   std::array<double, 36> cov;
-  double mean[4];
+  double mean[4] = {0};
   for (const auto & particle : particles) {
     mean[0] += particle.weight * particle.pose.getOrigin().getX();
     mean[1] += particle.weight * particle.pose.getOrigin().getY();
