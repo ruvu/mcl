@@ -33,26 +33,31 @@ Filter::Filter(
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0)
 {
-  for (int i = 0; i < config_.max_particles; ++i) {
-    tf2::Quaternion q;
-    q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
-    tf2::Vector3 p{
-      rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2),
-      rng_->sample_normal_distribution(0, 0.2)};
-    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
-  }
 }
 
 void Filter::configure(const Config & config)
 {
   ROS_INFO_NAMED(name, "configure call");
-  config_ = config;
+
   lasers_.clear();  // they will configure themself on next scan_cb
 
-  if (auto c = std::get_if<DifferentialMotionModelConfig>(&config_.model))
+  if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
   else
     throw std::logic_error("no motion model configured");
+
+  if (config.max_particles != filter_.particles.size()) {
+    ROS_INFO_NAMED(name, "spawning %zu particles", config.max_particles);
+    for (size_t i = 0; i < config.max_particles; ++i) {
+      tf2::Quaternion q;
+      q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
+      tf2::Vector3 p{
+        rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
+      filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config.max_particles);
+    }
+  }
+
+  config_ = config;
 }
 
 Filter::~Filter() = default;
