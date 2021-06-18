@@ -13,7 +13,6 @@
 BeamModel::BeamModel(const BeamModelConfig & config, const std::shared_ptr<const Map> & map)
 : parameters_(config), map_(map)
 {
-  ROS_INFO("config: %f", config.z_hit);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
 }
@@ -45,7 +44,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
       double map_range = map_->calc_range(
         particle.pose * data.pose.getOrigin(),
-        particle.pose * data.pose * tf2::quatRotate(q, {data.range_max, 0, 0}));
+        particle.pose * (data.pose * tf2::quatRotate(q, {data.range_max, 0, 0})));
       if (std::isinf(map_range)) continue;  // TODO(Ramon): don't skip infs
 
       double pz = 0.0;
