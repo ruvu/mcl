@@ -24,7 +24,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
   // https://github.com/ros-planning/navigation2/blob/f23d915608a94039ff91008014730971a8795c15/nav2_amcl/src/sensors/laser/beam_model.cpp
 
   visualization_msgs::Marker marker;
-  marker.header.frame_id = "map";
+  marker.header.frame_id = parameters_.global_frame_id;
   marker.header.stamp = ros::Time::now();
   marker.type = visualization_msgs::Marker::LINE_LIST;
   marker.action = visualization_msgs::Marker::MODIFY;
@@ -80,6 +80,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
       p += pz * pz * pz;
 
       if (first) {
+        // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
         tf2::toMsg(particle.pose * data.pose.getOrigin(), p1);
         tf2::toMsg(

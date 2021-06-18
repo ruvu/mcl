@@ -15,6 +15,7 @@ struct BeamModelConfig
   double sigma_hit;
   double lambda_short;
   size_t max_beams;
+  std::string global_frame_id;  // for visualization
 };
 
 struct DifferentialMotionModelConfig
@@ -30,6 +31,15 @@ struct Config
   Config(const ruvu_mcl::AMCLConfig & config);
   Config() = default;
 
+  double update_min_d;
+  double update_min_a;
+  int resample_interval;
+  bool selective_resampling;
+
   std::variant<BeamModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;
+
+  std::string odom_frame_id;
+  std::string base_frame_id;
+  std::string global_frame_id;
 };

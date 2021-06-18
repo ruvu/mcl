@@ -4,6 +4,11 @@
 
 Config::Config(const ruvu_mcl::AMCLConfig & config)
 {
+  update_min_d = config.update_min_d;
+  update_min_a = config.update_min_a;
+  resample_interval = config.resample_interval;
+  selective_resampling = config.selective_resampling;
+
   if (config.odom_model_type == ruvu_mcl::AMCL_diff_const) {
     DifferentialMotionModelConfig m;
     m.alpha1 = config.odom_alpha1;
@@ -26,10 +31,15 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     c.sigma_hit = config.laser_sigma_hit;
     c.lambda_short = config.laser_lambda_short;
     c.max_beams = config.laser_max_beams;
+    c.global_frame_id = config.global_frame_id;
     laser = c;
   } else {
     std::ostringstream ss;
     ss << "sensor model " << config.laser_model_type << " is not yet implemented";
     throw std::runtime_error(ss.str());
   }
+
+  odom_frame_id = config.odom_frame_id;
+  base_frame_id = config.base_frame_id;
+  global_frame_id = config.global_frame_id;
 }

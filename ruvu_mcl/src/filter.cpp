@@ -71,11 +71,9 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   auto odom_pose = get_odom_pose(scan->header.stamp);
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
-  double update_min_d = 0.25;
-  double update_min_a = 0.2;
   if (
-    diff.getOrigin().length() < update_min_d &&
-    fabs(tf2::getYaw(diff.getRotation())) < update_min_a) {
+    diff.getOrigin().length() < config_.update_min_d &&
+    fabs(tf2::getYaw(diff.getRotation())) < config_.update_min_a) {
     publish_particle_cloud(scan->header.stamp);
     return;
   }
@@ -106,7 +104,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   tf2::Transform tf;
   {
-    auto tfs = buffer_->lookupTransform("base_scan", scan->header.frame_id, scan->header.stamp);
+    auto tfs =
+      buffer_->lookupTransform(config_.base_frame_id, scan->header.frame_id, scan->header.stamp);
     tf2::fromMsg(tfs.transform, tf);
   }
 
@@ -114,13 +113,11 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
   // Resample
-  bool selective_resampling = true;
-  int resample_interval = 2;
-  if (selective_resampling) {
+  if (config_.selective_resampling) {
     if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)
       resampler_->resample(&filter_);
   } else {
-    if (!(++resample_count_ % resample_interval)) resampler_->resample(&filter_);
+    if (!(++resample_count_ % config_.resample_interval)) resampler_->resample(&filter_);
   }
 
   // Find best particle
@@ -134,7 +131,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   // Publish PoseWithCovarianceStamped
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
   pose_msg.header.stamp = ros::Time::now();
-  pose_msg.header.frame_id = "map";
+  pose_msg.header.frame_id = config_.global_frame_id;
 
   tf2::toMsg(max_weight_particle.pose, pose_msg.pose.pose);
   auto cov = filter_.get_2d_covariance_array();
@@ -146,7 +143,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   // Broadcast transform
   geometry_msgs::TransformStamped transform_msg;
   transform_msg.header = pose_msg.header;
-  transform_msg.child_frame_id = "odom";
+  transform_msg.child_frame_id = config_.odom_frame_id;
   transform_msg.transform = tf2::toMsg(max_weight_particle.pose * odom_pose.inverse());
   transform_br_.sendTransform(std::move(transform_msg));
 }
@@ -189,16 +186,14 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
 {
   ROS_DEBUG_NAMED(name, "get_odom_pose at time=%f", time.toSec());
-  geometry_msgs::PoseStamped odom_pose;
-  odom_pose.header.stamp = time;
-  odom_pose.header.frame_id = "base_scan";
-  tf2::toMsg(tf2::Transform::getIdentity(), odom_pose.pose);
+  geometry_msgs::Pose odom_pose;
+  tf2::toMsg(tf2::Transform::getIdentity(), odom_pose);
 
   // don't use .transform() because this could run offline without a listener thread
-  auto tf = buffer_->lookupTransform("odom", "base_scan", time);
+  auto tf = buffer_->lookupTransform(config_.odom_frame_id, config_.base_frame_id, time);
   tf2::doTransform(odom_pose, odom_pose, tf);
 
-  tf2::Stamped<tf2::Transform> odom_pose_tf;
+  tf2::Transform odom_pose_tf;
   tf2::convert(odom_pose, odom_pose_tf);
   return odom_pose_tf;
 }
@@ -210,7 +205,7 @@ void Filter::publish_particle_cloud(const ros::Time & time)
 
   visualization_msgs::Marker m;
   m.header.stamp = time;
-  m.header.frame_id = "map";
+  m.header.frame_id = config_.global_frame_id;
   m.ns = "particles";
   m.id = 0;
   m.type = visualization_msgs::Marker::LINE_LIST;
