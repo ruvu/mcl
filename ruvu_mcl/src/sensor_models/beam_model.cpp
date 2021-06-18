@@ -38,13 +38,15 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
     for (std::size_t i = 0; i < data.ranges.size(); i += step) {
       double obs_range = data.ranges[i];
-      auto q = data.get_angle(i);
+      auto a = data.get_angle(i);
 
       if (std::isinf(obs_range)) continue;  // TODO(Ramon): don't skip infs
 
-      double map_range = map_->calc_range(
-        particle.pose * data.pose.getOrigin(),
-        particle.pose * (data.pose * tf2::quatRotate(q, {data.range_max, 0, 0})));
+      auto point_laser = particle.pose * data.pose.getOrigin();
+      auto point_hit =
+        particle.pose *
+        (data.pose * tf2::Vector3{data.range_max * tf2Cos(a), data.range_max * tf2Sin(a), 0});
+      double map_range = map_->calc_range(point_laser, point_hit);
       if (std::isinf(map_range)) continue;  // TODO(Ramon): don't skip infs
 
       double pz = 0.0;
@@ -81,9 +83,8 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
       if (first) {
         // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
-        tf2::toMsg(particle.pose * data.pose.getOrigin(), p1);
-        tf2::toMsg(
-          particle.pose * data.pose * tf2::quatRotate(q, tf2::Vector3{map_range, 0, 0}), p2);
+        tf2::toMsg(point_laser);
+        tf2::toMsg(point_hit);
         marker.points.push_back(std::move(p1));
         marker.points.push_back(std::move(p2));
         std_msgs::ColorRGBA color;

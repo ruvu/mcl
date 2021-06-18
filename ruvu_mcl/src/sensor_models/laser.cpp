@@ -38,18 +38,6 @@ LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform &
   }
 }
 
-tf2::Quaternion LaserData::get_angle(std::size_t i) const
-{
-  auto angle = angle_min + i * angle_increment;
-  tf2::Quaternion q;
-  q.setRPY(0, 0, angle);
-  return q;
-}
-
-tf2::Vector3 LaserData::get_range(std::size_t i) const
-{
-  tf2::Vector3 v{ranges[i], 0, 0};
-  return tf2::quatRotate(get_angle(i), v);
-}
+double LaserData::get_angle(std::size_t i) const { return angle_min + i * angle_increment; }
 
 Laser::~Laser() = default;
