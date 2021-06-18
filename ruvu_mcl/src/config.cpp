@@ -4,6 +4,7 @@
 
 Config::Config(const ruvu_mcl::AMCLConfig & config)
 {
+  max_particles = config.max_particles;
   update_min_d = config.update_min_d;
   update_min_a = config.update_min_a;
   resample_interval = config.resample_interval;

@@ -33,14 +33,13 @@ Filter::Filter(
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0)
 {
-  int n = 10;
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < config_.max_particles; ++i) {
     tf2::Quaternion q;
     q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
     tf2::Vector3 p{
       rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2),
       rng_->sample_normal_distribution(0, 0.2)};
-    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / n);
+    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
 }
 
@@ -173,13 +172,12 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
       tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
   };
 
-  int n = 10;
   filter_.particles.clear();
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < config_.max_particles; ++i) {
     tf2::Vector3 p{dx(), dy(), 0};
     tf2::Quaternion q;
     q.setRPY(0, 0, dt());
-    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / n);
+    filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
 }
 

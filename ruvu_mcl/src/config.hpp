@@ -31,6 +31,7 @@ struct Config
   Config(const ruvu_mcl::AMCLConfig & config);
   Config() = default;
 
+  int max_particles;
   double update_min_d;
   double update_min_a;
   int resample_interval;
