@@ -12,10 +12,14 @@
 #include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
+#include "./split_and_merge.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "map"
+#include "ruvu_mcl/AMCLConfig.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
+#include "vector"
 #include "visualization_msgs/Marker.h"
 
 constexpr auto name = "filter";
@@ -34,7 +38,8 @@ Filter::Filter(
   map_(nullptr),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
-  resample_count_(0)
+  resample_count_(0),
+  adaptive_(nullptr)
 {
 }
 
@@ -49,6 +54,9 @@ void Filter::configure(const Config & config)
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
   else
     throw std::logic_error("no motion model configured");
+
+  if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge)
+    adaptive_ = std::make_unique<SplitAndMerge>(config);
 
   if (filter_.particles.size() == 0) {
     auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -98,6 +106,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   last_odom_pose_ = odom_pose;
 
+  if (config_.adaptive_type == ruvu_mcl::AMCL_split_and_merge) adaptive_->merge_particles(&filter_);
+
   if (!map_) {
     ROS_WARN_NAMED(name, "no map yet received, skipping sensor model");
     return;
@@ -127,6 +137,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
+
+  if (config_.adaptive_type == ruvu_mcl::AMCL_split_and_merge) adaptive_->split_particles(&filter_);
 
   // Resample
   if (config_.selective_resampling) {

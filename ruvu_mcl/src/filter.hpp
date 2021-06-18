@@ -6,6 +6,7 @@
 
 #include "./config.hpp"
 #include "./particle_filter.hpp"
+#include "./split_and_merge.hpp"
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 #include "tf2_ros/transform_broadcaster.h"
@@ -16,6 +17,7 @@ class MotionModel;
 class ParticleFilter;
 class Resampler;
 class Rng;
+class SplitAndMerge;
 namespace ros
 {
 class NodeHandle;
@@ -83,4 +85,5 @@ private:
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;
+  std::unique_ptr<SplitAndMerge> adaptive_;
 };

@@ -71,6 +71,7 @@ add_library(${PROJECT_NAME}
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
   src/sensor_models/likelihood_field_model.cpp
+  src/split_and_merge.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -192,4 +193,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_particle_filter test/test_particle_filter.cpp)
   target_link_libraries(test_particle_filter ${PROJECT_NAME})
+
+  catkin_add_gtest(test_split_and_merge test/test_split_and_merge.cpp)
+  target_link_libraries(test_split_and_merge ${PROJECT_NAME})
 endif()

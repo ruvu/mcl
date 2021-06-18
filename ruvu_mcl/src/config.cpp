@@ -15,6 +15,7 @@ void normalize(std::initializer_list<double *> zs)
 
 Config::Config(const ruvu_mcl::AMCLConfig & config)
 {
+  min_particles = config.min_particles;
   max_particles = config.max_particles;
   update_min_d = config.update_min_d;
   update_min_a = config.update_min_a;
@@ -68,6 +69,15 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     std::ostringstream ss;
     ss << "sensor model " << config.laser_model_type << " is not yet implemented";
     throw std::runtime_error(ss.str());
+  }
+
+  adaptive_type = config.adaptive_type;
+  if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge) {
+    SplitAndMergeConfig c;
+    c.xy_grid_size = config.xy_grid_size;
+    c.theta_grid_size = config.theta_grid_size;
+    c.split_weight = config.split_weight;
+    adaptive = c;
   }
 
   odom_frame_id = config.odom_frame_id;

@@ -43,22 +43,32 @@ struct DifferentialMotionModelConfig
   double alpha4;
 };
 
+struct SplitAndMergeConfig
+{
+  double xy_grid_size;
+  double theta_grid_size;
+  double split_weight;
+};
+
 struct Config
 {
   Config(const ruvu_mcl::AMCLConfig & config);
   Config() = default;
 
+  size_t min_particles;
   size_t max_particles;
   double update_min_d;
   double update_min_a;
   int resample_interval;
   bool selective_resampling;
+  std::string adaptive_type;
   double transform_tolerance;
   tf2::Transform initial_pose;
   std::array<double, 36> initial_cov;
 
   std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;
+  std::variant<SplitAndMergeConfig> adaptive;
 
   std::string odom_frame_id;
   std::string base_frame_id;
