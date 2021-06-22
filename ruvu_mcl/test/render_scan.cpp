@@ -9,7 +9,7 @@
 #include "ros/topic.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
-Magick::Image cells_to_image(const Map::CellsType cells)
+Magick::Image cells_to_image(const OccupancyMap::CellsType cells)
 {
   Magick::Image img;
   img.size(Magick::Geometry{
@@ -37,7 +37,7 @@ int main(int argc, char ** argv)
   ros::init(argc, argv, "render_scan");
   ros::NodeHandle nh;
 
-  Map map{*ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("map")};
+  OccupancyMap map{*ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("map")};
 
   auto range = map.calc_range(10, 10, 100, 100);
   ROS_INFO_STREAM("range: " << range);

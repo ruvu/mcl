@@ -18,6 +18,15 @@ struct BeamModelConfig
   std::string global_frame_id;  // for visualization
 };
 
+struct LikelihoodFieldModelConfig
+{
+  double z_hit;
+  double z_rand;
+  double sigma_hit;
+  size_t max_beams;
+  std::string global_frame_id;  // for visualization
+};
+
 struct DifferentialMotionModelConfig
 {
   double alpha1;
@@ -37,7 +46,7 @@ struct Config
   int resample_interval;
   bool selective_resampling;
 
-  std::variant<BeamModelConfig> laser;
+  std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;
 
   std::string odom_frame_id;

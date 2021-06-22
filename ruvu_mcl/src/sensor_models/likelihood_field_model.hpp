@@ -9,15 +9,16 @@
 #include "ros/publisher.h"
 
 // forward declare
-struct OccupancyMap;
+struct DistanceMap;
 
-class BeamModel : public Laser
+class LikelihoodFieldModel : public Laser
 {
 public:
   /*
-   * @brief BeamModel constructor
+   * @brief LikelihoodFieldModel constructor
    */
-  BeamModel(const BeamModelConfig & config, const std::shared_ptr<const OccupancyMap> & map);
+  LikelihoodFieldModel(
+    const LikelihoodFieldModelConfig & config, const std::shared_ptr<const DistanceMap> & map);
 
   /*
    * @brief Run a sensor update on laser
@@ -28,7 +29,7 @@ public:
   double sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
-  const BeamModelConfig parameters_;
-  const std::shared_ptr<const OccupancyMap> map_;
+  const LikelihoodFieldModelConfig config_;
+  const std::shared_ptr<const DistanceMap> map_;
   ros::Publisher debug_pub_;
 };

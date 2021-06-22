@@ -14,7 +14,6 @@
 // forward declare
 class ParticleFilter;
 class MotionModel;
-struct Map;
 class Laser;
 class Resampler;
 class Rng;
@@ -64,7 +63,7 @@ private:
   std::optional<tf2::Transform> last_odom_pose_;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
-  std::shared_ptr<Map> map_ = nullptr;
+  nav_msgs::OccupancyGridConstPtr map_;
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;

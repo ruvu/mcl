@@ -6,7 +6,7 @@ project(ruvu_mcl)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_filter.h
+set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept -Wstrict-overflow=2) # required for message_filter.h
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
@@ -64,6 +64,7 @@ add_library(${PROJECT_NAME}
   src/rng.cpp
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
+  src/sensor_models/likelihood_field_model.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -166,6 +167,9 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
   target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
 
-  catkin_add_gtest(test_map test/test_map.cpp)
-  target_link_libraries(test_map ${PROJECT_NAME})
+  catkin_add_gtest(test_occupancy_map test/test_occupancy_map.cpp)
+  target_link_libraries(test_occupancy_map ${PROJECT_NAME})
+
+  catkin_add_gtest(test_distance_map test/test_distance_map.cpp)
+  target_link_libraries(test_distance_map ${PROJECT_NAME})
 endif()

@@ -34,6 +34,14 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     c.max_beams = config.laser_max_beams;
     c.global_frame_id = config.global_frame_id;
     laser = c;
+  } else if (config.laser_model_type == ruvu_mcl::AMCL_likelihood_field_const) {
+    LikelihoodFieldModelConfig c;
+    c.z_hit = config.laser_z_hit;
+    c.z_rand = config.laser_z_rand;
+    c.sigma_hit = config.laser_sigma_hit;
+    c.max_beams = config.laser_max_beams;
+    c.global_frame_id = config.global_frame_id;
+    laser = c;
   } else {
     std::ostringstream ss;
     ss << "sensor model " << config.laser_model_type << " is not yet implemented";
