@@ -23,6 +23,10 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
 
   if (msg.info.width * msg.info.height != msg.data.size())
     throw std::runtime_error("msg.info.width * msg.info.height != msg.data.size()");
+
+  ROS_INFO_NAMED(
+    name, "Converted a %d X %d map @ %.3f m/pix (%f MB)", msg.info.width, msg.info.height,
+    msg.info.resolution, msg.data.size() / 1024.0 / 1024.0);
 }
 
 Map::operator nav_msgs::OccupancyGrid()
