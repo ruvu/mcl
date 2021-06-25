@@ -14,6 +14,7 @@ BeamModel::BeamModel(
   const BeamModelConfig & config, const std::shared_ptr<const OccupancyMap> & map)
 : parameters_(config), map_(map)
 {
+  assert(parameters_.z_hit + parameters_.z_short + parameters_.z_max + parameters_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
 }

@@ -15,6 +15,7 @@ LikelihoodFieldModel::LikelihoodFieldModel(
   const LikelihoodFieldModelConfig & config, const std::shared_ptr<const DistanceMap> & map)
 : config_(config), map_(map)
 {
+  assert(config_.z_hit + config_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("likelihood_field_Model", 1);
 }
