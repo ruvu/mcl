@@ -115,8 +115,16 @@ install(TARGETS ${PROJECT_NAME}
 
 ## Linting
 
-# set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use,-whitespace/braces,-runtime/references")
-set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
+# 0.12.0
+if(CATKIN_ENABLE_TESTING)
+  find_package(roslint REQUIRED)
+  if (roslint_VERSION VERSION_GREATER 0.12.0)
+    set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
+  else()
+    set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces,-build/c++11")
+  endif()
+endif()
+
 set(ROSLINT_PYTHON_OPTS "--max-line-length=305")
 ruvu_lint_add_test()
 
