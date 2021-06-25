@@ -6,7 +6,7 @@ project(ruvu_mcl)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept) # required for message_filter.h
+set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept -Wstrict-overflow=2) # required for message_filter.h
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
 
@@ -64,6 +64,7 @@ add_library(${PROJECT_NAME}
   src/rng.cpp
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
+  src/sensor_models/likelihood_field_model.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
@@ -114,8 +115,16 @@ install(TARGETS ${PROJECT_NAME}
 
 ## Linting
 
-# set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use,-whitespace/braces,-runtime/references")
-set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
+# 0.12.0
+if(CATKIN_ENABLE_TESTING)
+  find_package(roslint REQUIRED)
+  if (roslint_VERSION VERSION_GREATER 0.12.0)
+    set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
+  else()
+    set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces,-build/c++11")
+  endif()
+endif()
+
 set(ROSLINT_PYTHON_OPTS "--max-line-length=305")
 ruvu_lint_add_test()
 
@@ -166,6 +175,9 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
   target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
 
-  catkin_add_gtest(test_map test/test_map.cpp)
-  target_link_libraries(test_map ${PROJECT_NAME})
+  catkin_add_gtest(test_occupancy_map test/test_occupancy_map.cpp)
+  target_link_libraries(test_occupancy_map ${PROJECT_NAME})
+
+  catkin_add_gtest(test_distance_map test/test_distance_map.cpp)
+  target_link_libraries(test_distance_map ${PROJECT_NAME})
 endif()

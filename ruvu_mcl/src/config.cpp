@@ -2,6 +2,15 @@
 
 #include "./config.hpp"
 
+#include <numeric>
+
+void normalize(std::initializer_list<double *> zs)
+{
+  double z_total =
+    std::accumulate(zs.begin(), zs.end(), 0.0, [](double acc, double * z) { return acc + *z; });
+  for (auto & z : zs) *z /= z_total;
+}
+
 Config::Config(const ruvu_mcl::AMCLConfig & config)
 {
   max_particles = config.max_particles;
@@ -33,6 +42,16 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     c.lambda_short = config.laser_lambda_short;
     c.max_beams = config.laser_max_beams;
     c.global_frame_id = config.global_frame_id;
+    normalize({&c.z_hit, &c.z_short, &c.z_max, &c.z_rand});
+    laser = c;
+  } else if (config.laser_model_type == ruvu_mcl::AMCL_likelihood_field_const) {
+    LikelihoodFieldModelConfig c;
+    c.z_hit = config.laser_z_hit;
+    c.z_rand = config.laser_z_rand;
+    c.sigma_hit = config.laser_sigma_hit;
+    c.max_beams = config.laser_max_beams;
+    c.global_frame_id = config.global_frame_id;
+    normalize({&c.z_hit, &c.z_rand});
     laser = c;
   } else {
     std::ostringstream ss;

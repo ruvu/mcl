@@ -4,8 +4,7 @@
 
 #include "../src/map.hpp"
 #include "nav_msgs/OccupancyGrid.h"
-#include "ros/init.h"
-#include "ros/node_handle.h"
+#include "ros/console.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 TEST(TestSuite, testCells)
@@ -23,7 +22,7 @@ TEST(TestSuite, testCells)
    *   2 5
    */
 
-  Map map{msg};
+  OccupancyMap map{msg};
 
   std::cout << "In memory storage:\n";
   for (int i = 0; i < map.cells.size(); i++)
@@ -50,7 +49,7 @@ TEST(TestSuite, test_is_valid)
   msg.info.height = 2;
   msg.data.resize(msg.info.width * msg.info.height);
 
-  Map map{msg};
+  OccupancyMap map{msg};
   ASSERT_TRUE(map.is_valid(0, 0));
   ASSERT_TRUE(map.is_valid(2, 1));  // the corner
   ASSERT_FALSE(map.is_valid(3, 1));
@@ -66,7 +65,7 @@ TEST(TestSuite, test_world2map_offset)
   tf2::Quaternion q;
   q.setRPY(0, 0, M_PI_2);
   tf2::toMsg(tf2::Transform{q, tf2::Vector3{10, 10, 0}}, msg.info.origin);
-  Map map{msg};
+  OccupancyMap map{msg};
   {
     auto [i, j] = map.world2map({10, 10, 0});
     ASSERT_EQ(i, 0);
@@ -85,7 +84,7 @@ TEST(TestSuite, test_world2map_identity)
   msg.info.resolution = 0.1;  // m/pixel
   tf2::toMsg(tf2::Transform::getIdentity(), msg.info.origin);
 
-  Map map{msg};
+  OccupancyMap map{msg};
   {
     auto [i, j] = map.world2map({0, 0, 0});
     ASSERT_EQ(i, 0);

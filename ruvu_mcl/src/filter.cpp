@@ -11,6 +11,7 @@
 #include "./resamplers/low_variance.hpp"
 #include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
+#include "./sensor_models/likelihood_field_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf2/utils.h"
@@ -29,6 +30,7 @@ Filter::Filter(
   last_odom_pose_(),
   filter_(),
   model_(nullptr),
+  map_(nullptr),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0)
@@ -96,9 +98,13 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     ROS_INFO_NAMED(
       name, "new laser '%s' found, adding a sensor model", scan->header.frame_id.c_str());
 
+    // TODO(Ramon): A copy is made of the map for each sensor, but hey should all use the same
+    // shared pointer
     std::unique_ptr<Laser> sensor;
     if (auto c = std::get_if<BeamModelConfig>(&config_.laser))
-      sensor = std::make_unique<BeamModel>(*c, map_);
+      sensor = std::make_unique<BeamModel>(*c, std::make_shared<OccupancyMap>(*map_));
+    else if (auto c = std::get_if<LikelihoodFieldModelConfig>(&config_.laser))
+      sensor = std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map_));
     else
       throw std::logic_error("no laser model configured");
     lasers_.insert({scan->header.frame_id, std::move(sensor)});
@@ -155,10 +161,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
   ROS_INFO_NAMED(name, "map received");
-  if (!map_)
-    map_ = std::make_unique<Map>(*map);
-  else
-    *map_ = Map{*map};
+  map_ = map;
 }
 
 void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)

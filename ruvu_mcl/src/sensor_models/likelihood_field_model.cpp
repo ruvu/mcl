@@ -1,7 +1,8 @@
 // Copyright 2021 RUVU Robotics B.V.
 
-#include "./beam_model.hpp"
+#include "./likelihood_field_model.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -10,22 +11,21 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
-BeamModel::BeamModel(
-  const BeamModelConfig & config, const std::shared_ptr<const OccupancyMap> & map)
-: parameters_(config), map_(map)
+LikelihoodFieldModel::LikelihoodFieldModel(
+  const LikelihoodFieldModelConfig & config, const std::shared_ptr<const DistanceMap> & map)
+: config_(config), map_(map)
 {
-  assert(parameters_.z_hit + parameters_.z_short + parameters_.z_max + parameters_.z_rand <= 1.0);
+  assert(config_.z_hit + config_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
-  debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
+  debug_pub_ = nh.advertise<visualization_msgs::Marker>("likelihood_field_Model", 1);
 }
 
-double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
+double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
-  // inspired by:
-  // https://github.com/ros-planning/navigation2/blob/f23d915608a94039ff91008014730971a8795c15/nav2_amcl/src/sensors/laser/beam_model.cpp
+  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
 
   visualization_msgs::Marker marker;
-  marker.header.frame_id = parameters_.global_frame_id;
+  marker.header.frame_id = config_.global_frame_id;
   marker.header.stamp = ros::Time::now();
   marker.type = visualization_msgs::Marker::LINE_LIST;
   marker.action = visualization_msgs::Marker::MODIFY;
@@ -34,7 +34,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
-  auto step = (data.ranges.size() - 1) / (parameters_.max_beams - 1);
+  auto step = (data.ranges.size() - 1) / (config_.max_beams - 1);
   for (auto & particle : pf->particles) {
     double p = 1.0;
 
@@ -42,36 +42,25 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
       double obs_range = data.ranges[i];
       auto a = data.get_angle(i);
 
-      if (std::isinf(obs_range)) continue;  // TODO(Ramon): don't skip infs
+      // This model ignores max range readings
+      if (std::isinf(obs_range)) continue;
 
       auto point_laser = particle.pose * data.pose.getOrigin();
-      auto point_hit =
-        particle.pose *
-        (data.pose * tf2::Vector3{data.range_max * tf2Cos(a), data.range_max * tf2Sin(a), 0});
-      double map_range = map_->calc_range(point_laser, point_hit);
-      if (std::isinf(map_range)) continue;  // TODO(Ramon): don't skip infs
+      auto hit =
+        particle.pose * (data.pose * tf2::Vector3{obs_range * tf2Cos(a), obs_range * tf2Sin(a), 0});
 
       double pz = 0.0;
 
-      // Part 1: good, but noisy, hit
-      auto z = obs_range - map_range;
-      pz += parameters_.z_hit * exp(-(z * z) / (2 * parameters_.sigma_hit * parameters_.sigma_hit));
+      // Part 1: Get distance from the hit to closest obstacle.
+      // Off-map penalized as max distance
+      double z = map_->closest_obstacle(hit);
+      assert(!std::isinf(z));
 
-      // Part 2: short reading from unexpected obstacle (e.g., a person)
-      if (z < 0) {
-        pz += parameters_.z_short * parameters_.lambda_short *
-              exp(-parameters_.lambda_short * obs_range);
-      }
-
-      // Part 3: Failure to detect obstacle, reported as max-range
-      if (obs_range == data.range_max) {
-        pz += parameters_.z_max * 1.0;
-      }
-
-      // Part 4: Random measurements
-      if (obs_range < data.range_max) {
-        pz += parameters_.z_rand * 1.0 / data.range_max;
-      }
+      // Gaussian model
+      // NOTE: this should have a normalization of 1/(sqrt(2pi)*sigma)
+      pz += config_.z_hit * exp(-(z * z) / (2 * config_.sigma_hit * config_.sigma_hit));
+      // Part 2: random measurements
+      pz += config_.z_rand / data.range_max;
 
       // TODO(?): outlier rejection for short readings
 
@@ -85,14 +74,15 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
       if (first) {
         // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
-        tf2::toMsg(point_laser);
-        tf2::toMsg(point_hit);
+        tf2::toMsg(point_laser, p1);
+        tf2::toMsg(hit, p2);
         marker.points.push_back(std::move(p1));
         marker.points.push_back(std::move(p2));
         std_msgs::ColorRGBA color;
         color.a = 1;
         color.b = pz;
         color.r = 1 - pz;
+        color.r = std::min(z, 1.0);
         marker.colors.push_back(color);
         marker.colors.push_back(std::move(color));
       }

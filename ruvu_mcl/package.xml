@@ -23,5 +23,6 @@ Copyright 2021 RUVU Robotics B.V.
 
   <exec_depend>graphicsmagick</exec_depend>
 
+  <test_depend>roslint</test_depend>
   <test_depend>ruvu_lint</test_depend>
 </package>
