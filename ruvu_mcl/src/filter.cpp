@@ -169,16 +169,9 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   ROS_INFO_NAMED(name, "initial pose received");
 
   auto & p = initial_pose->pose;
-  auto dx = [this, &p]() {
-    return rng_->sample_normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
-  };
-  auto dy = [this, &p]() {
-    return rng_->sample_normal_distribution(p.pose.position.y, p.covariance[1 * 6 + 1]);
-  };
-  auto dt = [this, &p]() {
-    return rng_->sample_normal_distribution(
-      tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
-  };
+  auto dx = rng_->normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
+  auto dy = rng_->normal_distribution(p.pose.position.y, p.covariance[1 * 6 + 1]);
+  auto dt = rng_->normal_distribution(tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
 
   filter_.particles.clear();
   for (size_t i = 0; i < config_.max_particles; ++i) {

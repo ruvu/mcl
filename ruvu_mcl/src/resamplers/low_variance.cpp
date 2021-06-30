@@ -17,7 +17,7 @@ bool LowVariance::resample(ParticleFilter * pf)
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   int M = pf->particles.size();
   double M_inv = 1. / M;
-  auto uniform_dist = [this, M_inv]() { return rng_->sample_uniform_distribution(0, M_inv); };
+  auto uniform_dist = rng_->uniform_distribution(0, M_inv);
 
   ParticleFilter pf_resampled;
   pf_resampled.particles.reserve(M);

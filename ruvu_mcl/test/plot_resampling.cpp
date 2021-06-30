@@ -28,7 +28,7 @@ int main()
   gp << "set multiplot layout 2,2 rowsfirst\n";
 
   auto rng = std::make_shared<Rng>();
-  auto initial_dist = [rng]() { return rng->sample_uniform_distribution(-1, 1); };
+  auto initial_dist = rng->uniform_distribution(-1, 1);
 
   ParticleFilter pf;
   for (int i = 0; i < 1000; ++i) {
