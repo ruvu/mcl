@@ -218,11 +218,13 @@ void Filter::publish_particle_cloud(const ros::Time & time)
   m.action = visualization_msgs::Marker::MODIFY;
   m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
   m.scale.x = width;
+  m.points.reserve(filter_.particles.size() * 2);
+  m.colors.reserve(filter_.particles.size() * 2);
 
-  tf2::Vector3 p1{length / 2, 0, 0};
   double max_weight = 0;
   for (const auto & p : filter_.particles) max_weight = std::max(max_weight, p.weight);
 
+  tf2::Vector3 p1{length / 2, 0, 0};
   for (const auto & particle : filter_.particles) {
     std_msgs::ColorRGBA c;
     c.a = particle.weight / max_weight;

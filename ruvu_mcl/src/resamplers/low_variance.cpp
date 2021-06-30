@@ -20,6 +20,7 @@ bool LowVariance::resample(ParticleFilter * pf)
   auto uniform_dist = [this, M_inv]() { return rng_->sample_uniform_distribution(0, M_inv); };
 
   ParticleFilter pf_resampled;
+  pf_resampled.particles.reserve(M);
   float r = uniform_dist();
   double c = pf->particles.at(0).weight;
   int i = 0;
