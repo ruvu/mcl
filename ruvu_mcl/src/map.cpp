@@ -38,17 +38,11 @@ Map::operator nav_msgs::OccupancyGrid()
   return msg;
 }
 
-template <typename T>
-int floor2int(T v)
-{
-  return static_cast<int>(floor(v));
-}
-
 std::pair<int, int> Map::world2map(const tf2::Vector3 & v) const
 {
   tf2::Vector3 w = origin * v;
-  int i = floor2int(w.getX() / scale + 0.5);
-  int j = floor2int(w.getY() / scale + 0.5);
+  auto i = std::nearbyint(w.getX() / scale);
+  auto j = std::nearbyint(w.getY() / scale);
   return {i, j};
 }
 
