@@ -180,6 +180,9 @@ if (CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_differential_motion_model test/test_differential_motion_model.cpp)
   target_link_libraries(test_differential_motion_model ${PROJECT_NAME})
 
+  catkin_add_gtest(test_map test/test_map.cpp)
+  target_link_libraries(test_map ${PROJECT_NAME})
+
   catkin_add_gtest(test_occupancy_map test/test_occupancy_map.cpp)
   target_link_libraries(test_occupancy_map ${PROJECT_NAME})
 

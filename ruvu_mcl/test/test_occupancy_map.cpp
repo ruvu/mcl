@@ -58,45 +58,6 @@ TEST(TestSuite, test_is_valid)
   ASSERT_FALSE(map.is_valid(0, -1));
 }
 
-TEST(TestSuite, test_world2map_offset)
-{
-  nav_msgs::OccupancyGrid msg;
-  msg.info.resolution = 0.1;  // m/pixel
-  tf2::Quaternion q;
-  q.setRPY(0, 0, M_PI_2);
-  tf2::toMsg(tf2::Transform{q, tf2::Vector3{10, 10, 0}}, msg.info.origin);
-  OccupancyMap map{msg};
-  {
-    auto [i, j] = map.world2map({10, 10, 0});
-    ASSERT_EQ(i, 0);
-    ASSERT_EQ(j, 0);
-  }
-  {
-    auto [i, j] = map.world2map({9, 12, 0});
-    ASSERT_EQ(i, 20);
-    ASSERT_EQ(j, 10);
-  }
-}
-
-TEST(TestSuite, test_world2map_identity)
-{
-  nav_msgs::OccupancyGrid msg;
-  msg.info.resolution = 0.1;  // m/pixel
-  tf2::toMsg(tf2::Transform::getIdentity(), msg.info.origin);
-
-  OccupancyMap map{msg};
-  {
-    auto [i, j] = map.world2map({0, 0, 0});
-    ASSERT_EQ(i, 0);
-    ASSERT_EQ(j, 0);
-  }
-  {
-    auto [i, j] = map.world2map({1, 2, 0});
-    ASSERT_EQ(i, 10);
-    ASSERT_EQ(j, 20);
-  }
-}
-
 // Run all the tests that were declared with TEST()
 int main(int argc, char ** argv)
 {
