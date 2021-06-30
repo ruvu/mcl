@@ -12,6 +12,7 @@
 #include "rosbag/bag.h"
 #include "rosbag/query.h"
 #include "rosbag/view.h"
+#include "ruvu_mcl/AMCLConfig.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf2_msgs/TFMessage.h"
 #include "tf2_ros/buffer.h"
