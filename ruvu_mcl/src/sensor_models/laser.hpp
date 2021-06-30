@@ -4,14 +4,15 @@
 
 #include <vector>
 
-#include "../particle_filter.hpp"
 #include "ros/message_forward.h"
+#include "tf2/LinearMath/Transform.h"
 
 // forward declare
 namespace sensor_msgs
 {
 ROS_DECLARE_MESSAGE(LaserScan)
 }
+class ParticleFilter;
 
 class LaserData
 {

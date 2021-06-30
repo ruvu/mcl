@@ -4,6 +4,8 @@
 
 #include <numeric>
 
+#include "ruvu_mcl/AMCLConfig.h"
+
 void normalize(std::initializer_list<double *> zs)
 {
   double z_total =

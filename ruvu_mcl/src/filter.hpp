@@ -6,7 +6,6 @@
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
 #include "ros/node_handle.h"
-#include "ruvu_mcl/AMCLConfig.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_broadcaster.h"

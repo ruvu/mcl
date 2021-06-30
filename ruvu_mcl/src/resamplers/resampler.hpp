@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "../particle_filter.hpp"
+// forward declare
+class ParticleFilter;
 
 class Resampler
 {

@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "../particle_filter.hpp"
 #include "../rng.hpp"
 #include "ros/console.h"
 

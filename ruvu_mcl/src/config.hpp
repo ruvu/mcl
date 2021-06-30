@@ -2,9 +2,14 @@
 
 #pragma once
 
+#include <string>
 #include <variant>
 
-#include "ruvu_mcl/AMCLConfig.h"
+// forward declare
+namespace ruvu_mcl
+{
+class AMCLConfig;
+}
 
 struct BeamModelConfig
 {

@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "../particle_filter.hpp"
-
 // forward declare
 namespace tf2
 {
 class Transform;
 }
+class ParticleFilter;
 
 class MotionModel
 {

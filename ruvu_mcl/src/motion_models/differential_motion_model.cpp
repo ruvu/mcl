@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "../particle_filter.hpp"
 #include "../rng.hpp"
 #include "angles/angles.h"
 #include "ros/console.h"

@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "../map.hpp"
+#include "../particle_filter.hpp"
 #include "ros/node_handle.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
