@@ -38,7 +38,7 @@ Map::operator nav_msgs::OccupancyGrid()
   return msg;
 }
 
-std::pair<int, int> Map::world2map(const tf2::Vector3 & v) const
+std::pair<Eigen::Index, Eigen::Index> Map::world2map(const tf2::Vector3 & v) const
 {
   tf2::Vector3 w = origin * v;
   auto i = std::nearbyint(w.getX() / scale);
@@ -75,7 +75,7 @@ OccupancyMap::OccupancyMap(const nav_msgs::OccupancyGrid & msg) : Map(msg)
             });
 }
 
-bool OccupancyMap::is_valid(int i, int j) const
+bool OccupancyMap::is_valid(Eigen::Index i, Eigen::Index j) const
 {
   return i >= 0 && i < cells.rows() && j >= 0 && j < cells.cols();
 }
@@ -87,7 +87,8 @@ double OccupancyMap::calc_range(const tf2::Vector3 & v1, const tf2::Vector3 & v2
   return calc_range(i0, j0, i1, j1) * scale;
 }
 
-double OccupancyMap::calc_range(int x0, int y0, int x1, int y1) const
+double OccupancyMap::calc_range(
+  Eigen::Index x0, Eigen::Index y0, Eigen::Index x1, Eigen::Index y1) const
 {
   auto x = x0, y = y0;
   auto dx = abs(x1 - x);
@@ -228,7 +229,7 @@ double DistanceMap::closest_obstacle(const tf2::Vector3 & v) const
   }
 }
 
-bool DistanceMap::is_valid(int i, int j) const
+bool DistanceMap::is_valid(Eigen::Index i, Eigen::Index j) const
 {
   return i >= 0 && i < cells.rows() && j >= 0 && j < cells.cols();
 }

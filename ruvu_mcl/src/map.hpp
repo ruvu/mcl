@@ -23,7 +23,7 @@ struct Map
   explicit Map(const nav_msgs::OccupancyGrid & msg);
   operator nav_msgs::OccupancyGrid();
 
-  std::pair<int, int> world2map(const tf2::Vector3 & v) const;
+  std::pair<Eigen::Index, Eigen::Index> world2map(const tf2::Vector3 & v) const;
 };
 
 struct OccupancyMap : Map
@@ -39,8 +39,8 @@ struct OccupancyMap : Map
   explicit OccupancyMap(const nav_msgs::OccupancyGrid & msg);
 
   double calc_range(const tf2::Vector3 & v1, const tf2::Vector3 & v2) const;
-  double calc_range(int x0, int y0, int x1, int y1) const;
-  bool is_valid(int i, int j) const;
+  double calc_range(Eigen::Index x0, Eigen::Index y0, Eigen::Index x1, Eigen::Index y1) const;
+  bool is_valid(Eigen::Index i, Eigen::Index j) const;
 };
 
 struct DistanceMap : Map
@@ -58,5 +58,5 @@ struct DistanceMap : Map
   operator nav_msgs::OccupancyGrid();
 
   double closest_obstacle(const tf2::Vector3 & v) const;
-  bool is_valid(int i, int j) const;  // TODO(Ramon): move to baseclass
+  bool is_valid(Eigen::Index i, Eigen::Index j) const;  // TODO(Ramon): move to baseclass
 };
