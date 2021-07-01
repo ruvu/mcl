@@ -47,6 +47,10 @@ public:
 private:
   tf2::Transform get_odom_pose(const ros::Time & time);
   void publish_particle_cloud(const ros::Time & time);
+  tf2::Transform get_output_pose(const ParticleFilter pf);
+  void publish_pose_with_covariance(const tf2::Transform pose);
+  void broadcast_tf(
+    const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
 
   // data input
   std::shared_ptr<const tf2_ros::Buffer> buffer_;
@@ -60,6 +64,7 @@ private:
   Config config_;
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
+  std::optional<tf2::Transform> last_pose_;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;

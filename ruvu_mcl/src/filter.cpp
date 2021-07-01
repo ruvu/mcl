@@ -60,6 +60,10 @@ void Filter::configure(const Config & config)
   }
 
   config_ = config;
+
+  publish_particle_cloud(ros::Time::now());
+  last_pose_ = get_output_pose(filter_);
+  publish_pose_with_covariance(last_pose_.value());
 }
 
 Filter::~Filter() = default;
@@ -76,10 +80,12 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   auto odom_pose = get_odom_pose(scan->header.stamp);
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
-
   if (
     diff.getOrigin().length() < config_.update_min_d &&
     fabs(tf2::getYaw(diff.getRotation())) < config_.update_min_a) {
+    if (last_pose_ && last_odom_pose_) {
+      broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
+    }
     return;
   }
   ROS_DEBUG_NAMED(
@@ -130,32 +136,10 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     if (!(++resample_count_ % config_.resample_interval)) resampler_->resample(&filter_);
   }
 
-  // Find best particle
-  Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
-  for (const auto & particle : filter_.particles) {
-    if (particle.weight > max_weight_particle.weight) {
-      max_weight_particle = particle;
-    }
-  }
-
-  // Publish PoseWithCovarianceStamped
-  geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  pose_msg.header.stamp = ros::Time::now();
-  pose_msg.header.frame_id = config_.global_frame_id;
-
-  tf2::toMsg(max_weight_particle.pose, pose_msg.pose.pose);
-  auto cov = filter_.get_2d_covariance_array();
-  assert(cov.size() == pose_msg.pose.covariance.size());
-  std::copy(cov.begin(), cov.end(), pose_msg.pose.covariance.begin());
-
-  pose_pub_.publish(std::move(pose_msg));
-
-  // Broadcast transform
-  geometry_msgs::TransformStamped transform_msg;
-  transform_msg.header = pose_msg.header;
-  transform_msg.child_frame_id = config_.odom_frame_id;
-  transform_msg.transform = tf2::toMsg(max_weight_particle.pose * odom_pose.inverse());
-  transform_br_.sendTransform(std::move(transform_msg));
+  // Create output
+  last_pose_ = get_output_pose(filter_);
+  publish_pose_with_covariance(last_pose_.value());
+  broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
 }
 
 void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
@@ -180,6 +164,9 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     q.setRPY(0, 0, dt());
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
+  publish_particle_cloud(ros::Time::now());
+  last_pose_ = get_output_pose(filter_);
+  publish_pose_with_covariance(last_pose_.value());
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
@@ -237,4 +224,43 @@ void Filter::publish_particle_cloud(const ros::Time & time)
   }
 
   cloud_pub_.publish(std::move(m));
+}
+
+tf2::Transform Filter::get_output_pose(const ParticleFilter pf)
+{
+  // Find best particle
+  Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
+  for (const auto & particle : filter_.particles) {
+    if (particle.weight > max_weight_particle.weight) {
+      max_weight_particle = particle;
+    }
+  }
+  return max_weight_particle.pose;
+}
+
+void Filter::publish_pose_with_covariance(const tf2::Transform pose)
+{
+  // Publish PoseWithCovarianceStamped
+  geometry_msgs::PoseWithCovarianceStamped pose_msg;
+  pose_msg.header.stamp = ros::Time::now();
+  pose_msg.header.frame_id = config_.global_frame_id;
+
+  tf2::toMsg(pose, pose_msg.pose.pose);
+  auto cov = filter_.get_2d_covariance_array();
+  assert(cov.size() == pose_msg.pose.covariance.size());
+  std::copy(cov.begin(), cov.end(), pose_msg.pose.covariance.begin());
+
+  pose_pub_.publish(std::move(pose_msg));
+}
+
+void Filter::broadcast_tf(
+  const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp)
+{
+  // Broadcast transform
+  geometry_msgs::TransformStamped transform_msg;
+  transform_msg.header.stamp = stamp;
+  transform_msg.header.frame_id = config_.global_frame_id;
+  transform_msg.child_frame_id = config_.odom_frame_id;
+  transform_msg.transform = tf2::toMsg(pose * odom_pose.inverse());
+  transform_br_.sendTransform(std::move(transform_msg));
 }
