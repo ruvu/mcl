@@ -48,7 +48,7 @@ void Filter::configure(const Config & config)
   else
     throw std::logic_error("no motion model configured");
 
-  if (config.max_particles != filter_.particles.size()) {
+  if (filter_.particles.size() == 0) {
     ROS_INFO_NAMED(name, "spawning %zu particles", config.max_particles);
     for (size_t i = 0; i < config.max_particles; ++i) {
       tf2::Quaternion q;
