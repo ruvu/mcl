@@ -162,6 +162,18 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
   )
 
+  add_executable(plot_adaptive
+    test/plot_adaptive.cpp
+  )
+  target_include_directories(plot_adaptive
+    SYSTEM PRIVATE
+      ${Boost_INCLUDE_DIRS}
+  )
+  target_link_libraries(plot_adaptive
+    ${PROJECT_NAME}
+    ${Boost_LIBRARIES}
+  )
+
   add_executable(render_scan
     test/render_scan.cpp
   )
