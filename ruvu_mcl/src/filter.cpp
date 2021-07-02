@@ -126,7 +126,6 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
-  publish_particle_cloud(scan->header.stamp);
 
   // Resample
   if (config_.selective_resampling) {
@@ -137,6 +136,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   // Create output
+  publish_particle_cloud(scan->header.stamp);
   last_pose_ = get_output_pose(filter_);
   publish_pose_with_covariance(last_pose_.value());
   broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
