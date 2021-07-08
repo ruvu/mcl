@@ -188,4 +188,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_distance_map test/test_distance_map.cpp)
   target_link_libraries(test_distance_map ${PROJECT_NAME})
+
+  catkin_add_gtest(test_particle_filter test/test_particle_filter.cpp)
+  target_link_libraries(test_particle_filter ${PROJECT_NAME})
 endif()
