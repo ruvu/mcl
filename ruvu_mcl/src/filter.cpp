@@ -58,13 +58,12 @@ void Filter::configure(const Config & config)
         rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
       filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config.max_particles);
     }
+    publish_particle_cloud(ros::Time::now());
+    last_pose_ = get_output_pose(filter_);
+    publish_pose_with_covariance(last_pose_.value());
   }
 
   config_ = config;
-
-  publish_particle_cloud(ros::Time::now());
-  last_pose_ = get_output_pose(filter_);
-  publish_pose_with_covariance(last_pose_.value());
 }
 
 Filter::~Filter() = default;
