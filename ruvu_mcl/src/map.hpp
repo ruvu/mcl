@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Eigen/Eigen"
+#include "Eigen/Core"
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 #include "tf2/LinearMath/Transform.h"

@@ -2,6 +2,8 @@
 
 #include "./particle_filter.hpp"
 
+#include "tf2/utils.h"
+
 void ParticleFilter::normalize_weights()
 {
   double total_weight = 0;

@@ -2,21 +2,33 @@
 
 #pragma once
 
+#include <memory>
+
 #include "./config.hpp"
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
-#include "ros/node_handle.h"
-#include "tf2/LinearMath/Transform.h"
-#include "tf2_ros/buffer.h"
+#include "ros/publisher.h"
 #include "tf2_ros/transform_broadcaster.h"
 
 // forward declare
-class ParticleFilter;
-class MotionModel;
 class Laser;
+class MotionModel;
+class ParticleFilter;
 class Resampler;
 class Rng;
-
+namespace ros
+{
+class NodeHandle;
+class Time;
+}  // namespace ros
+namespace tf2
+{
+class Transform;
+}
+namespace tf2_ros
+{
+class Buffer;
+}
 namespace geometry_msgs
 {
 ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)

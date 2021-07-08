@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
 
 #include "tf2/LinearMath/Transform.h"
-#include "tf2/utils.h"
 
 class Particle
 {

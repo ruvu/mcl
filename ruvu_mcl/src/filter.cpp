@@ -15,6 +15,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf2/utils.h"
+#include "tf2_ros/buffer.h"
 #include "visualization_msgs/Marker.h"
 
 constexpr auto name = "filter";
