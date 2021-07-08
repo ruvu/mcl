@@ -123,7 +123,6 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
-
   // Resample
   if (config_.selective_resampling) {
     if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)

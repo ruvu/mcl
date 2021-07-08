@@ -4,6 +4,8 @@
 
 Rng::Rng() : generator(std::random_device{}()) {}
 
+Rng::Rng(uint_fast32_t seed) : generator(seed) {}
+
 double Rng::sample_normal_distribution(double mean, double stddev)
 {
   std::normal_distribution<> distribution{mean, stddev};

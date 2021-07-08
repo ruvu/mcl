@@ -1,9 +1,11 @@
 // Copyright 2021 RUVU Robotics B.V.
 
 #include "../src/particle_filter.hpp"
+#include "../src/rng.hpp"
 #include "gtest/gtest.h"
 #include "ros/init.h"
 #include "tf2/utils.h"
+#include "tf2_eigen/tf2_eigen.h"
 
 class ParticleFilterTest : public ::testing::Test
 {
@@ -82,6 +84,78 @@ TEST_F(ParticleFilterTest, Covariance)
 
   double expected_theta_cov = -2 * log(sqrt(sum[2] * sum[2] + sum[3] * sum[3]));
   EXPECT_FLOAT_EQ(cov[35], expected_theta_cov);
+}
+
+class ParticleFilterCovarianceTest : public ::testing::Test
+{
+protected:
+  void SetUp(double mean, double stddev)
+  {
+    auto rng = std::make_shared<Rng>(4);
+    auto d = rng->normal_distribution(mean, stddev);
+
+    // generate a set of particles according to a normal distribution
+    pf.particles.clear();
+    int n = 1000;
+    for (int i = 0; i < n; ++i) {
+      tf2::Quaternion q;
+      q.setRPY(0, 0, d());
+      pf.particles.emplace_back(tf2::Transform{q, tf2::Vector3{d(), d(), 0}}, 1. / n);
+    }
+  }
+
+  ParticleFilter pf;
+};
+
+TEST_F(ParticleFilterCovarianceTest, Covariance)
+{
+  SetUp(0, 0.5);
+  constexpr double eps = 5e-2;
+
+  auto cov = pf.get_2d_covariance_array();
+  EXPECT_NEAR(cov[0], pow(0.5, 2), eps);
+  EXPECT_NEAR(cov[1], 0, eps);
+  EXPECT_NEAR(cov[6], 0, eps);
+  EXPECT_NEAR(cov[7], pow(0.5, 2), eps);
+}
+
+TEST_F(ParticleFilterCovarianceTest, CovarianceWithOffset)
+{
+  SetUp(3, 0.5);
+  constexpr double eps = 5e-2;
+
+  auto cov = pf.get_2d_covariance_array();
+  EXPECT_NEAR(cov[0], pow(0.5, 2), eps);
+  EXPECT_NEAR(cov[1], 0, eps);
+  EXPECT_NEAR(cov[6], 0, eps);
+  EXPECT_NEAR(cov[7], pow(0.5, 2), eps);
+}
+
+TEST_F(ParticleFilterCovarianceTest, CovarianceTransformed)
+{
+  SetUp(0, 1);
+  constexpr double eps = 5e-3;
+
+  // scaling matrix
+  tf2::Matrix3x3 s{0.2, 0, 0, 0, 0.5, 0, 0, 0, 0};
+
+  // rotation matrix
+  tf2::Quaternion q;
+  q.setRPY(0, 0, 1);
+  tf2::Matrix3x3 r{q};
+  auto t = r * s;
+  for (auto & p : pf.particles) {
+    p.pose.setOrigin(t * p.pose.getOrigin());
+  }
+
+  // https://www.visiondummy.com/2014/04/geometric-interpretation-covariance-matrix/
+  auto expected = r * s * s * r.transpose();
+
+  auto cov = pf.get_2d_covariance_array();
+  EXPECT_NEAR(cov[0], expected[0][0], eps);
+  EXPECT_NEAR(cov[1], expected[0][1], eps);
+  EXPECT_NEAR(cov[6], expected[1][0], eps);
+  EXPECT_NEAR(cov[7], expected[1][1], eps);
 }
 
 int main(int argc, char ** argv)
