@@ -50,17 +50,14 @@ void Filter::configure(const Config & config)
     throw std::logic_error("no motion model configured");
 
   if (filter_.particles.size() == 0) {
-    ROS_INFO_NAMED(name, "spawning %zu particles", config.max_particles);
-    for (size_t i = 0; i < config.max_particles; ++i) {
-      tf2::Quaternion q;
-      q.setRPY(0, 0, rng_->sample_normal_distribution(0, 0.2));
-      tf2::Vector3 p{
-        rng_->sample_normal_distribution(0, 0.2), rng_->sample_normal_distribution(0, 0.2), 0};
-      filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config.max_particles);
-    }
-    publish_particle_cloud(ros::Time::now());
-    last_pose_ = get_output_pose(filter_);
-    publish_pose_with_covariance(last_pose_.value());
+    auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
+    p->header.stamp = ros::Time::now();
+    p->header.frame_id = config_.global_frame_id;
+    p->pose.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
+    p->pose.covariance[0 * 6 + 0] = 0.2;
+    p->pose.covariance[1 * 6 + 1] = 0.2;
+    p->pose.covariance[5 * 6 + 5] = 0.2;
+    initial_pose_cb(p);
   }
 
   config_ = config;
