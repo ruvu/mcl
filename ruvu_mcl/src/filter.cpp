@@ -164,7 +164,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     q.setRPY(0, 0, dt());
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
-  publish_particle_cloud(ros::Time::now());
+  publish_particle_cloud(initial_pose->header.stamp);
   last_pose_ = get_output_pose(filter_);
   publish_pose_with_covariance(last_pose_.value());
 }
