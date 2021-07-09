@@ -14,6 +14,7 @@ LowVariance::LowVariance(std::shared_ptr<Rng> rng) : rng_(rng) {}
 
 bool LowVariance::resample(ParticleFilter * pf)
 {
+  assert(pf->particles.size());
   ROS_DEBUG_NAMED(name, "resample");
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   int M = pf->particles.size();

@@ -41,6 +41,7 @@ Filter::Filter(
 void Filter::configure(const Config & config)
 {
   ROS_INFO_NAMED(name, "configure call");
+  config_ = config;
 
   lasers_.clear();  // they will configure themself on next scan_cb
 
@@ -59,8 +60,6 @@ void Filter::configure(const Config & config)
     p->pose.covariance[5 * 6 + 5] = 0.2;
     initial_pose_cb(p);
   }
-
-  config_ = config;
 }
 
 Filter::~Filter() = default;
@@ -146,7 +145,7 @@ void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 
 void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
 {
-  ROS_INFO_NAMED(name, "initial pose received");
+  ROS_INFO_NAMED(name, "initial pose received, spawning %lu new particles", config_.max_particles);
 
   auto & p = initial_pose->pose;
   auto dx = rng_->normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
