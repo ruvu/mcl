@@ -20,6 +20,7 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
   update_min_a = config.update_min_a;
   resample_interval = config.resample_interval;
   selective_resampling = config.selective_resampling;
+  transform_tolerance = config.transform_tolerance;
 
   if (config.odom_model_type == ruvu_mcl::AMCL_diff_const) {
     DifferentialMotionModelConfig m;

@@ -50,6 +50,7 @@ struct Config
   double update_min_a;
   int resample_interval;
   bool selective_resampling;
+  double transform_tolerance;
 
   std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;

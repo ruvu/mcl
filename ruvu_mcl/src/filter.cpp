@@ -253,7 +253,8 @@ void Filter::broadcast_tf(
 {
   // Broadcast transform
   geometry_msgs::TransformStamped transform_msg;
-  transform_msg.header.stamp = stamp;
+  transform_msg.header.stamp = stamp + ros::Duration(config_.transform_tolerance);
+
   transform_msg.header.frame_id = config_.global_frame_id;
   transform_msg.child_frame_id = config_.odom_frame_id;
   transform_msg.transform = tf2::toMsg(pose * odom_pose.inverse());
