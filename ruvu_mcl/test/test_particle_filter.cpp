@@ -1,5 +1,6 @@
 // Copyright 2021 RUVU Robotics B.V.
 
+#include <memory>
 #include "../src/particle_filter.hpp"
 #include "../src/rng.hpp"
 #include "gtest/gtest.h"
