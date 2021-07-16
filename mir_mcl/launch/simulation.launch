@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="gui" default="true" />
+  <arg name="world" default="maze"/>
+
+  <arg name="tf_prefix" default="" doc="tf_prefix to be used by gazebo plugins and in the robot's urdf etc." />
+
+  <arg name="prefix" value="$(arg tf_prefix)/" if="$(eval tf_prefix != '')" /> <!-- $(arg prefix) is used in all the config files! TODO: For multiple robots, create groups when loading the parameters to overwrite the arg? -->
+  <arg name="prefix" value=""                  unless="$(eval tf_prefix != '')" />
+
+  <!-- Load the world specific parameters -->
+  <rosparam command="load" file="$(find mir_mcl)/worlds/$(arg world).yaml" />
+
+  <!-- Start a gazebo server with physics disabled -->
+  <group>
+    <remap from="joint_states"                   to="mir/joint_states" />
+    <remap from="mobile_base_controller/cmd_vel" to="cmd_vel" />
+    <remap from="mobile_base_controller/odom"    to="odom" />
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" value="$(find mir_mcl)/worlds/$(arg world).world"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="use_clock_frequency" value="true"/>
+      <arg name="pub_clock_frequency" value="500"/>
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="verbose" value="true"/>
+      <arg name="debug" value="false"/>
+    </include>
+  </group>
+
+  <include file="$(find mir_gazebo)/launch/includes/spawn_maze.launch.xml" />
+
+  <!-- Load URDF -->
+  <include file="$(find mir_description)/launch/upload_mir_urdf.launch">
+    <arg name="tf_prefix" value="$(arg tf_prefix)"/>
+  </include>
+
+  <!-- Spawn the robot into Gazebo -->
+  <param name="robot_namespace" value="/"/>
+  <node name="spawn_model" pkg="ruvu_gazebo_plugins" type="spawn_model" output="screen">
+    <param if="$(eval arg('prefix') != '')" name="robot_name" value="$(arg prefix)"/>
+  </node>
+
+  <!-- Load ros_control controller configurations -->
+  <rosparam file="$(find mir_description)/config/joint_state_controller.yaml" command="load" />
+  <rosparam file="$(find mir_description)/config/diffdrive_controller.yaml" command="load" subst_value="true" />
+  <param name="mobile_base_controller/enable_odom_tf" value="true"/>
+
+  <!-- Start the controllers -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+    args="joint_state_controller mobile_base_controller"/>
+
+  <!-- Add passive + mimic joints to joint_states topic -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <rosparam param="source_list">[mir/joint_states]</rosparam>
+    <param name="rate" value="200.0" />
+  </node>
+
+  <!-- Robot state publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" />
+
+  <!-- create combined scan topic (like on real MiR) -->
+  <node pkg="topic_tools" type="relay" name="b_scan_relay" args="b_scan scan"/>
+  <node pkg="topic_tools" type="relay" name="f_scan_relay" args="f_scan scan"/>
+
+  <!-- Map server -->
+  <node name="map_server" pkg="map_server" type="map_server" required="true"
+        args="$(find mir_gazebo)/maps/maze.yaml">
+  </node>
+</launch>
