@@ -133,7 +133,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   // Create output
   publish_particle_cloud(scan->header.stamp);
   last_pose_ = get_output_pose(filter_);
-  publish_pose_with_covariance(last_pose_.value());
+  publish_pose_with_covariance(last_pose_.value(), scan->header.stamp);
   broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
 }
 
@@ -161,7 +161,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   }
   publish_particle_cloud(initial_pose->header.stamp);
   last_pose_ = get_output_pose(filter_);
-  publish_pose_with_covariance(last_pose_.value());
+  publish_pose_with_covariance(last_pose_.value(), initial_pose->header.stamp);
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
@@ -233,11 +233,11 @@ tf2::Transform Filter::get_output_pose(const ParticleFilter pf)
   return max_weight_particle.pose;
 }
 
-void Filter::publish_pose_with_covariance(const tf2::Transform pose)
+void Filter::publish_pose_with_covariance(const tf2::Transform pose, const ros::Time & stamp)
 {
   // Publish PoseWithCovarianceStamped
   geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  pose_msg.header.stamp = ros::Time::now();
+  pose_msg.header.stamp = stamp;
   pose_msg.header.frame_id = config_.global_frame_id;
 
   tf2::toMsg(pose, pose_msg.pose.pose);

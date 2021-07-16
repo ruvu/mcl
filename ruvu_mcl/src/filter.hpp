@@ -60,7 +60,7 @@ private:
   tf2::Transform get_odom_pose(const ros::Time & time);
   void publish_particle_cloud(const ros::Time & time);
   tf2::Transform get_output_pose(const ParticleFilter pf);
-  void publish_pose_with_covariance(const tf2::Transform pose);
+  void publish_pose_with_covariance(const tf2::Transform pose, const ros::Time & stamp);
   void broadcast_tf(
     const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
 
