@@ -63,7 +63,7 @@ public:
       filter_.configure(Config{config});
     });
 
-    auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
+    auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 100);
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
 
     std::vector<std::string> topics = {"/scan", "/map", "/initialpose"};
