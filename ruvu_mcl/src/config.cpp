@@ -22,6 +22,14 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
   selective_resampling = config.selective_resampling;
   transform_tolerance = config.transform_tolerance;
 
+  tf2::Quaternion q;
+  q.setRPY(0, 0, config.initial_pose_a);
+  initial_pose = tf2::Transform{q, tf2::Vector3{config.initial_pose_x, config.initial_pose_y, 0}};
+  initial_cov = {0};
+  initial_cov[0 * 6 + 0] = config.initial_cov_xx;
+  initial_cov[1 * 6 + 1] = config.initial_cov_yy;
+  initial_cov[5 * 6 + 5] = config.initial_cov_aa;
+
   if (config.odom_model_type == ruvu_mcl::AMCL_diff_const) {
     DifferentialMotionModelConfig m;
     m.alpha1 = config.odom_alpha1;

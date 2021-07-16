@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <variant>
+
+#include "tf2/LinearMath/Transform.h"
 
 // forward declare
 namespace ruvu_mcl
@@ -51,6 +54,8 @@ struct Config
   int resample_interval;
   bool selective_resampling;
   double transform_tolerance;
+  tf2::Transform initial_pose;
+  std::array<double, 36> initial_cov;
 
   std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;

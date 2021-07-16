@@ -54,10 +54,9 @@ void Filter::configure(const Config & config)
     auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
     p->header.stamp = ros::Time::now();
     p->header.frame_id = config_.global_frame_id;
-    p->pose.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
-    p->pose.covariance[0 * 6 + 0] = 0.2;
-    p->pose.covariance[1 * 6 + 1] = 0.2;
-    p->pose.covariance[5 * 6 + 5] = 0.2;
+    tf2::toMsg(config.initial_pose.getOrigin(), p->pose.pose.position);
+    p->pose.pose.orientation = tf2::toMsg(config.initial_pose.getRotation());
+    std::copy(config.initial_cov.begin(), config.initial_cov.end(), p->pose.covariance.begin());
     initial_pose_cb(p);
   }
 }
@@ -145,9 +144,11 @@ void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 
 void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
 {
-  ROS_INFO_NAMED(name, "initial pose received, spawning %lu new particles", config_.max_particles);
-
   auto & p = initial_pose->pose;
+  ROS_INFO_NAMED(
+    name, "initial pose received %.3f %.3f %.3f, spawning %lu new particles", p.pose.position.x,
+    p.pose.position.y, tf2::getYaw(p.pose.orientation), config_.max_particles);
+
   auto dx = rng_->normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
   auto dy = rng_->normal_distribution(p.pose.position.y, p.covariance[1 * 6 + 1]);
   auto dt = rng_->normal_distribution(tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
