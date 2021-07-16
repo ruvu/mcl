@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosbag
   roscpp
   ruvu_lint
+  tf2_eigen
   tf2_geometry_msgs
   tf2_ros
 )
