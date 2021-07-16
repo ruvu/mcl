@@ -67,13 +67,20 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
   assert(model_);
 
-  if (!last_odom_pose_) {
-    ROS_INFO_NAMED(name, "first scan_cb, recording the odom pose");
-    last_odom_pose_ = get_odom_pose(scan->header.stamp);
+  tf2::Transform odom_pose;
+  try {
+    odom_pose = get_odom_pose(scan->header.stamp);
+  } catch (const tf2::TransformException & e) {
+    ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
     return;
   }
 
-  auto odom_pose = get_odom_pose(scan->header.stamp);
+  if (!last_odom_pose_) {
+    ROS_INFO_NAMED(name, "first scan_cb, recording the odom pose");
+    last_odom_pose_ = odom_pose;
+    return;
+  }
+
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
   if (
     diff.getOrigin().length() < config_.update_min_d &&
