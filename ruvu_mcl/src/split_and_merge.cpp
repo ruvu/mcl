@@ -41,7 +41,6 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
       nr_particles < config_.min_particles + cluster.second.size() + 1) {
       merged_particles.insert(merged_particles.end(), cluster.second.begin(), cluster.second.end());
     } else {
-      Particle mean_particle(tf2::Transform::getIdentity(), 0);
       double sum_x = 0;
       double sum_y = 0;
       double sum_cos_theta = 0;
@@ -54,11 +53,13 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
         sum_sin_theta += sin(tf2::getYaw(particle.pose.getRotation()));
         sum_weight += particle.weight;
       }
-      mean_particle.pose.getOrigin().setX(sum_x / cluster.second.size());
-      mean_particle.pose.getOrigin().setY(sum_y / cluster.second.size());
+      tf2::Vector3 mean_origin;
+      tf2::Quaternion mean_rotation;
+      mean_origin.setX(sum_x / cluster.second.size());
+      mean_origin.setY(sum_y / cluster.second.size());
       double mean_theta = atan2(sum_sin_theta, sum_cos_theta);
-      mean_particle.pose.getRotation().setEuler(mean_theta, 0, 0);
-      mean_particle.weight = sum_weight;
+      mean_rotation.setRPY(0, 0, mean_theta);
+      Particle mean_particle(tf2::Transform(mean_rotation, mean_origin), sum_weight);
       merged_particles.push_back(std::move(mean_particle));
       nr_particles -= cluster.second.size() - 1;
       ROS_DEBUG_NAMED(name, "Merged %lu particles", cluster.second.size());
