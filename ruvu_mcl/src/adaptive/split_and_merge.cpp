@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "./particle_filter.hpp"
+#include "../particle_filter.hpp"
 #include "ros/console.h"
 #include "tf2/utils.h"
 
@@ -16,6 +16,7 @@ constexpr auto name = "split_and_merge";
 
 SplitAndMerge::SplitAndMerge(const Config & config)
 {
+  ROS_INFO_NAMED(name, "Using SplitAndMerge adaptive method");
   adaptive_config_ = std::get<SplitAndMergeConfig>(config.adaptive);
   config_ = config;
 }

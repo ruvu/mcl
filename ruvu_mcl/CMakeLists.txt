@@ -58,6 +58,8 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
+  src/adaptive/fixed.cpp
+  src/adaptive/split_and_merge.cpp
   src/config.cpp
   src/filter.cpp
   src/map.cpp
@@ -71,7 +73,6 @@ add_library(${PROJECT_NAME}
   src/sensor_models/beam_model.cpp
   src/sensor_models/laser.cpp
   src/sensor_models/likelihood_field_model.cpp
-  src/split_and_merge.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

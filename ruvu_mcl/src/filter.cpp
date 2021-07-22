@@ -6,13 +6,14 @@
 #include <memory>
 #include <utility>
 
+#include "./adaptive/fixed.hpp"
+#include "./adaptive/split_and_merge.hpp"
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
 #include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
-#include "./split_and_merge.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "map"
 #include "ruvu_mcl/AMCLConfig.h"
@@ -57,8 +58,10 @@ void Filter::configure(const Config & config)
   else
     throw std::logic_error("no motion model configured");
 
-  if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge)
+  if (std::holds_alternative<SplitAndMergeConfig>(config.adaptive))
     adaptive_ = std::make_unique<SplitAndMerge>(config);
+  else
+    adaptive_ = std::make_unique<Fixed>(config);
 
   if (filter_.particles.size() == 0) {
     auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -91,6 +94,9 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
 
+  assert(adaptive_);
+  adaptive_->before_odometry_update(&filter_);
+
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
   if (
     diff.getOrigin().length() < config_.update_min_d &&
@@ -108,7 +114,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   last_odom_pose_ = odom_pose;
 
-  if (config_.adaptive_type == ruvu_mcl::AMCL_split_and_merge) adaptive_->merge_particles(&filter_);
+  adaptive_->after_odometry_update(&filter_);
 
   if (!map_) {
     ROS_WARN_NAMED(name, "no map yet received, skipping sensor model");
@@ -140,7 +146,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
-  if (config_.adaptive_type == ruvu_mcl::AMCL_split_and_merge) adaptive_->split_particles(&filter_);
+  adaptive_->after_sensor_update(&filter_);
 
   // Resample
   if (config_.selective_resampling) {

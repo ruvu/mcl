@@ -71,7 +71,6 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     throw std::runtime_error(ss.str());
   }
 
-  adaptive_type = config.adaptive_type;
   if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge) {
     SplitAndMergeConfig c;
     c.xy_grid_size = config.xy_grid_size;

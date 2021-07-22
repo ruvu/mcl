@@ -4,9 +4,9 @@
 
 #include <memory>
 
+#include "./adaptive/adaptive_method.hpp"
 #include "./config.hpp"
 #include "./particle_filter.hpp"
-#include "./split_and_merge.hpp"
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 #include "tf2_ros/transform_broadcaster.h"
@@ -86,5 +86,5 @@ private:
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;
-  std::unique_ptr<SplitAndMerge> adaptive_;
+  std::unique_ptr<AdaptiveMethod> adaptive_;
 };
