@@ -15,13 +15,10 @@
 #include "./sensor_models/beam_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "map"
-#include "ruvu_mcl/AMCLConfig.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
-#include "vector"
 #include "visualization_msgs/Marker.h"
 
 constexpr auto name = "filter";
