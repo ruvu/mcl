@@ -38,7 +38,7 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
   for (const auto & cluster : grid_clusters) {
     if (
       cluster.second.size() == 1 ||
-      nr_particles < config_.min_particles + cluster.second.size() + 1) {
+      nr_particles < config_.min_particles + cluster.second.size() - 1) {
       merged_particles.insert(merged_particles.end(), cluster.second.begin(), cluster.second.end());
     } else {
       double sum_x = 0;
@@ -73,7 +73,8 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
   std::vector<Particle> spawn_particles;
   for (auto & particle : pf->particles) {
     size_t spawn = particle.weight / adaptive_config_.split_weight;
-    spawn = std::min(spawn, (config_.max_particles - pf->particles.size()));
+    spawn =
+      std::min(spawn, (config_.max_particles - (pf->particles.size() + spawn_particles.size())));
     if (spawn) {
       ROS_DEBUG_NAMED(name, "Split particle into %lu equals", spawn + 1);
       particle.weight /= spawn + 1;
