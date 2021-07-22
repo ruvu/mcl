@@ -17,6 +17,7 @@
 #include "map"
 #include "ruvu_mcl/AMCLConfig.h"
 #include "sensor_msgs/LaserScan.h"
+#include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
 #include "vector"
@@ -29,6 +30,7 @@ Filter::Filter(
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
 : buffer_(buffer),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+  count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
   config_(),
   rng_(std::make_unique<Rng>()),
@@ -150,6 +152,9 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   // Create output
   publish_particle_cloud(scan->header.stamp);
+  std_msgs::UInt32 count;
+  count.data = filter_.particles.size();
+  count_pub_.publish(count);
   last_pose_ = get_output_pose(filter_);
   publish_pose_with_covariance(last_pose_.value(), scan->header.stamp);
   broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);

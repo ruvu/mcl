@@ -71,6 +71,7 @@ private:
 
   // data output
   ros::Publisher cloud_pub_;
+  ros::Publisher count_pub_;
   ros::Publisher pose_pub_;
   tf2_ros::TransformBroadcaster transform_br_;
 
