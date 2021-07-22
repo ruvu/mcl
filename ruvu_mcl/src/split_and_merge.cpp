@@ -2,12 +2,15 @@
 
 #include "./split_and_merge.hpp"
 
-#include "algorithm"
-#include "map"
+#include <algorithm>
+#include <map>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "./particle_filter.hpp"
+#include "ros/console.h"
 #include "tf2/utils.h"
-#include "tuple"
-#include "utility"
-#include "vector"
 
 constexpr auto name = "split_and_merge";
 

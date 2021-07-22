@@ -17,7 +17,7 @@ class MotionModel;
 class ParticleFilter;
 class Resampler;
 class Rng;
-class SplitAndMerge;
+class AdaptiveMethod;
 namespace ros
 {
 class NodeHandle;

@@ -2,10 +2,11 @@
 
 #include <vector>
 
+#include "../src/adaptive/split_and_merge.hpp"
 #include "../src/config.hpp"
-#include "../src/filter.hpp"
 #include "../src/particle_filter.hpp"
 #include "gtest/gtest.h"
+#include "ros/console.h"
 #include "tf2/utils.h"
 
 class FilterTest : public ::testing::Test
