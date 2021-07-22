@@ -17,6 +17,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/UInt32.h"
+#include <tf2/transform_datatypes.h>
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
 #include "visualization_msgs/Marker.h"
@@ -158,8 +159,10 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   std_msgs::UInt32 count;
   count.data = filter_.particles.size();
   count_pub_.publish(count);
-  last_pose_ = get_output_pose(filter_);
-  publish_pose_with_covariance(last_pose_.value(), scan->header.stamp);
+  average_pose_with_covariance_stamped =
+    filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
+  tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
+  pose_pub_.publish(std::move(average_pose_with_covariance_stamped));
   broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
 }
 
@@ -188,8 +191,10 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
   publish_particle_cloud(initial_pose->header.stamp);
-  last_pose_ = get_output_pose(filter_);
-  publish_pose_with_covariance(last_pose_.value(), initial_pose->header.stamp);
+  average_pose_with_covariance_stamped =
+    filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
+  tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
+  pose_pub_.publish(std::move(average_pose_with_covariance_stamped));
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
@@ -247,33 +252,6 @@ void Filter::publish_particle_cloud(const ros::Time & time)
   }
 
   cloud_pub_.publish(std::move(m));
-}
-
-tf2::Transform Filter::get_output_pose(const ParticleFilter pf)
-{
-  // Find best particle
-  Particle max_weight_particle(tf2::Transform::getIdentity(), 0);
-  for (const auto & particle : filter_.particles) {
-    if (particle.weight > max_weight_particle.weight) {
-      max_weight_particle = particle;
-    }
-  }
-  return max_weight_particle.pose;
-}
-
-void Filter::publish_pose_with_covariance(const tf2::Transform pose, const ros::Time & stamp)
-{
-  // Publish PoseWithCovarianceStamped
-  geometry_msgs::PoseWithCovarianceStamped pose_msg;
-  pose_msg.header.stamp = stamp;
-  pose_msg.header.frame_id = config_.global_frame_id;
-
-  tf2::toMsg(pose, pose_msg.pose.pose);
-  auto cov = filter_.get_2d_covariance_array();
-  assert(cov.size() == pose_msg.pose.covariance.size());
-  std::copy(cov.begin(), cov.end(), pose_msg.pose.covariance.begin());
-
-  pose_pub_.publish(std::move(pose_msg));
 }
 
 void Filter::broadcast_tf(
