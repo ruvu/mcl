@@ -87,6 +87,7 @@ public:
         ROS_WARN_STREAM("Unsupported message type " << msg.getTopic());
       }
       sleep.sleep();
+      ros::spinOnce();  // handle dynamic reconfigure calls
     }
   }
 

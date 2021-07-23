@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "./adaptive/adaptive_method.hpp"
 #include "./config.hpp"
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
@@ -16,6 +17,7 @@ class MotionModel;
 class ParticleFilter;
 class Resampler;
 class Rng;
+class AdaptiveMethod;
 namespace ros
 {
 class NodeHandle;
@@ -69,6 +71,7 @@ private:
 
   // data output
   ros::Publisher cloud_pub_;
+  ros::Publisher count_pub_;
   ros::Publisher pose_pub_;
   tf2_ros::TransformBroadcaster transform_br_;
 
@@ -83,4 +86,5 @@ private:
   std::map<std::string, std::unique_ptr<Laser>> lasers_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;
+  std::unique_ptr<AdaptiveMethod> adaptive_;
 };

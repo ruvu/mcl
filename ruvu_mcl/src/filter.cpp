@@ -6,6 +6,8 @@
 #include <memory>
 #include <utility>
 
+#include "./adaptive/fixed.hpp"
+#include "./adaptive/split_and_merge.hpp"
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
@@ -14,6 +16,7 @@
 #include "./sensor_models/likelihood_field_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
+#include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
 #include "visualization_msgs/Marker.h"
@@ -25,6 +28,7 @@ Filter::Filter(
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
 : buffer_(buffer),
   cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+  count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
   config_(),
   rng_(std::make_unique<Rng>()),
@@ -34,7 +38,8 @@ Filter::Filter(
   map_(nullptr),
   lasers_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
-  resample_count_(0)
+  resample_count_(0),
+  adaptive_(nullptr)
 {
 }
 
@@ -49,6 +54,11 @@ void Filter::configure(const Config & config)
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
   else
     throw std::logic_error("no motion model configured");
+
+  if (std::holds_alternative<SplitAndMergeConfig>(config.adaptive))
+    adaptive_ = std::make_unique<SplitAndMerge>(config);
+  else
+    adaptive_ = std::make_unique<Fixed>(config);
 
   if (filter_.particles.size() == 0) {
     auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -81,6 +91,9 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
 
+  assert(adaptive_);
+  adaptive_->before_odometry_update(&filter_);
+
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
   if (
     diff.getOrigin().length() < config_.update_min_d &&
@@ -97,6 +110,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   model_->odometry_update(&filter_, odom_pose, diff);
 
   last_odom_pose_ = odom_pose;
+
+  adaptive_->after_odometry_update(&filter_);
 
   if (!map_) {
     ROS_WARN_NAMED(name, "no map yet received, skipping sensor model");
@@ -128,6 +143,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   LaserData data(*scan, tf);
   lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
 
+  adaptive_->after_sensor_update(&filter_);
+
   // Resample
   if (config_.selective_resampling) {
     if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)
@@ -138,6 +155,9 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   // Create output
   publish_particle_cloud(scan->header.stamp);
+  std_msgs::UInt32 count;
+  count.data = filter_.particles.size();
+  count_pub_.publish(count);
   last_pose_ = get_output_pose(filter_);
   publish_pose_with_covariance(last_pose_.value(), scan->header.stamp);
   broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);

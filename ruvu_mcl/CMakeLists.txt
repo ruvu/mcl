@@ -58,6 +58,8 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
+  src/adaptive/fixed.cpp
+  src/adaptive/split_and_merge.cpp
   src/config.cpp
   src/filter.cpp
   src/map.cpp
@@ -161,6 +163,18 @@ if(CATKIN_ENABLE_TESTING)
     ${Boost_LIBRARIES}
   )
 
+  add_executable(plot_adaptive
+    test/plot_adaptive.cpp
+  )
+  target_include_directories(plot_adaptive
+    SYSTEM PRIVATE
+      ${Boost_INCLUDE_DIRS}
+  )
+  target_link_libraries(plot_adaptive
+    ${PROJECT_NAME}
+    ${Boost_LIBRARIES}
+  )
+
   add_executable(render_scan
     test/render_scan.cpp
   )
@@ -192,4 +206,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_particle_filter test/test_particle_filter.cpp)
   target_link_libraries(test_particle_filter ${PROJECT_NAME})
+
+  catkin_add_gtest(test_split_and_merge test/test_split_and_merge.cpp)
+  target_link_libraries(test_split_and_merge ${PROJECT_NAME})
 endif()
