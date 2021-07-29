@@ -66,9 +66,11 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
       Particle mean_particle(tf2::Transform(mean_rotation, mean_origin), sum_weight);
       merged_particles.push_back(std::move(mean_particle));
       nr_particles -= cluster.second.size() - 1;
-      ROS_DEBUG_NAMED(name, "Merged %lu particles", cluster.second.size());
     }
   }
+  ROS_DEBUG_NAMED(
+    name, "merging reduced particles from %zu to %zu particles", pf->particles.size(),
+    merged_particles.size());
   pf->particles = merged_particles;
 }
 
@@ -80,7 +82,6 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
     spawn =
       std::min(spawn, (config_.max_particles - (pf->particles.size() + spawn_particles.size())));
     if (spawn) {
-      ROS_DEBUG_NAMED(name, "Split particle into %lu equals", spawn + 1);
       particle.weight /= spawn + 1;
       for (size_t i = 0; i < spawn; i++) {
         spawn_particles.push_back(std::move(particle));
@@ -88,8 +89,10 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
     }
   }
 
+  ROS_DEBUG_NAMED(
+    name, "splitting increased particles from %zu to %zu particles", pf->particles.size(),
+    pf->particles.size() + spawn_particles.size());
   for (auto particle : spawn_particles) {
     pf->particles.push_back(std::move(particle));
   }
-  ROS_DEBUG_NAMED(name, "Using %lu particles", pf->particles.size());
 }
