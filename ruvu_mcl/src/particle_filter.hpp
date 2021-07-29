@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "tf2/LinearMath/Transform.h"
 
 class Particle
@@ -23,5 +24,6 @@ public:
 
   void normalize_weights();
   double calc_effective_sample_size();
-  std::array<double, 36> get_2d_covariance_array();
+  geometry_msgs::PoseWithCovarianceStamped get_pose_with_covariance_stamped(
+    const ros::Time stamp, const std::string frame_id);
 };
