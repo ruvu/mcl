@@ -194,7 +194,6 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
 {
-  ROS_DEBUG_NAMED(name, "get_odom_pose at time=%f", time.toSec());
   geometry_msgs::Pose odom_pose;
   tf2::toMsg(tf2::Transform::getIdentity(), odom_pose);
 
