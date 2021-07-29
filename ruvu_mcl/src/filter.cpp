@@ -17,7 +17,7 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/UInt32.h"
-#include <tf2/transform_datatypes.h>
+#include "tf2/transform_datatypes.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
 #include "visualization_msgs/Marker.h"
@@ -159,7 +159,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   std_msgs::UInt32 count;
   count.data = filter_.particles.size();
   count_pub_.publish(count);
-  average_pose_with_covariance_stamped =
+  geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped =
     filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
   tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
   pose_pub_.publish(std::move(average_pose_with_covariance_stamped));
@@ -191,7 +191,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
   publish_particle_cloud(initial_pose->header.stamp);
-  average_pose_with_covariance_stamped =
+  geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped =
     filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
   tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
   pose_pub_.publish(std::move(average_pose_with_covariance_stamped));

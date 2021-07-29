@@ -78,7 +78,6 @@ private:
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
   std::optional<tf2::Transform> last_pose_;
-  geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
