@@ -66,6 +66,7 @@ public:
     auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 100);
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
     auto tf_pub = nh.advertise<tf2_msgs::TFMessage>("/tf", 100);
+    ros::WallDuration{0.1}.sleep();  // wait for topics to connect
 
     std::vector<std::string> topics = {"/scan", "/map", "/initialpose", "/tf"};
     rosbag::View view(bag, rosbag::TopicQuery(topics));
