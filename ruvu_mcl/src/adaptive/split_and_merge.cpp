@@ -78,12 +78,12 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
 {
   std::vector<Particle> spawn_particles;
   for (auto & particle : pf->particles) {
-    int16_t spawn = particle.weight / adaptive_config_.split_weight;
+    int spawn = particle.weight / adaptive_config_.split_weight;
     spawn = std::min(
-      spawn, (int16_t)(config_.max_particles - (pf->particles.size() + spawn_particles.size())));
+      spawn, static_cast<int>(config_.max_particles - (pf->particles.size() + spawn_particles.size())));
     if (spawn > 0) {
       particle.weight /= spawn + 1;
-      for (int16_t i = 0; i < spawn; i++) {
+      for (int i = 0; i < spawn; i++) {
         spawn_particles.push_back(std::move(particle));
       }
     }
