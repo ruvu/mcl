@@ -6,6 +6,7 @@
 
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
+#include "visualization_msgs/Marker.h"
 
 namespace ros
 {
@@ -28,5 +29,6 @@ public:
 
 private:
   ros::Publisher cloud_pub_;
+  visualization_msgs::Marker marker_;  // as member to reduce allocations
 };
 }  // namespace ruvu_mcl

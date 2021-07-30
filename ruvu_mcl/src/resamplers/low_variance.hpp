@@ -3,6 +3,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "./resampler.hpp"
 
@@ -10,6 +11,7 @@ namespace ruvu_mcl
 {
 // forward declare
 class Rng;
+class Particle;
 
 class LowVariance : public Resampler
 {
@@ -24,5 +26,6 @@ public:
 
 private:
   std::shared_ptr<Rng> rng_;
+  std::vector<Particle> buffer_;  // working space to avoid allocations
 };
 }  // namespace ruvu_mcl

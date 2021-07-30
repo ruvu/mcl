@@ -22,8 +22,8 @@ bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
   double step_size = 1. / needed_particles;
   auto gen_uniform = rng_->uniform_distribution(0, step_size);
 
-  ParticleFilter pf_resampled;
-  pf_resampled.particles.reserve(needed_particles);
+  buffer_.clear();
+  buffer_.reserve(needed_particles);
   double r = gen_uniform();
   double c = pf->particles.at(0).weight;
   int i = 0;
@@ -33,10 +33,10 @@ bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
       i++;
       c += pf->particles.at(i).weight;
     }
-    pf_resampled.particles.emplace_back(pf->particles.at(i));
+    buffer_.emplace_back(pf->particles.at(i));
   }
-  pf_resampled.normalize_weights();
-  *pf = pf_resampled;
+  std::swap(pf->particles, buffer_);
+  pf->normalize_weights();
   return true;
 }
 }  // namespace ruvu_mcl

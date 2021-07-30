@@ -23,16 +23,17 @@ void CloudPublisher::publish(const std_msgs::Header & header, const std::vector<
   constexpr double length = 0.1;
   constexpr double width = 0.02;
 
-  visualization_msgs::Marker m;
-  m.header = header;
-  m.ns = "particles";
-  m.id = 0;
-  m.type = visualization_msgs::Marker::LINE_LIST;
-  m.action = visualization_msgs::Marker::MODIFY;
-  m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
-  m.scale.x = width;
-  m.points.reserve(pf.size() * 2);
-  m.colors.reserve(pf.size() * 2);
+  marker_.header = header;
+  marker_.ns = "particles";
+  marker_.id = 0;
+  marker_.type = visualization_msgs::Marker::LINE_LIST;
+  marker_.action = visualization_msgs::Marker::MODIFY;
+  marker_.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
+  marker_.scale.x = width;
+  marker_.points.clear();
+  marker_.colors.clear();
+  marker_.points.reserve(pf.size() * 2);
+  marker_.colors.reserve(pf.size() * 2);
 
   double max_weight = 0;
   for (const auto & p : pf) max_weight = std::max(max_weight, p.weight);
@@ -42,18 +43,18 @@ void CloudPublisher::publish(const std_msgs::Header & header, const std::vector<
     std_msgs::ColorRGBA c;
     c.a = particle.weight / max_weight;
     c.b = 1;
-    m.colors.push_back(c);
-    m.colors.push_back(c);
+    marker_.colors.push_back(c);
+    marker_.colors.push_back(c);
 
     geometry_msgs::Point front;
     tf2::toMsg(particle.pose * p1, front);
-    m.points.push_back(front);
+    marker_.points.push_back(front);
 
     geometry_msgs::Point back;
     tf2::toMsg(particle.pose * -p1, back);
-    m.points.push_back(back);
+    marker_.points.push_back(back);
   }
 
-  cloud_pub_.publish(m);
+  cloud_pub_.publish(marker_);
 }
 }  // namespace ruvu_mcl
