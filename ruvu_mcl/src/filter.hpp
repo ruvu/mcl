@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "./adaptive/adaptive_method.hpp"
+#include "./cloud_publisher.hpp"
 #include "./config.hpp"
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
@@ -60,7 +60,6 @@ public:
 
 private:
   tf2::Transform get_odom_pose(const ros::Time & time);
-  void publish_particle_cloud(const ros::Time & time);
   void broadcast_tf(
     const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
 
@@ -68,7 +67,7 @@ private:
   std::shared_ptr<const tf2_ros::Buffer> buffer_;
 
   // data output
-  ros::Publisher cloud_pub_;
+  CloudPublisher cloud_pub_;
   ros::Publisher count_pub_;
   ros::Publisher pose_pub_;
   tf2_ros::TransformBroadcaster transform_br_;

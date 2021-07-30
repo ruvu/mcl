@@ -8,6 +8,7 @@
 
 #include "./adaptive/fixed.hpp"
 #include "./adaptive/split_and_merge.hpp"
+#include "./cloud_publisher.hpp"
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
@@ -17,10 +18,8 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/UInt32.h"
-#include "tf2/transform_datatypes.h"
 #include "tf2/utils.h"
 #include "tf2_ros/buffer.h"
-#include "visualization_msgs/Marker.h"
 
 constexpr auto name = "filter";
 
@@ -28,7 +27,7 @@ Filter::Filter(
   ros::NodeHandle nh, ros::NodeHandle private_nh,
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
 : buffer_(buffer),
-  cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1)),
+  cloud_pub_(nh, private_nh),
   count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
   config_(),
@@ -155,7 +154,10 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   // Create output
-  publish_particle_cloud(scan->header.stamp);
+  std_msgs::Header header;
+  header.stamp = scan->header.stamp;
+  header.frame_id = config_.global_frame_id;
+  cloud_pub_.publish(header, filter_);
   std_msgs::UInt32 count;
   count.data = filter_.particles.size();
   count_pub_.publish(count);
@@ -190,7 +192,8 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     q.setRPY(0, 0, dt());
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
-  publish_particle_cloud(initial_pose->header.stamp);
+
+  cloud_pub_.publish(initial_pose->header, filter_);
   geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped =
     filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
   tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
@@ -209,48 +212,6 @@ tf2::Transform Filter::get_odom_pose(const ros::Time & time)
   tf2::Transform odom_pose_tf;
   tf2::convert(odom_pose, odom_pose_tf);
   return odom_pose_tf;
-}
-
-void Filter::publish_particle_cloud(const ros::Time & time)
-{
-  constexpr double length = 0.1;
-  constexpr double width = 0.02;
-
-  visualization_msgs::Marker m;
-  m.header.stamp = time;
-  m.header.frame_id = config_.global_frame_id;
-  m.ns = "particles";
-  m.id = 0;
-  m.type = visualization_msgs::Marker::LINE_LIST;
-  m.action = visualization_msgs::Marker::MODIFY;
-  m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
-  m.scale.x = width;
-  m.points.reserve(filter_.particles.size() * 2);
-  m.colors.reserve(filter_.particles.size() * 2);
-
-  double max_weight = 0;
-  for (const auto & p : filter_.particles) max_weight = std::max(max_weight, p.weight);
-
-  tf2::Vector3 p1{length / 2, 0, 0};
-  for (const auto & particle : filter_.particles) {
-    std_msgs::ColorRGBA c;
-    c.a = particle.weight / max_weight;
-    c.b = 1;
-    m.colors.push_back(c);
-    m.colors.push_back(std::move(c));
-    {
-      geometry_msgs::Point tmp;
-      tf2::toMsg(particle.pose * p1, tmp);
-      m.points.push_back(std::move(tmp));
-    }
-    {
-      geometry_msgs::Point tmp;
-      tf2::toMsg(particle.pose * -p1, tmp);
-      m.points.push_back(std::move(tmp));
-    }
-  }
-
-  cloud_pub_.publish(std::move(m));
 }
 
 void Filter::broadcast_tf(
