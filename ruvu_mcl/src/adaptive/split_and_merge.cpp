@@ -111,3 +111,5 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
     pf->particles.push_back(std::move(particle));
   }
 }
+
+int SplitAndMerge::calc_needed_particles(ParticleFilter * pf) { return pf->particles.size(); }

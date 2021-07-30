@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "./adaptive/fixed.hpp"
+#include "./adaptive/kld_sampling.hpp"
 #include "./adaptive/split_and_merge.hpp"
 #include "./cloud_publisher.hpp"
 #include "./map.hpp"
@@ -55,10 +56,14 @@ void Filter::configure(const Config & config)
   else
     throw std::logic_error("no motion model configured");
 
-  if (std::holds_alternative<SplitAndMergeConfig>(config.adaptive))
+  if (std::holds_alternative<FixedConfig>(config.adaptive))
+    adaptive_ = std::make_unique<Fixed>(config);
+  else if (auto c = std::get_if<KLDSamplingConfig>(&config.adaptive))
+    adaptive_ = std::make_unique<KLDSampling>(*c);
+  else if (std::holds_alternative<SplitAndMergeConfig>(config.adaptive))
     adaptive_ = std::make_unique<SplitAndMerge>(config);
   else
-    adaptive_ = std::make_unique<Fixed>(config);
+    throw std::logic_error("no adaptive algorithm configured");
 
   if (filter_.particles.size() == 0) {
     auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
@@ -91,9 +96,6 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
 
-  assert(adaptive_);
-  adaptive_->before_odometry_update(&filter_);
-
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
   if (
     diff.getOrigin().length() < config_.update_min_d &&
@@ -111,6 +113,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   last_odom_pose_ = odom_pose;
 
+  assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
 
   if (!map_) {
@@ -145,12 +148,15 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   adaptive_->after_sensor_update(&filter_);
 
+  auto needed_particles = adaptive_->calc_needed_particles(&filter_);
+
   // Resample
   if (config_.selective_resampling) {
     if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)
-      resampler_->resample(&filter_);
+      resampler_->resample(&filter_, needed_particles);
   } else {
-    if (!(++resample_count_ % config_.resample_interval)) resampler_->resample(&filter_);
+    if (!(++resample_count_ % config_.resample_interval))
+      resampler_->resample(&filter_, needed_particles);
   }
 
   // Create output
