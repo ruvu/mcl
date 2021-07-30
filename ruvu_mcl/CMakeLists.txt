@@ -60,6 +60,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/adaptive/fixed.cpp
   src/adaptive/split_and_merge.cpp
+  src/cloud_publisher.cpp
   src/config.cpp
   src/filter.cpp
   src/map.cpp
