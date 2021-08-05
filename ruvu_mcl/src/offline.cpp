@@ -63,10 +63,12 @@ public:
       filter_.configure(Config{config});
     });
 
-    auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 1);
+    auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 100);
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+    auto tf_pub = nh.advertise<tf2_msgs::TFMessage>("/tf", 100);
+    ros::WallDuration{0.1}.sleep();  // wait for topics to connect
 
-    std::vector<std::string> topics = {"/scan", "/map", "/initialpose"};
+    std::vector<std::string> topics = {"/scan", "/map", "/initialpose", "/tf"};
     rosbag::View view(bag, rosbag::TopicQuery(topics));
 
     ros::WallDuration sleep{private_nh.param("sleep", 0.0)};
@@ -83,6 +85,8 @@ public:
         geometry_msgs::PoseWithCovarianceStampedConstPtr initialpose =
           msg.instantiate<geometry_msgs::PoseWithCovarianceStamped>()) {
         filter_.initial_pose_cb(initialpose);
+      } else if (tf2_msgs::TFMessageConstPtr tf = msg.instantiate<tf2_msgs::TFMessage>()) {
+        tf_pub.publish(tf);
       } else {
         ROS_WARN_STREAM("Unsupported message type " << msg.getTopic());
       }

@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+import os
+import signal
+import subprocess
+from argparse import ArgumentParser, FileType
+from copy import deepcopy
+
+import rospy
+from nav_msgs.msg import OccupancyGrid
+from rosbag import Bag
+
+
+class Benchmark:
+    def __init__(self, bagfile, map) -> None:
+        with Bag(bagfile.name, 'r') as bag:
+            for _ in bag.read_messages(topics=['/map']):
+                raise RuntimeError('bagfile already contains a map')
+
+        with subprocess.Popen(['rosrun', 'map_server', 'map_server', map.name]) as p:
+            print('waiting for the map')
+            msg = rospy.wait_for_message('map', OccupancyGrid, timeout=5)
+            print('received a map')
+            p.kill()
+
+        if p.returncode and -p.returncode != signal.SIGKILL:
+            raise subprocess.CalledProcessError(p.returncode, p.args)
+
+        print('writing the map to the bagfile')
+        with Bag(bagfile.name, 'a') as bag:
+            # determine first timestamp
+            for _, _, t, connection_header in bag.read_messages(topics=['/tf'], return_connection_header=True):
+                break
+            msg.header.stamp = t
+            topic = '/map'
+            connection_header = deepcopy(connection_header)
+            connection_header['topic'] = topic
+            connection_header['latching'] = '1'
+            connection_header['type'] = msg._type
+            connection_header['md5sum'] = msg._md5sum
+            connection_header['message_definition'] = msg._full_text
+            bag.write(topic, msg, t=t, connection_header=connection_header)
+        print('OK')
+
+
+def main(bagfile, map):
+    Benchmark(bagfile, map)
+
+
+if __name__ == '__main__':
+    rospy.init_node(os.path.basename(__file__))
+    parser = ArgumentParser(description='Benchmark')
+    parser.add_argument('bagfile', type=FileType('r'))
+    parser.add_argument('map', type=FileType('r'))
+    args = parser.parse_args()
+    main(**vars(args))

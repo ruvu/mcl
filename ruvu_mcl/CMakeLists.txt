@@ -118,6 +118,12 @@ install(TARGETS ${PROJECT_NAME}
 #   PATTERN ".svn" EXCLUDE
 # )
 
+catkin_install_python(PROGRAMS
+    scripts/add_map_to_rosbag
+    scripts/plot_benchmark_results
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Testing ##
 #############
