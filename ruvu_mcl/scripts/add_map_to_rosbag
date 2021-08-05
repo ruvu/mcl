@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import os
+import signal
 import subprocess
 from argparse import ArgumentParser, FileType
 from copy import deepcopy
-from typing import Optional
 
 import rospy
 from nav_msgs.msg import OccupancyGrid
@@ -12,33 +12,34 @@ from rosbag import Bag
 
 class Benchmark:
     def __init__(self, bagfile, map) -> None:
-        self.map = None  # type: Optional[OccupancyGrid]
-        sub = rospy.Subscriber('map', OccupancyGrid, self.map_cb)
-        try:
-            subprocess.run(['rosrun', 'map_server', 'map_server', map.name], check=True, timeout=2)
-        except subprocess.TimeoutExpired:
-            pass
+        with Bag(bagfile.name, 'r') as bag:
+            for _ in bag.read_messages(topics=['/map']):
+                raise RuntimeError('bagfile already contains a map')
+
+        with subprocess.Popen(['rosrun', 'map_server', 'map_server', map.name]) as p:
+            print('waiting for the map')
+            msg = rospy.wait_for_message('map', OccupancyGrid, timeout=5)
+            print('received a map')
+            p.kill()
+
+        if p.returncode and -p.returncode != signal.SIGKILL:
+            raise subprocess.CalledProcessError(p.returncode, p.args)
 
         print('writing the map to the bagfile')
-        topic = '/map'
         with Bag(bagfile.name, 'a') as bag:
-
             # determine first timestamp
             for _, _, t, connection_header in bag.read_messages(topics=['/tf'], return_connection_header=True):
                 break
-            self.map.header.stamp = t
+            msg.header.stamp = t
+            topic = '/map'
             connection_header = deepcopy(connection_header)
             connection_header['topic'] = topic
             connection_header['latching'] = '1'
-            connection_header['type'] = self.map._type
-            connection_header['md5sum'] = self.map._md5sum
-            connection_header['message_definition'] = self.map._full_text
-            bag.write(topic, self.map, t=t, connection_header=connection_header)
+            connection_header['type'] = msg._type
+            connection_header['md5sum'] = msg._md5sum
+            connection_header['message_definition'] = msg._full_text
+            bag.write(topic, msg, t=t, connection_header=connection_header)
         print('OK')
-
-    def map_cb(self, msg):
-        print('received the map from the map server')
-        self.map = msg
 
 
 def main(bagfile, map):
