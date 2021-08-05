@@ -3,8 +3,9 @@
 #include "./split_and_merge.hpp"
 
 #include <algorithm>
-#include <map>
+#include <boost/functional/hash.hpp>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -13,6 +14,19 @@
 #include "tf2/utils.h"
 
 constexpr auto name = "split_and_merge";
+
+using Key = std::tuple<int, int, int>;
+
+struct KeyHasher
+{
+  std::size_t operator()(const Key & key) const noexcept
+  {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, 1);
+    boost::hash_combine(seed, 2);
+    return seed;
+  }
+};
 
 SplitAndMerge::SplitAndMerge(const Config & config)
 {
@@ -26,7 +40,7 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
   // Based on paper: Monte Carlo localization for mobile robot using adaptive particle merging and splitting technique
 
   // Discretize particles:
-  std::map<std::tuple<int, int, int>, std::vector<Particle> > grid_clusters;
+  std::unordered_map<Key, std::vector<Particle>, KeyHasher> grid_clusters;
   for (auto & particle : pf->particles) {
     int i = particle.pose.getOrigin().getX() / adaptive_config_.xy_grid_size;
     int j = particle.pose.getOrigin().getY() / adaptive_config_.xy_grid_size;
@@ -80,7 +94,8 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
   for (auto & particle : pf->particles) {
     int spawn = particle.weight / adaptive_config_.split_weight;
     spawn = std::min(
-      spawn, static_cast<int>(config_.max_particles - (pf->particles.size() + spawn_particles.size())));
+      spawn,
+      static_cast<int>(config_.max_particles - (pf->particles.size() + spawn_particles.size())));
     if (spawn > 0) {
       particle.weight /= spawn + 1;
       for (int i = 0; i < spawn; i++) {
