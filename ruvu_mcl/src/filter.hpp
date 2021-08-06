@@ -80,7 +80,12 @@ private:
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
-  std::map<std::string, std::unique_ptr<Laser>> lasers_;
+  std::unique_ptr<Laser> laser_;
+
+  /**
+   * @brief If a measurement from a frame_id should be processed
+   */
+  std::map<std::string, bool> should_process_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;
   std::unique_ptr<AdaptiveMethod> adaptive_;

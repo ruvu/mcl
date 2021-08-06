@@ -37,7 +37,8 @@ Filter::Filter(
   filter_(),
   model_(nullptr),
   map_(nullptr),
-  lasers_(),
+  laser_(nullptr),
+  should_process_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0),
   adaptive_(nullptr)
@@ -49,7 +50,7 @@ void Filter::configure(const Config & config)
   ROS_INFO_NAMED(name, "configure call");
   config_ = config;
 
-  lasers_.clear();  // they will configure themself on next scan_cb
+  laser_.reset();  // they will configure themself on next scan_cb
 
   if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
@@ -97,14 +98,24 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
+
   if (
-    diff.getOrigin().length() < config_.update_min_d &&
-    fabs(tf2::getYaw(diff.getRotation())) < config_.update_min_a) {
+    diff.getOrigin().length() >= config_.update_min_d ||
+    fabs(tf2::getYaw(diff.getRotation())) >= config_.update_min_a) {
+    ROS_DEBUG_NAMED(name, "enough movement detected, processing all sensors");
+    for (auto & s : should_process_) {
+      s.second = true;
+    }
+  }
+
+  if (!should_process_[scan->header.frame_id]) {
     if (last_pose_ && last_odom_pose_) {
       broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
     }
     return;
   }
+  should_process_[scan->header.frame_id] = false;
+
   ROS_DEBUG_NAMED(
     name, "movement: x=%f y=%f t=%f", diff.getOrigin().getX(), diff.getOrigin().getY(),
     tf2::getYaw(diff.getRotation()));
@@ -120,9 +131,8 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     ROS_WARN_NAMED(name, "no map yet received, skipping sensor model");
     return;
   }
-  if (lasers_.find(scan->header.frame_id) == lasers_.end()) {
-    ROS_INFO_NAMED(
-      name, "new laser '%s' found, adding a sensor model", scan->header.frame_id.c_str());
+  if (!laser_) {
+    ROS_INFO_NAMED(name, "adding a laser sensor model");
 
     // TODO(Ramon): A copy is made of the map for each sensor, but hey should all use the same
     // shared pointer
@@ -133,7 +143,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
       sensor = std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map_));
     else
       throw std::logic_error("no laser model configured");
-    lasers_.insert({scan->header.frame_id, std::move(sensor)});
+    laser_ = std::move(sensor);
   }
 
   tf2::Transform tf;
@@ -144,7 +154,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   LaserData data(*scan, tf);
-  lasers_.at(scan->header.frame_id)->sensor_update(&filter_, data);
+  laser_->sensor_update(&filter_, data);
 
   adaptive_->after_sensor_update(&filter_);
 
