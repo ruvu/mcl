@@ -3,6 +3,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 #include "./cloud_publisher.hpp"
 #include "./config.hpp"
@@ -60,6 +61,8 @@ public:
 
 private:
   tf2::Transform get_odom_pose(const ros::Time & time);
+  bool should_process(const tf2::Transform & diff, const std::string & frame_id);
+  void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
   void broadcast_tf(
     const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
 
@@ -76,7 +79,7 @@ private:
   Config config_;
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
-  std::optional<tf2::Transform> last_pose_;
+  tf2::Transform last_pose_;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
