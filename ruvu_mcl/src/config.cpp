@@ -71,7 +71,16 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     throw std::runtime_error(ss.str());
   }
 
-  if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge) {
+  if (config.adaptive_type == ruvu_mcl::AMCL_kld_sampling) {
+    KLDSamplingConfig c;
+    c.min_particles = config.min_particles;
+    c.max_particles = config.max_particles;
+    c.kld_err = config.kld_err;
+    c.kld_z = config.kld_z;
+    c.xy_grid_size = config.xy_grid_size;
+    c.theta_grid_size = config.theta_grid_size;
+    adaptive = c;
+  } else if (config.adaptive_type == ruvu_mcl::AMCL_split_and_merge) {
     SplitAndMergeConfig c;
     c.xy_grid_size = config.xy_grid_size;
     c.theta_grid_size = config.theta_grid_size;

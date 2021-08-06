@@ -15,5 +15,5 @@ public:
    * @param pf Particle filter to use
    * @return if it was succesful
    */
-  virtual bool resample(ParticleFilter * pf) = 0;
+  virtual bool resample(ParticleFilter * pf, int needed_particles) = 0;
 };

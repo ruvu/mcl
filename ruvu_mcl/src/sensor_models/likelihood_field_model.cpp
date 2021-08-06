@@ -56,8 +56,7 @@ double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData 
       // Off-map penalized as max distance
       double z = map_->closest_obstacle(hit);
 
-      if (std::isinf(z))
-        z = data.range_max;
+      if (std::isinf(z)) z = data.range_max;
 
       // Gaussian model
       // NOTE: this should have a normalization of 1/(sqrt(2pi)*sigma)

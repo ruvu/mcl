@@ -8,7 +8,12 @@ class ParticleFilter;
 class AdaptiveMethod
 {
 public:
-  virtual void before_odometry_update(ParticleFilter * pf){};
   virtual void after_odometry_update(ParticleFilter * pf){};
   virtual void after_sensor_update(ParticleFilter * pf){};
+
+  /**
+   * @brief Calculate how many particles are wanted
+   * @return Number of particles
+   */
+  virtual int calc_needed_particles(ParticleFilter * pf) = 0;
 };

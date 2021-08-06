@@ -18,7 +18,7 @@ public:
    * @param pf Particle filter to use
    * @return if it was succesful
    */
-  bool resample(ParticleFilter * pf) override;
+  bool resample(ParticleFilter * pf, int needed_particles) override;
 
 private:
   std::shared_ptr<Rng> rng_;

@@ -14,6 +14,16 @@ namespace ruvu_mcl
 class AMCLConfig;
 }
 
+struct KLDSamplingConfig
+{
+  int min_particles;
+  int max_particles;
+  double kld_err;
+  double kld_z;
+  double xy_grid_size;
+  double theta_grid_size;
+};
+
 struct BeamModelConfig
 {
   double z_hit;
@@ -71,7 +81,7 @@ struct Config
 
   std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
   std::variant<DifferentialMotionModelConfig> model;
-  std::variant<FixedConfig, SplitAndMergeConfig> adaptive;
+  std::variant<FixedConfig, KLDSamplingConfig, SplitAndMergeConfig> adaptive;
 
   std::string odom_frame_id;
   std::string base_frame_id;

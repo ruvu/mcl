@@ -45,7 +45,7 @@ int main()
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   LowVariance resampler{rng};
   for (int j = 0; j < 3; j++) {
-    resampler.resample(&pf);
+    resampler.resample(&pf, pf.particles.size());
     gp << "plot" << gp.file1d(convert_to_gnuplot(pf)) << "title 'Resampling #: " << j + 1 << "'\n";
   }
 }

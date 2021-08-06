@@ -17,6 +17,7 @@ public:
 
   void merge_particles(ParticleFilter * pf);
   void split_particles(ParticleFilter * pf);
+  int calc_needed_particles(ParticleFilter * pf);
 
 private:
   SplitAndMergeConfig adaptive_config_;
