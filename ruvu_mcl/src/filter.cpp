@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "./adaptive/fixed.hpp"
@@ -94,27 +95,16 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first scan_cb, recording the odom pose");
     last_odom_pose_ = odom_pose;
+    broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
     return;
   }
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
-  if (
-    diff.getOrigin().length() >= config_.update_min_d ||
-    fabs(tf2::getYaw(diff.getRotation())) >= config_.update_min_a) {
-    ROS_DEBUG_NAMED(name, "enough movement detected, processing all sensors");
-    for (auto & s : should_process_) {
-      s.second = true;
-    }
-  }
-
-  if (!should_process_[scan->header.frame_id]) {
-    if (last_pose_ && last_odom_pose_) {
-      broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
-    }
+  if (!should_process(diff, scan->header.frame_id)) {
+    broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
     return;
   }
-  should_process_[scan->header.frame_id] = false;
 
   ROS_DEBUG_NAMED(
     name, "movement: x=%f y=%f t=%f", diff.getOrigin().getX(), diff.getOrigin().getY(),
@@ -170,18 +160,10 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   // Create output
-  std_msgs::Header header;
-  header.stamp = scan->header.stamp;
-  header.frame_id = config_.global_frame_id;
-  cloud_pub_.publish(header, filter_);
-  std_msgs::UInt32 count;
-  count.data = filter_.particles.size();
-  count_pub_.publish(count);
-  geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped =
-    filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
-  tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
-  pose_pub_.publish(std::move(average_pose_with_covariance_stamped));
-  broadcast_tf(last_pose_.value(), last_odom_pose_.value(), scan->header.stamp);
+  auto ps = filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
+  publish_data(ps);
+  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
+  broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
 }
 
 void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
@@ -209,11 +191,12 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
 
-  cloud_pub_.publish(initial_pose->header, filter_);
-  geometry_msgs::PoseWithCovarianceStamped average_pose_with_covariance_stamped =
+  auto ps =
     filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
-  tf2::convert(average_pose_with_covariance_stamped.pose.pose, last_pose_.emplace());
-  pose_pub_.publish(std::move(average_pose_with_covariance_stamped));
+  publish_data(ps);
+  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
+  if (last_odom_pose_)                     // before first scan_cb, we can't calculate the tf
+    broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
@@ -228,6 +211,34 @@ tf2::Transform Filter::get_odom_pose(const ros::Time & time)
   tf2::Transform odom_pose_tf;
   tf2::convert(odom_pose, odom_pose_tf);
   return odom_pose_tf;
+}
+
+bool Filter::should_process(const tf2::Transform & diff, const std::string & frame_id)
+{
+  if (
+    diff.getOrigin().length() >= config_.update_min_d ||
+    fabs(tf2::getYaw(diff.getRotation())) >= config_.update_min_a) {
+    ROS_DEBUG_NAMED(name, "enough movement detected, processing all sensors");
+    for (auto & s : should_process_) {
+      s.second = true;
+    }
+  }
+
+  if (should_process_[frame_id]) {
+    should_process_[frame_id] = false;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void Filter::publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps)
+{
+  cloud_pub_.publish(ps.header, filter_);
+  std_msgs::UInt32 count;
+  count.data = filter_.particles.size();
+  count_pub_.publish(count);
+  pose_pub_.publish(std::move(ps));
 }
 
 void Filter::broadcast_tf(
