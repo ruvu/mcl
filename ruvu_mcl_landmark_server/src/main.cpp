@@ -1,7 +1,7 @@
-#include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 
+#include "./filesystem.hpp"
 #include "geometry_msgs/PoseStamped.h"
 #include "ros/node_handle.h"
 #include "ruvu_mcl_msgs/LandmarkList.h"
@@ -75,7 +75,7 @@ public:
     {
       std::string path;
       if (!private_nh.getParam("file_path", path))
-        throw std::runtime_error("file_path does not exist");
+        throw std::runtime_error("parameter 'file_path' does not exist");
       path_ = path;
     }
 
@@ -85,7 +85,7 @@ public:
       std::ifstream file(path_);
       if (!file.is_open()) throw std::runtime_error("file_path can't be opened");
       json j = json::parse(file);
-      j.get_to(landmarks_);
+      landmarks_ = j.get<std::vector<Landmark>>();
       ROS_INFO("successfuly loaded landmarks from %s", path_.c_str());
     }
 
