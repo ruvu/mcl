@@ -1,3 +1,7 @@
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
 <sdf version='1.6'>
   <world name="default">
     <scene>

@@ -1,3 +1,5 @@
+# Copyright 2021 RUVU Robotics B.V.
+
 cmake_minimum_required(VERSION 3.0.2)
 project(ruvu_mcl_landmark_server)
 
