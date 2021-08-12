@@ -8,7 +8,8 @@ Copyright 2021 RUVU Robotics B.V.
   <version>0.0.0</version>
   <description>The ruvu_mcl_landmark_server package</description>
 
-  <maintainer email="ramon@todo.todo">ramon</maintainer>
+  <maintainer email="paul@ruvu.nl">Paul Verhoeckx</maintainer>
+  <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
 
   <license>TODO</license>
 
