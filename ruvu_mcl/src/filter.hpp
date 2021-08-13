@@ -13,12 +13,14 @@
 #include "tf2_ros/transform_broadcaster.h"
 
 // forward declare
+class AdaptiveMethod;
+class LandmarkLikelihoodFieldModel;
+class LandmarkList;
 class Laser;
 class MotionModel;
 class ParticleFilter;
 class Resampler;
 class Rng;
-class AdaptiveMethod;
 namespace ros
 {
 class NodeHandle;
@@ -44,6 +46,10 @@ namespace sensor_msgs
 {
 ROS_DECLARE_MESSAGE(LaserScan)
 }
+namespace ruvu_mcl_msgs
+{
+ROS_DECLARE_MESSAGE(LandmarkList)
+}
 
 class Filter
 {
@@ -56,10 +62,13 @@ public:
   void configure(const Config & config);
 
   void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  void landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
+  void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
 
 private:
+  void odometry_update(const std_msgs::Header & header);
   tf2::Transform get_odom_pose(const ros::Time & time);
   bool should_process(const tf2::Transform & diff, const std::string & frame_id);
   void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
@@ -83,7 +92,9 @@ private:
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
+  std::shared_ptr<LandmarkList> landmarks_;
   std::unique_ptr<Laser> laser_;
+  std::unique_ptr<LandmarkLikelihoodFieldModel> landmark_model_;
 
   /**
    * @brief If a measurement from a frame_id should be processed

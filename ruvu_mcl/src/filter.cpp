@@ -16,8 +16,10 @@
 #include "./resamplers/low_variance.hpp"
 #include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
+#include "./sensor_models/landmark_likelihood_field_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
+#include "ruvu_mcl_msgs/LandmarkList.h"
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
@@ -38,7 +40,9 @@ Filter::Filter(
   filter_(),
   model_(nullptr),
   map_(nullptr),
+  landmarks_(nullptr),
   laser_(nullptr),
+  landmark_model_(nullptr),
   should_process_(),
   resampler_(std::make_unique<LowVariance>(rng_)),
   resample_count_(0),
@@ -51,7 +55,9 @@ void Filter::configure(const Config & config)
   ROS_INFO_NAMED(name, "configure call");
   config_ = config;
 
-  laser_.reset();  // they will configure themself on next scan_cb
+  // they will configure themself on next scan_cb
+  laser_.reset();
+  landmarks_.reset();
 
   if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
@@ -82,37 +88,7 @@ Filter::~Filter() = default;
 
 void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
-  assert(model_);
-
-  tf2::Transform odom_pose;
-  try {
-    odom_pose = get_odom_pose(scan->header.stamp);
-  } catch (const tf2::TransformException & e) {
-    ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
-    return;
-  }
-
-  if (!last_odom_pose_) {
-    ROS_INFO_NAMED(name, "first scan_cb, recording the odom pose");
-    last_odom_pose_ = odom_pose;
-    broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
-    return;
-  }
-
-  auto diff = last_odom_pose_->inverseTimes(odom_pose);
-
-  if (!should_process(diff, scan->header.frame_id)) {
-    broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
-    return;
-  }
-
-  ROS_DEBUG_NAMED(
-    name, "movement: x=%f y=%f t=%f", diff.getOrigin().getX(), diff.getOrigin().getY(),
-    tf2::getYaw(diff.getRotation()));
-
-  model_->odometry_update(&filter_, odom_pose, diff);
-
-  last_odom_pose_ = odom_pose;
+  odometry_update(scan->header);
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -166,10 +142,63 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
 }
 
+void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+{
+  odometry_update(landmarks->header);
+
+  assert(adaptive_);
+  adaptive_->after_odometry_update(&filter_);
+
+  if (!landmarks_) {
+    ROS_WARN_NAMED(name, "no landmark list yet received, skipping sensor model");
+    return;
+  }
+  if (!landmark_model_) {
+    ROS_INFO_NAMED(name, "adding a landmark sensor model");
+    landmark_model_ = std::make_unique<LandmarkLikelihoodFieldModel>(config_.landmark, *landmarks_);
+  }
+
+  //  tf2::Transform tf;
+  //  {
+  //    auto tfs =
+  //      buffer_->lookupTransform(config_.base_frame_id, scan->header.frame_id, scan->header.stamp);
+  //    tf2::fromMsg(tfs.transform, tf);
+  //  }
+
+  //  LaserData data(*scan, tf);
+  //  laser_->sensor_update(&filter_, data);
+
+  adaptive_->after_sensor_update(&filter_);
+
+  auto needed_particles = adaptive_->calc_needed_particles(&filter_);
+
+  // Resample
+  if (config_.selective_resampling) {
+    if (filter_.calc_effective_sample_size() < filter_.particles.size() / 2)
+      resampler_->resample(&filter_, needed_particles);
+  } else {
+    if (!(++resample_count_ % config_.resample_interval))
+      resampler_->resample(&filter_, needed_particles);
+  }
+
+  // Create output
+  auto ps =
+    filter_.get_pose_with_covariance_stamped(landmarks->header.stamp, config_.global_frame_id);
+  publish_data(ps);
+  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
+  broadcast_tf(last_pose_, last_odom_pose_.value(), landmarks->header.stamp);
+}
+
 void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
   ROS_INFO_NAMED(name, "map received");
   map_ = map;
+}
+
+void Filter::landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+{
+  ROS_INFO_NAMED(name, "landmark list received");
+  landmarks_ = std::make_shared<LandmarkList>(*landmarks);
 }
 
 void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
@@ -197,6 +226,41 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
   if (last_odom_pose_)                     // before first scan_cb, we can't calculate the tf
     broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
+}
+
+void Filter::odometry_update(const std_msgs::Header & header)
+{
+  assert(model_);
+
+  tf2::Transform odom_pose;
+  try {
+    odom_pose = get_odom_pose(header.stamp);
+  } catch (const tf2::TransformException & e) {
+    ROS_WARN("Failed to compute odom pose, skipping measurement (%s)", e.what());
+    return;
+  }
+
+  if (!last_odom_pose_) {
+    ROS_INFO_NAMED(name, "first odometry update, recording the odom pose");
+    last_odom_pose_ = odom_pose;
+    broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
+    return;
+  }
+
+  auto diff = last_odom_pose_->inverseTimes(odom_pose);
+
+  if (!should_process(diff, header.frame_id)) {
+    broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
+    return;
+  }
+
+  ROS_DEBUG_NAMED(
+    name, "movement: x=%f y=%f t=%f", diff.getOrigin().getX(), diff.getOrigin().getY(),
+    tf2::getYaw(diff.getRotation()));
+
+  model_->odometry_update(&filter_, odom_pose, diff);
+
+  last_odom_pose_ = odom_pose;
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
