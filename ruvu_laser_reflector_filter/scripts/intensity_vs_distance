@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+# Copyright 2021 RUVU Robotics B.V.
+
+import rospy
+from sensor_msgs.msg import LaserScan
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+class Plotter():
+    def __init__(self):
+        self.ranges = []
+        self.intensities = []
+
+        # Create plot window
+        # self.line, = plt.plot([0],[0],'r.')
+
+        xs = np.linspace(0.1,15,150)
+        # ys = 10000/(pow(xs,2))+2100
+        # ys = 10000*(1/pow(xs,1.5))+2000
+        # ys = 7000*np.exp(-0.4*xs)+2200+ 2000
+        # plt.plot(xs,ys,'b-')
+        # plt.ion()
+
+        self.sub = rospy.Subscriber("scan", LaserScan, self._scan_callback)
+        self.pub = rospy.Publisher("scan_filtered", LaserScan)
+
+    def _scan_callback(self, msg):
+        self.ranges = msg.ranges
+        self.intensities = msg.intensities
+
+        # self.line.axes.set_xlim(msg.range_min, 15)
+        # self.line.axes.set_ylim(0, 10000)
+
+        # self._update_plot()
+
+        out_msg = msg
+        ranges = []
+        for idx, (r, i) in enumerate(zip(msg.ranges, msg.intensities)):
+            if i < (7000*np.exp(-0.4*r)+4200):
+                ranges.append(msg.range_max + 1)
+            else:
+                ranges.append(msg.ranges[idx])
+
+        out_msg.ranges = ranges
+
+        self.pub.publish(out_msg)
+
+
+    def _update_plot(self):
+        self.line.set_data(self.ranges, self.intensities)
+        plt.pause(0.01)
+
+
+def __main__(argc, argv):
+    rospy.init_node()
+
+
+if __name__ == "__main__":
+    rospy.init_node('intensity_vs_distance_plotter')
+
+    plotter = Plotter()
+    rospy.spin()
+    # plt.ioff()
+    # plt.show()
