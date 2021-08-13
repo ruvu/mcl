@@ -1,3 +1,7 @@
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
 # Benchmark
 
 To compare localization algorithms, we need ground truth data. This is quite hard to capture. Luckily the University of

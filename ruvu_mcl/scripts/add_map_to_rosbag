@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Copyright 2021 RUVU Robotics B.V.
+
 import os
 import signal
 import subprocess

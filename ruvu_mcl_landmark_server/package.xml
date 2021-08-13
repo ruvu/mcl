@@ -4,9 +4,9 @@ Copyright 2021 RUVU Robotics B.V.
 -->
 
 <package format="2">
-  <name>ruvu_mcl</name>
+  <name>ruvu_mcl_landmark_server</name>
   <version>0.0.0</version>
-  <description>The ruvu_mcl package</description>
+  <description>The ruvu_mcl_landmark_server package</description>
 
   <maintainer email="paul@ruvu.nl">Paul Verhoeckx</maintainer>
   <maintainer email="ramon@ruvu.nl">Ramon Wijnands</maintainer>
@@ -15,16 +15,9 @@ Copyright 2021 RUVU Robotics B.V.
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>dynamic_reconfigure</depend>
-  <depend>libgnuplot-iostream-dev</depend>
-  <depend>rosbag</depend>
   <depend>roscpp</depend>
-  <depend>tf2_eigen</depend>
+  <depend>ruvu_mcl_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>tf2_ros</depend>
 
-  <exec_depend>graphicsmagick</exec_depend>
-
-  <test_depend>roslint</test_depend>
-  <test_depend>ruvu_lint</test_depend>
+  <build_depend>nlohmann-json-dev</build_depend>
 </package>
