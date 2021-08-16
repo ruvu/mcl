@@ -9,6 +9,6 @@ LandmarkList::LandmarkList(const ruvu_mcl_msgs::LandmarkList & msg) : landmarks(
   for (const auto & landmark : msg.landmarks) {
     tf2::Transform pose;
     tf2::convert(landmark.pose.pose, pose);
-    landmarks.emplace_back(std::move(pose));
+    landmarks.emplace_back(Landmark(pose, landmark.id));
   }
 }

@@ -21,13 +21,15 @@ ROS_DECLARE_MESSAGE(LandmarkList)
 
 struct Landmark
 {
-  Landmark(const tf2::Transform & pose) : pose(pose) {}
+  Landmark(const tf2::Transform & pose) : pose(pose), id(0) {}
+  Landmark(const tf2::Transform & pose, int id) : pose(pose), id(id) {}
 
   /**
    * Landmarks that are from the landmark map are assumed to be transformed to the global frame.
    * Landmark from measurments are assumed to be transformed to the robot frame.
    */
   tf2::Transform pose;
+  int id;
 };
 
 class LandmarkList
