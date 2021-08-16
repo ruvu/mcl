@@ -43,10 +43,10 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
 
       // Part 1: Get distance from the hit to closest obstacle.
       // Off-map penalized as max distance
-
+      auto hit = particle.pose * measurement.pose;
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
-        auto distance = (landmark.pose.getOrigin() - measurement.pose.getOrigin()).length();
+        auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
         if (distance < z) z = distance;
       }
 
@@ -58,6 +58,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       //pz += config_.z_rand / data.range_max;
 
       // TODO(?): outlier rejection for short readings
+      // TODO(?): Use covariance for weighing measurement influence?
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);

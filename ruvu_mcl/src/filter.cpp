@@ -161,15 +161,19 @@ void Filter::landmark_cb(
     landmark_model_ = std::make_unique<LandmarkLikelihoodFieldModel>(config_.landmark, *landmarks_);
   }
 
-  //  tf2::Transform tf;
-  //  {
-  //    auto tfs =
-  //      buffer_->lookupTransform(config_.base_frame_id, scan->header.frame_id, scan->header.stamp);
-  //    tf2::fromMsg(tfs.transform, tf);
-  //  }
+  tf2::Transform tf;
+  {
+    auto tfs = buffer_->lookupTransform(
+      config_.base_frame_id, landmarks->header.frame_id, landmarks->header.stamp);
+    tf2::fromMsg(tfs.transform, tf);
+  }
 
-  //  LaserData data(*scan, tf);
-  //  laser_->sensor_update(&filter_, data);
+  LandmarkList landmark_list(*landmarks);
+  for (auto & landmark : landmark_list.landmarks) {
+    landmark.pose = tf * landmark.pose;
+  }
+
+  landmark_model_->sensor_update(&filter_, landmark_list);
 
   adaptive_->after_sensor_update(&filter_);
 
