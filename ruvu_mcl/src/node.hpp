@@ -31,8 +31,11 @@ public:
   ~Node();  // to handle forward declares
 
 private:
-  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan, const std::string & sensor_topic_name);
+  void landmark_cb(
+    const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
+  void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmark_list);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
 
   // data input
@@ -40,7 +43,10 @@ private:
   tf2_ros::TransformListener tf_listener_;
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_scan_sub_;
   tf2_ros::MessageFilter<sensor_msgs::LaserScan> laser_scan_filter_;
+  message_filters::Subscriber<ruvu_mcl_msgs::LandmarkList> landmark_sub_;
+  tf2_ros::MessageFilter<ruvu_mcl_msgs::LandmarkList> landmark_filter_;
   ros::Subscriber map_sub_;
+  ros::Subscriber landmark_list_sub_;
   ros::Subscriber initial_pose_sub_;
   dynamic_reconfigure::Server<ruvu_mcl::AMCLConfig> reconfigure_server_;
 

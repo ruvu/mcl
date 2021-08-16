@@ -86,9 +86,10 @@ void Filter::configure(const Config & config)
 
 Filter::~Filter() = default;
 
-void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
+void Filter::scan_cb(
+  const sensor_msgs::LaserScanConstPtr & scan, const std::string & sensor_topic_name)
 {
-  if (!odometry_update(scan->header)) return;
+  if (!odometry_update(scan->header, sensor_topic_name)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -142,9 +143,11 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
 }
 
-void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+void Filter::landmark_cb(
+  const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name)
 {
-  if (!odometry_update(landmarks->header)) return;
+  ROS_INFO("Landmark measurement received from %s", sensor_topic_name.c_str());
+  if (!odometry_update(landmarks->header, sensor_topic_name)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -228,7 +231,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
-bool Filter::odometry_update(const std_msgs::Header & header)
+bool Filter::odometry_update(const std_msgs::Header & header, const std::string sensor_topic_name)
 {
   assert(model_);
 
@@ -249,7 +252,8 @@ bool Filter::odometry_update(const std_msgs::Header & header)
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
-  if (!should_process(diff, header.frame_id)) {
+  auto sensor_id = std::make_tuple(sensor_topic_name, header.frame_id);
+  if (!should_process(diff, sensor_id)) {
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
     return false;
   }
@@ -278,7 +282,8 @@ tf2::Transform Filter::get_odom_pose(const ros::Time & time)
   return odom_pose_tf;
 }
 
-bool Filter::should_process(const tf2::Transform & diff, const std::string & frame_id)
+bool Filter::should_process(
+  const tf2::Transform & diff, std::tuple<std::string, std::string> & sensor_id)
 {
   if (
     diff.getOrigin().length() >= config_.update_min_d ||
@@ -289,8 +294,8 @@ bool Filter::should_process(const tf2::Transform & diff, const std::string & fra
     }
   }
 
-  if (should_process_[frame_id]) {
-    should_process_[frame_id] = false;
+  if (should_process_[sensor_id]) {
+    should_process_[sensor_id] = false;
     return true;
   } else {
     return false;

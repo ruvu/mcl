@@ -13,6 +13,7 @@
 #include "rosbag/query.h"
 #include "rosbag/view.h"
 #include "ruvu_mcl/AMCLConfig.h"
+#include "ruvu_mcl_msgs/LandmarkList.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf2_msgs/TFMessage.h"
 #include "tf2_ros/buffer.h"
@@ -64,11 +65,13 @@ public:
     });
 
     auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 100);
+    auto landmark_pub = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 100);
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+    auto landmark_list_pub = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
     auto tf_pub = nh.advertise<tf2_msgs::TFMessage>("/tf", 100);
     ros::WallDuration{0.1}.sleep();  // wait for topics to connect
 
-    std::vector<std::string> topics = {"/scan", "/map", "/initialpose", "/tf"};
+    std::vector<std::string> topics = {"/scan", "/map", "/landmarks", "/landmark_list", "/initialpose", "/tf"};
     rosbag::View view(bag, rosbag::TopicQuery(topics));
 
     ros::WallDuration sleep{private_nh.param("sleep", 0.0)};
@@ -77,10 +80,20 @@ public:
 
       if (sensor_msgs::LaserScanConstPtr scan = msg.instantiate<sensor_msgs::LaserScan>()) {
         scan_pub.publish(scan);
-        filter_.scan_cb(scan);
+        filter_.scan_cb(scan, msg.getTopic());
       } else if (nav_msgs::OccupancyGridConstPtr map = msg.instantiate<nav_msgs::OccupancyGrid>()) {
         map_pub.publish(map);
         filter_.map_cb(map);
+      } else if (ruvu_mcl_msgs::LandmarkListConstPtr landmarks = msg.instantiate<ruvu_mcl_msgs::LandmarkList>()) {
+        if (msg.getTopic() == "/landmarks") {
+          landmark_pub.publish(landmarks);
+          filter_.landmark_cb(landmarks, msg.getTopic());
+        } else if (msg.getTopic() == "/landmark_list") {
+          landmark_list_pub.publish(landmarks);
+          filter_.landmark_list_cb(landmarks);
+        } else {
+          ROS_WARN_STREAM("Unsupported message type " << msg.getTopic());
+        }
       } else if (
         geometry_msgs::PoseWithCovarianceStampedConstPtr initialpose =
           msg.instantiate<geometry_msgs::PoseWithCovarianceStamped>()) {
