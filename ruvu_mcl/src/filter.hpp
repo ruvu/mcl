@@ -68,7 +68,7 @@ public:
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
 
 private:
-  void odometry_update(const std_msgs::Header & header);
+  bool odometry_update(const std_msgs::Header & header);
   tf2::Transform get_odom_pose(const ros::Time & time);
   bool should_process(const tf2::Transform & diff, const std::string & frame_id);
   void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);

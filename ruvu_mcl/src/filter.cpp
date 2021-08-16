@@ -88,7 +88,7 @@ Filter::~Filter() = default;
 
 void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
-  odometry_update(scan->header);
+  if (!odometry_update(scan->header)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -144,7 +144,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
 void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 {
-  odometry_update(landmarks->header);
+  if (!odometry_update(landmarks->header)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -228,7 +228,7 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
-void Filter::odometry_update(const std_msgs::Header & header)
+bool Filter::odometry_update(const std_msgs::Header & header)
 {
   assert(model_);
 
@@ -237,21 +237,21 @@ void Filter::odometry_update(const std_msgs::Header & header)
     odom_pose = get_odom_pose(header.stamp);
   } catch (const tf2::TransformException & e) {
     ROS_WARN("Failed to compute odom pose, skipping measurement (%s)", e.what());
-    return;
+    return false;
   }
 
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first odometry update, recording the odom pose");
     last_odom_pose_ = odom_pose;
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
-    return;
+    return false;
   }
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
   if (!should_process(diff, header.frame_id)) {
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
-    return;
+    return false;
   }
 
   ROS_DEBUG_NAMED(
@@ -261,6 +261,7 @@ void Filter::odometry_update(const std_msgs::Header & header)
   model_->odometry_update(&filter_, odom_pose, diff);
 
   last_odom_pose_ = odom_pose;
+  return true;
 }
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
