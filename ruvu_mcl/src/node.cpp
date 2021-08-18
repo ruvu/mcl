@@ -3,6 +3,7 @@
 #include "./node.hpp"
 
 #include <memory>
+#include <string>
 
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "nav_msgs/OccupancyGrid.h"

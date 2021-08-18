@@ -3,6 +3,7 @@
 #include "./landmark_likelihood_field_model.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <utility>
 
@@ -55,7 +56,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       pz += config_.z_hit * exp(-(z * z) / (2 * config_.sigma_hit * config_.sigma_hit));
       // Part 2: random measurements
       // TODO(ramon): Where to get range_max?
-      //pz += config_.z_rand / data.range_max;
+      // pz += config_.z_rand / data.range_max;
 
       // TODO(?): outlier rejection for short readings
       // TODO(?): Use covariance for weighing measurement influence?
@@ -93,7 +94,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
     particle.weight /= total_weight;
   }
 
-  //debug_pub_.publish(std::move(marker));
+  // debug_pub_.publish(std::move(marker));
 
   return true;
 }
