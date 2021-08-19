@@ -24,7 +24,7 @@ Copyright 2021 RUVU Robotics B.V.
             <size>0.001 0.04 0.2</size>
           </box>
         </geometry>
-        <laser_retro>5000</laser_retro>
+        <laser_retro>10000</laser_retro>
       </collision>
       <visual name="visual">
         <geometry>
