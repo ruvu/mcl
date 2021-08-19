@@ -16,7 +16,7 @@ class Plotter():
         # Create plot window
         # self.line, = plt.plot([0],[0],'r.')
 
-        xs = np.linspace(0.1,15,150)
+        xs = np.linspace(0.1, 15, 150)
         # ys = 10000/(pow(xs,2))+2100
         # ys = 10000*(1/pow(xs,1.5))+2000
         # ys = 7000*np.exp(-0.4*xs)+2200+ 2000
@@ -46,7 +46,6 @@ class Plotter():
         out_msg.ranges = ranges
 
         self.pub.publish(out_msg)
-
 
     def _update_plot(self):
         self.line.set_data(self.ranges, self.intensities)
