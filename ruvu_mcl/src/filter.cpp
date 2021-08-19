@@ -147,7 +147,6 @@ void Filter::scan_cb(
 void Filter::landmark_cb(
   const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name)
 {
-  ROS_INFO("Landmark measurement received from %s", sensor_topic_name.c_str());
   if (!odometry_update(landmarks->header, sensor_topic_name)) return;
 
   assert(adaptive_);

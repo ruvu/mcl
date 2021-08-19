@@ -5,6 +5,7 @@
 #include "../config.hpp"
 #include "./landmark.hpp"
 #include "ros/message_forward.h"
+#include "ros/publisher.h"
 
 // forward declare
 namespace ruvu_mcl_msgs
@@ -32,4 +33,5 @@ public:
 private:
   const LandmarkLikelihoodFieldModelConfig config_;
   const LandmarkList landmarks_;
+  ros::Publisher debug_pub_;
 };

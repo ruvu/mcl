@@ -19,6 +19,8 @@ LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
 : config_(config), landmarks_(landmarks)
 {
   assert(config_.z_hit + config_.z_rand <= 1.0);
+  ros::NodeHandle nh("~");
+  debug_pub_ = nh.advertise<visualization_msgs::Marker>("landmark_likelihood_field_Model", 1);
 }
 
 double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
@@ -71,14 +73,14 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       if (first) {
         // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
-        tf2::toMsg(measurement.pose.getOrigin(), p2);
+        tf2::toMsg(particle.pose.getOrigin(), p1);
+        tf2::toMsg(hit.getOrigin(), p2);
         marker.points.push_back(std::move(p1));
         marker.points.push_back(std::move(p2));
         std_msgs::ColorRGBA color;
         color.a = 1;
         color.b = pz;
         color.r = 1 - pz;
-        color.r = std::min(z, 1.0);
         marker.colors.push_back(color);
         marker.colors.push_back(std::move(color));
       }
@@ -94,7 +96,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
     particle.weight /= total_weight;
   }
 
-  // debug_pub_.publish(std::move(marker));
+  debug_pub_.publish(std::move(marker));
 
   return true;
 }
