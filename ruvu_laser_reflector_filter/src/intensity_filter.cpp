@@ -8,7 +8,9 @@
 #include "ruvu_mcl_msgs/LandmarkEntry.h"
 #include "ruvu_mcl_msgs/LandmarkList.h"
 #include "sensor_msgs/LaserScan.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2/LinearMath/Scalar.h"
+#include "visualization_msgs/Marker.h"
 
 class Filter
 {
@@ -16,12 +18,41 @@ public:
   Filter(ros::NodeHandle nh, ros::NodeHandle private_nh)
   {
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
+    marker_pub_ = nh.advertise<visualization_msgs::Marker>("landmark_markers", 1);
     scan_sub_ = nh.subscribe<sensor_msgs::LaserScan>("scan", 1, &Filter::scan_cb, this);
   }
 
   void configure(const ruvu_laser_reflector_filter::ReflectorFilterConfig & config)
   {
     intensity_threshold_ = config.intensity_threshold;
+    publish_markers_ = config.publish_markers;
+  }
+
+  void publish_markers(ruvu_mcl_msgs::LandmarkList landmark_list){
+    double scale = 0.05;
+    visualization_msgs::Marker m;
+    m.header = landmark_list.header;
+    m.ns = "measured_landmarks";
+    m.id = 0;
+    m.type = visualization_msgs::Marker::SPHERE_LIST;
+    m.action = visualization_msgs::Marker::MODIFY;
+    m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
+    m.scale.x = scale;
+    m.scale.y = scale;
+    m.scale.z = scale;
+    m.points.reserve(landmark_list.landmarks.size());
+    m.colors.reserve(landmark_list.landmarks.size());
+    m.lifetime = ros::Duration(0.1);
+
+    std_msgs::ColorRGBA c;
+    c.a = 1;
+    c.r = 1;
+    for (const auto & landmark : landmark_list.landmarks)
+    {
+      m.points.push_back(landmark.pose.pose.position);
+      m.colors.push_back(c);
+    }
+    marker_pub_.publish(std::move(m));
   }
 
 private:
@@ -45,12 +76,15 @@ private:
     if (landmark_list.landmarks.size() > 0)
     {
       landmarks_pub_.publish(landmark_list);
+      if (publish_markers_) publish_markers(landmark_list);
     }
   }
 
   int intensity_threshold_;
+  bool publish_markers_;
   ros::Subscriber scan_sub_;
   ros::Publisher landmarks_pub_;
+  ros::Publisher marker_pub_;
 };
 
 int main(int argc, char ** argv)
