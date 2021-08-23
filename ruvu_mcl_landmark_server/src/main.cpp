@@ -1,14 +1,22 @@
 // Copyright 2021 RUVU Robotics B.V.
 
+#include <math.h>
+
 #include <fstream>
+#include <map>
 #include <nlohmann/json.hpp>
+#include <string>
 
 #include "./filesystem.hpp"
 #include "geometry_msgs/PoseStamped.h"
+#include "interactive_markers/interactive_marker_server.h"
 #include "ros/node_handle.h"
 #include "ruvu_mcl_msgs/LandmarkList.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "visualization_msgs/InteractiveMarker.h"
+#include "visualization_msgs/InteractiveMarkerControl.h"
+#include "visualization_msgs/Marker.h"
 
 using json = nlohmann::json;
 
@@ -68,7 +76,8 @@ struct adl_serializer<Landmark>
 class Node
 {
 public:
-  Node(ros::NodeHandle nh, ros::NodeHandle private_nh) : landmarks_(), path_()
+  Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
+  : landmarks_(), path_(), interactive_marker_server_("reflectors")
   {
     pose_sub_ =
       nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::add_landmark_cb, this);
@@ -87,7 +96,10 @@ public:
       std::ifstream file(path_);
       if (!file.is_open()) throw std::runtime_error("file_path can't be opened");
       json j = json::parse(file);
-      landmarks_ = j.get<std::vector<Landmark>>();
+      auto landmarks = j.get<std::vector<Landmark>>();
+      for (const auto & landmark : landmarks) {
+        add_landmark(landmark);
+      }
       ROS_INFO("successfuly loaded landmarks from %s", path_.c_str());
     }
 
@@ -106,25 +118,30 @@ private:
       ROS_WARN("input quaternion is not normalized, skipping pose");
       return;
     }
-
-    landmarks_.emplace_back(tf2::Transform{orientation, position});
-
-    // save
-    {
-      json j = landmarks_;
-      std::ofstream file(path_);
-      file << std::setw(2) << j;
-    }
-
+    add_landmark(tf2::Transform{orientation, position});
+    save_landmarks();
     publish_landmarks(msg->header.stamp);
+  }
+
+  void add_landmark(Landmark landmark)
+  {
+    std::string landmark_name = "landmark_" + std::to_string(interactive_marker_server_.size());
+    auto interactive_marker_ = create_interactive_marker(landmark, landmark_name);
+    interactive_marker_server_.insert(interactive_marker_, boost::bind(&Node::marker_cb, this, _1));
+    interactive_marker_server_.applyChanges();
+    landmarks_.emplace(landmark_name, landmark);
   }
 
   void publish_landmarks(const ros::Time & stamp)
   {
     ruvu_mcl_msgs::LandmarkList msg;
-    for (const auto & landmark : landmarks_) {
+    for (const auto & [_, landmark] : landmarks_) {
       ruvu_mcl_msgs::LandmarkEntry entry;
-      tf2::toMsg(landmark.pose, entry.pose.pose);
+      entry.pose.pose.position.x =
+        landmark.pose.getOrigin().getX();  // tf2::convert() fails for some reason
+      entry.pose.pose.position.y = landmark.pose.getOrigin().getY();
+      entry.pose.pose.position.z = landmark.pose.getOrigin().getZ();
+      tf2::convert(landmark.pose.getRotation(), entry.pose.pose.orientation);
       msg.landmarks.push_back(std::move(entry));
     }
     msg.header.frame_id = "map";
@@ -132,10 +149,93 @@ private:
     landmarks_pub_.publish(msg);
   }
 
+  void save_landmarks()
+  {
+    std::vector<Landmark> landmarks;
+    for (const auto & [_, landmark] : landmarks_) landmarks.push_back(landmark);
+    json j = landmarks;
+    std::ofstream file(path_);
+    file << std::setw(2) << j;
+  }
+
+  visualization_msgs::InteractiveMarker create_interactive_marker(
+    Landmark landmark, std::string name)
+  {
+    visualization_msgs::InteractiveMarker int_marker;
+    int_marker.header.frame_id = "map";
+    int_marker.pose.position.x =
+      landmark.pose.getOrigin().getX();  // tf2::convert() fails for some reason
+    int_marker.pose.position.y = landmark.pose.getOrigin().getY();
+    int_marker.pose.position.z = landmark.pose.getOrigin().getZ();
+    tf2::convert(landmark.pose.getRotation(), int_marker.pose.orientation);
+    int_marker.scale = 0.15;
+    int_marker.name = name;
+    int_marker.description = "id: " + std::to_string(landmark.id);
+    double l = 1 / sqrt(2);
+    auto control = create_marker_control(
+      "move_xy_plane", visualization_msgs::InteractiveMarkerControl::MOVE_PLANE,
+      tf2::toMsg(tf2::Quaternion(0, l, 0, l)));
+    auto marker_arrow = create_marker_arrow(int_marker.scale);
+    control.markers.push_back(marker_arrow);
+    control.always_visible = true;
+    int_marker.controls.push_back(control);
+    int_marker.controls.push_back(create_marker_control(
+      "move_x", visualization_msgs::InteractiveMarkerControl::MOVE_AXIS,
+      tf2::toMsg(tf2::Quaternion(l, 0, 0, l))));
+    int_marker.controls.push_back(create_marker_control(
+      "move_y", visualization_msgs::InteractiveMarkerControl::MOVE_AXIS,
+      tf2::toMsg(tf2::Quaternion(0, 0, l, l))));
+    int_marker.controls.push_back(create_marker_control(
+      "rotate_z", visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS,
+      tf2::toMsg(tf2::Quaternion(0, l, 0, l))));
+    return int_marker;
+  }
+
+  visualization_msgs::InteractiveMarkerControl create_marker_control(
+    std::string control_name, int control_mode, geometry_msgs::Quaternion orientation)
+  {
+    visualization_msgs::InteractiveMarkerControl control;
+    control.orientation = orientation;
+    control.name = control_name;
+    control.interaction_mode = control_mode;
+    return control;
+  }
+
+  visualization_msgs::Marker create_marker_arrow(double marker_scale)
+  {
+    visualization_msgs::Marker marker;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.scale.x = marker_scale * 2;
+    marker.scale.y = marker_scale / 5;
+    marker.scale.z = marker_scale / 5;
+    marker.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
+    marker.color.g = 1.0;
+    marker.color.a = 1.0;
+    return marker;
+  }
+
+  void marker_cb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr & feedback)
+  {
+    tf2::Vector3 position;
+    tf2::Quaternion orientation;
+    tf2::fromMsg(feedback->pose.orientation, orientation);
+    tf2::fromMsg(feedback->pose.position, position);
+    landmarks_.at(feedback->marker_name) = tf2::Transform{orientation, position};
+    interactive_marker_server_.applyChanges();
+    if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP)
+    {
+      ROS_INFO_STREAM(
+        feedback->marker_name << " is now at " << feedback->pose.position.x << ", "
+                              << feedback->pose.position.y << ", " << feedback->pose.position.z);
+      save_landmarks();
+    }
+  }
+
   ros::Subscriber pose_sub_;
   ros::Publisher landmarks_pub_;
 
-  std::vector<Landmark> landmarks_;
+  interactive_markers::InteractiveMarkerServer interactive_marker_server_;
+  std::map<std::string, Landmark> landmarks_;
   std::filesystem::path path_;
 };
 

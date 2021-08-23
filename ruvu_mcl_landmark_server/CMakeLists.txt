@@ -8,9 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(catkin REQUIRED COMPONENTS
+  interactive_markers
   roscpp
   ruvu_mcl_msgs
   tf2_geometry_msgs
+  visualization_msgs
 )
 
 ###################################
