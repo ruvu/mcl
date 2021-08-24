@@ -33,6 +33,7 @@ include_directories(
 
 add_executable(landmark_server
   src/main.cpp
+  src/interactive_markers.cpp
 )
 
 target_link_libraries(landmark_server
