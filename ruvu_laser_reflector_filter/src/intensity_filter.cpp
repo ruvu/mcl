@@ -1,6 +1,7 @@
 // Copyright 2021 RUVU Robotics B.V.
 
 #include <utility>
+#include <math.h>
 
 #include "dynamic_reconfigure/server.h"
 #include "ros/node_handle.h"
@@ -24,7 +25,9 @@ public:
 
   void configure(const ruvu_laser_reflector_filter::ReflectorFilterConfig & config)
   {
-    intensity_threshold_ = config.intensity_threshold;
+    threshold_floor_ = config.threshold_floor;
+    threshold_decay_ = config.threshold_decay;
+    threshold_multiplier_ = config.threshold_multiplier;
     publish_markers_ = config.publish_markers;
   }
 
@@ -62,8 +65,9 @@ private:
 
     ruvu_mcl_msgs::LandmarkList landmark_list;
     landmark_list.header = scan->header;
+
     for (size_t i = 0; i < scan->ranges.size(); i++) {
-      if (scan->intensities[i] >= intensity_threshold_) {
+      if (scan->intensities[i] >= threshold_function(scan->ranges[i])) {
         ruvu_mcl_msgs::LandmarkEntry landmark;
         double angle = scan->angle_min + i * scan->angle_increment;
         landmark.pose.pose.position.x = scan->ranges[i] * tf2Cos(angle);
@@ -77,7 +81,14 @@ private:
     }
   }
 
-  int intensity_threshold_;
+  double threshold_function(const double range)
+  {
+    return threshold_multiplier_ * exp(-threshold_decay_ * range) + threshold_floor_;
+  }
+
+  int threshold_multiplier_;
+  double threshold_decay_;
+  int threshold_floor_;
   bool publish_markers_;
   ros::Subscriber scan_sub_;
   ros::Publisher landmarks_pub_;
