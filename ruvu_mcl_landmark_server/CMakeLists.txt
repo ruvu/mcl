@@ -8,9 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(catkin REQUIRED COMPONENTS
+  interactive_markers
   roscpp
+  ruvu_lint
   ruvu_mcl_msgs
   tf2_geometry_msgs
+  visualization_msgs
 )
 
 ###################################
@@ -18,7 +21,10 @@ find_package(catkin REQUIRED COMPONENTS
 ###################################
 
 catkin_package(
-  CATKIN_DEPENDS roscpp ruvu_mcl_msgs
+  CATKIN_DEPENDS
+  roscpp
+  ruvu_mcl_msgs
+  visualization_msgs
 )
 
 ###########
@@ -31,6 +37,7 @@ include_directories(
 
 add_executable(landmark_server
   src/main.cpp
+  src/interactive_markers.cpp
 )
 
 target_link_libraries(landmark_server
@@ -49,8 +56,13 @@ install(
 )
 
 #############
-## Testing ##
+## Testing ##set(ROSLINT_CPP_OPTS "--filter=-build/header_guard,-build/include_what_you_use,-whitespace/braces,-runtime/references")
+
+
 #############
+
+set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces, -runtime/explicit")
+ruvu_lint_add_test()
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_ruvu_mcl_landmark_server.cpp)
