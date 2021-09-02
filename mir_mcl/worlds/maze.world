@@ -19,5 +19,18 @@ Copyright 2021 RUVU Robotics B.V.
     <include>
       <uri>model://ground_plane</uri>
     </include>
+
+    <!-- Reflectors -->
+    <include><uri>model://reflector</uri><name>reflector0</name><pose>-9 1.89 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector1</name><pose>-5 1.89 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector2</name><pose>0 1.89 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector3</name><pose>5 1.89 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector4</name><pose>9.8 0 0.18 0 0 0</pose></include>
+    <include><uri>model://reflector</uri><name>reflector5</name><pose>9.8 -5 0.18 0 0 0</pose></include>
+    <include><uri>model://reflector</uri><name>reflector6</name><pose>5 -9.75 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector7</name><pose>0 -9.75 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector8</name><pose>-5 -9.75 0.18 0 0 1.5708</pose></include>
+    <include><uri>model://reflector</uri><name>reflector9</name><pose>-9.89 -7 0.18 0 0 0</pose></include>
+    <include><uri>model://reflector</uri><name>reflector10</name><pose>-4.35 -3 0.18 0 0 0</pose></include>
   </world>
 </sdf>

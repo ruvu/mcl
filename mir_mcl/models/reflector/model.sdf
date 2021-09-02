@@ -1,0 +1,43 @@
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<sdf version="1.4">
+  <model name="reflector">
+    <pose>0 0 0 0 0 0</pose>
+    <static>true</static>
+    <link name="link">
+      <inertial>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.001 0.04 0.2</size>
+          </box>
+        </geometry>
+        <laser_retro>10000</laser_retro>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <box>
+            <size>0.001 0.04 0.2</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/YellowGlow</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
