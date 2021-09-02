@@ -64,4 +64,5 @@ install(
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
 ruvu_lint_add_test()

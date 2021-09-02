@@ -8,8 +8,8 @@
 #include "ruvu_mcl_msgs/LandmarkEntry.h"
 #include "ruvu_mcl_msgs/LandmarkList.h"
 #include "sensor_msgs/LaserScan.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2/LinearMath/Scalar.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
 class Filter
@@ -28,7 +28,8 @@ public:
     publish_markers_ = config.publish_markers;
   }
 
-  void publish_markers(ruvu_mcl_msgs::LandmarkList landmark_list){
+  void publish_markers(ruvu_mcl_msgs::LandmarkList landmark_list)
+  {
     double scale = 0.05;
     visualization_msgs::Marker m;
     m.header = landmark_list.header;
@@ -47,8 +48,7 @@ public:
     std_msgs::ColorRGBA c;
     c.a = 1;
     c.r = 1;
-    for (const auto & landmark : landmark_list.landmarks)
-    {
+    for (const auto & landmark : landmark_list.landmarks) {
       m.points.push_back(landmark.pose.pose.position);
       m.colors.push_back(c);
     }
@@ -62,10 +62,8 @@ private:
 
     ruvu_mcl_msgs::LandmarkList landmark_list;
     landmark_list.header = scan->header;
-    for (size_t i = 0; i < scan->ranges.size(); i++)
-    {
-      if (scan->intensities[i] >= intensity_threshold_)
-      {
+    for (size_t i = 0; i < scan->ranges.size(); i++) {
+      if (scan->intensities[i] >= intensity_threshold_) {
         ruvu_mcl_msgs::LandmarkEntry landmark;
         double angle = scan->angle_min + i * scan->angle_increment;
         landmark.pose.pose.position.x = scan->ranges[i] * tf2Cos(angle);
@@ -73,8 +71,7 @@ private:
         landmark_list.landmarks.push_back(std::move(landmark));
       }
     }
-    if (landmark_list.landmarks.size() > 0)
-    {
+    if (landmark_list.landmarks.size() > 0) {
       landmarks_pub_.publish(landmark_list);
       if (publish_markers_) publish_markers(landmark_list);
     }
@@ -95,12 +92,9 @@ int main(int argc, char ** argv)
   ros::NodeHandle private_nh{"~"};
   Filter filter(nh, private_nh);
   dynamic_reconfigure::Server<ruvu_laser_reflector_filter::ReflectorFilterConfig> server;
-  server.setCallback(
-    [&filter](
-      const ruvu_laser_reflector_filter::ReflectorFilterConfig & config, const uint32_t level)
-    {
-      filter.configure(config);
-    });  //NOLINT
+  server.setCallback([&filter](
+                       const ruvu_laser_reflector_filter::ReflectorFilterConfig & config,
+                       const uint32_t level) { filter.configure(config); });
 
   ros::spin();
   return EXIT_SUCCESS;
