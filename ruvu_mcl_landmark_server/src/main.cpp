@@ -82,9 +82,9 @@ public:
   {
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
     add_landmark_sub_ =
-      nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::add_landmark_cb, this);
+      nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::addLandmarkCB, this);
     remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
-      "remove_landmark", 1, &Node::remove_landmark_cb, this);
+      "remove_landmark", 1, &Node::removeLandmarkCB, this);
 
     {
       std::string path;
@@ -101,16 +101,16 @@ public:
       json j = json::parse(file);
       auto landmarks = j.get<std::vector<Landmark>>();
       for (const auto & landmark : landmarks) {
-        add_landmark(landmark);
+        addLandmark(landmark);
       }
       ROS_INFO("successfuly loaded landmarks from %s", path_.c_str());
     }
 
-    publish_landmarks(ros::Time::now());
+    publishLandmarks(ros::Time::now());
   }
 
 private:
-  void add_landmark_cb(const geometry_msgs::PoseStampedConstPtr & msg)
+  void addLandmarkCB(const geometry_msgs::PoseStampedConstPtr & msg)
   {
     ROS_INFO("add landmark callback");
     tf2::Vector3 position;
@@ -121,22 +121,22 @@ private:
       ROS_WARN("input quaternion is not normalized, skipping pose");
       return;
     }
-    add_landmark(tf2::Transform{orientation, position});
-    save_landmarks();
-    publish_landmarks(msg->header.stamp);
+    addLandmark(tf2::Transform{orientation, position});
+    saveLandmarks();
+    publishLandmarks(msg->header.stamp);
   }
 
-  void add_landmark(Landmark landmark)
+  void addLandmark(Landmark landmark)
   {
     std::string landmark_name = "landmark_" + std::to_string(next_landmark_number_);
     next_landmark_number_++;
     auto interactive_marker_ = create_interactive_marker(landmark.pose, landmark.id, landmark_name);
-    interactive_marker_server_.insert(interactive_marker_, boost::bind(&Node::marker_cb, this, _1));
+    interactive_marker_server_.insert(interactive_marker_, boost::bind(&Node::markerCB, this, _1));
     interactive_marker_server_.applyChanges();
     landmarks_.emplace(landmark_name, landmark);
   }
 
-  void remove_landmark_cb(const geometry_msgs::PointStampedConstPtr & msg)
+  void removeLandmarkCB(const geometry_msgs::PointStampedConstPtr & msg)
   {
     tf2::Vector3 point;
     tf2::fromMsg(msg->point, point);
@@ -155,14 +155,14 @@ private:
                tf2::tf2Distance2(point, rhs.second.pose.getOrigin());
       });
     landmarks_.erase(nearby_landmarks[0].first);
-    save_landmarks();
-    publish_landmarks(msg->header.stamp);
+    saveLandmarks();
+    publishLandmarks(msg->header.stamp);
     interactive_marker_server_.erase(nearby_landmarks[0].first);
     interactive_marker_server_.applyChanges();
     ROS_INFO_STREAM("Removed " << nearby_landmarks[0].first);
   }
 
-  void publish_landmarks(const ros::Time & stamp)
+  void publishLandmarks(const ros::Time & stamp)
   {
     ruvu_mcl_msgs::LandmarkList msg;
     for (const auto & [_, landmark] : landmarks_) {
@@ -179,7 +179,7 @@ private:
     landmarks_pub_.publish(msg);
   }
 
-  void save_landmarks()
+  void saveLandmarks()
   {
     std::vector<Landmark> landmarks;
     for (const auto & [_, landmark] : landmarks_) landmarks.push_back(landmark);
@@ -188,7 +188,7 @@ private:
     file << std::setw(2) << j;
   }
 
-  void marker_cb(const visualization_msgs::InteractiveMarkerFeedbackConstPtr & feedback)
+  void markerCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr & feedback)
   {
     tf2::Vector3 position;
     tf2::Quaternion orientation;
@@ -200,7 +200,7 @@ private:
       ROS_INFO_STREAM(
         feedback->marker_name << " is now at " << feedback->pose.position.x << ", "
                               << feedback->pose.position.y << ", " << feedback->pose.position.z);
-      save_landmarks();
+      saveLandmarks();
     }
   }
 
