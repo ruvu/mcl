@@ -62,7 +62,6 @@ public:
 private:
   void addLandmarkCB(const geometry_msgs::PoseStampedConstPtr & msg)
   {
-    ROS_INFO("add landmark callback");
     tf2::Vector3 position;
     tf2::Quaternion orientation;
     tf2::fromMsg(msg->pose.orientation, orientation);
@@ -71,6 +70,7 @@ private:
       ROS_WARN("input quaternion is not normalized, skipping pose");
       return;
     }
+    ROS_INFO("Added landmark_%u", next_landmark_number_);
     addLandmark(tf2::Transform{orientation, position});
     saveLandmarks();
     publishLandmarks(msg->header.stamp);
