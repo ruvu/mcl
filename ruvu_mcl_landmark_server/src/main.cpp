@@ -78,7 +78,7 @@ class Node
 {
 public:
   Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
-  : landmarks_(), path_(), interactive_marker_server_("reflectors")
+  : landmarks_(), path_(), interactive_marker_server_("reflectors"), next_landmark_number_(0)
   {
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
     add_landmark_sub_ =
@@ -128,7 +128,8 @@ private:
 
   void add_landmark(Landmark landmark)
   {
-    std::string landmark_name = "landmark_" + std::to_string(interactive_marker_server_.size());
+    std::string landmark_name = "landmark_" + std::to_string(next_landmark_number_);
+    next_landmark_number_++;
     auto interactive_marker_ = create_interactive_marker(landmark.pose, landmark.id, landmark_name);
     interactive_marker_server_.insert(interactive_marker_, boost::bind(&Node::marker_cb, this, _1));
     interactive_marker_server_.applyChanges();
@@ -206,6 +207,7 @@ private:
   ros::Subscriber add_landmark_sub_;
   ros::Subscriber remove_landmark_sub_;
   ros::Publisher landmarks_pub_;
+  uint next_landmark_number_;
 
   interactive_markers::InteractiveMarkerServer interactive_marker_server_;
   std::map<std::string, Landmark> landmarks_;
