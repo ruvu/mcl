@@ -28,6 +28,8 @@ public:
   Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   : landmarks_(), path_(), interactive_marker_server_("reflectors"), next_landmark_number_(0)
   {
+    private_nh.param("max_landmark_remove_dist", max_landmark_remove_dist_, 1.0);
+
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
     add_landmark_sub_ =
       nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::addLandmarkCB, this);
@@ -90,7 +92,7 @@ private:
     tf2::fromMsg(msg->point, point);
     std::vector<std::pair<std::string, Landmark>> nearby_landmarks;
     for (const auto & [landmark_name, landmark] : landmarks_) {
-      if (tf2::tf2Distance(point, landmark.pose.getOrigin()) < 1)
+      if (tf2::tf2Distance(point, landmark.pose.getOrigin()) <= max_landmark_remove_dist_)
         nearby_landmarks.push_back(make_pair(landmark_name, landmark));
     }
     if (nearby_landmarks.size() == 0) return;
@@ -155,6 +157,7 @@ private:
   ros::Subscriber add_landmark_sub_;
   ros::Subscriber remove_landmark_sub_;
   ros::Publisher landmarks_pub_;
+  double max_landmark_remove_dist_;
   uint next_landmark_number_;
 
   interactive_markers::InteractiveMarkerServer interactive_marker_server_;
