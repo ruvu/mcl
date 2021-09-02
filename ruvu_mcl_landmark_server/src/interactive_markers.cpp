@@ -15,31 +15,27 @@ visualization_msgs::InteractiveMarker create_interactive_marker(
 {
   visualization_msgs::InteractiveMarker int_marker;
   int_marker.header.frame_id = "map";
-  int_marker.pose.position.x =
-    landmark_pose.getOrigin().getX();  // tf2::convert() fails for some reason
-  int_marker.pose.position.y = landmark_pose.getOrigin().getY();
-  int_marker.pose.position.z = landmark_pose.getOrigin().getZ();
+  tf2::toMsg(landmark_pose.getOrigin(), int_marker.pose.position);
   tf2::convert(landmark_pose.getRotation(), int_marker.pose.orientation);
   int_marker.scale = 0.15;
   int_marker.name = name;
   int_marker.description = name + ", id: " + (landmark_id ? std::to_string(landmark_id) : "<none>");
-  double l = 1 / sqrt(2);
   auto control = create_marker_control(
     "move_xy_plane", visualization_msgs::InteractiveMarkerControl::MOVE_PLANE,
-    tf2::toMsg(tf2::Quaternion(0, l, 0, l)));
+    tf2::toMsg(tf2::Quaternion(0, 1, 0, 1)));
   auto marker_arrow = create_marker_arrow(int_marker.scale);
   control.markers.push_back(marker_arrow);
   control.always_visible = true;
   int_marker.controls.push_back(control);
   int_marker.controls.push_back(create_marker_control(
     "move_x", visualization_msgs::InteractiveMarkerControl::MOVE_AXIS,
-    tf2::toMsg(tf2::Quaternion(l, 0, 0, l))));
+    tf2::toMsg(tf2::Quaternion(1, 0, 0, 1))));
   int_marker.controls.push_back(create_marker_control(
     "move_y", visualization_msgs::InteractiveMarkerControl::MOVE_AXIS,
-    tf2::toMsg(tf2::Quaternion(0, 0, l, l))));
+    tf2::toMsg(tf2::Quaternion(0, 0, 1, 1))));
   int_marker.controls.push_back(create_marker_control(
     "rotate_z", visualization_msgs::InteractiveMarkerControl::ROTATE_AXIS,
-    tf2::toMsg(tf2::Quaternion(0, l, 0, l))));
+    tf2::toMsg(tf2::Quaternion(0, 1, 0, 1))));
   return int_marker;
 }
 
