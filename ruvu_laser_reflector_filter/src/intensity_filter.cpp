@@ -30,11 +30,11 @@ public:
     threshold_decay_ = config.threshold_decay;
     threshold_multiplier_ = config.threshold_multiplier;
     publish_markers_ = config.publish_markers;
+    marker_diameter_ = config.marker_diameter;
   }
 
   void publish_markers(ruvu_mcl_msgs::LandmarkList landmark_list)
   {
-    double scale = 0.05;
     visualization_msgs::Marker m;
     m.header = landmark_list.header;
     m.ns = "measured_landmarks";
@@ -42,9 +42,9 @@ public:
     m.type = visualization_msgs::Marker::SPHERE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;
     m.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
-    m.scale.x = scale;
-    m.scale.y = scale;
-    m.scale.z = scale;
+    m.scale.x = marker_diameter_;
+    m.scale.y = marker_diameter_;
+    m.scale.z = marker_diameter_;
     m.points.reserve(landmark_list.landmarks.size());
     m.colors.reserve(landmark_list.landmarks.size());
     m.lifetime = ros::Duration(0.1);
@@ -91,6 +91,7 @@ private:
   double threshold_decay_;
   int threshold_floor_;
   bool publish_markers_;
+  double marker_diameter_;
   ros::Subscriber scan_sub_;
   ros::Publisher landmarks_pub_;
   ros::Publisher marker_pub_;
