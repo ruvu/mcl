@@ -22,7 +22,7 @@ visualization_msgs::InteractiveMarker create_interactive_marker(
   tf2::convert(landmark_pose.getRotation(), int_marker.pose.orientation);
   int_marker.scale = 0.15;
   int_marker.name = name;
-  int_marker.description = "id: " + std::to_string(landmark_id);
+  int_marker.description = "Name: " + name + ", Id: " + std::to_string(landmark_id);
   double l = 1 / sqrt(2);
   auto control = create_marker_control(
     "move_xy_plane", visualization_msgs::InteractiveMarkerControl::MOVE_PLANE,
