@@ -1,7 +1,8 @@
 // Copyright 2021 RUVU Robotics B.V.
 
-#include <utility>
 #include <math.h>
+
+#include <utility>
 
 #include "dynamic_reconfigure/server.h"
 #include "ros/node_handle.h"
