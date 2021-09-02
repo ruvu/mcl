@@ -14,6 +14,20 @@ variables:
     ruvu_mcl_msgs
     turtlebot3_mcl
 
+stages:
+  - lint
+  - build
+  - test
+  - release
+
+clang-format:
+  stage: lint
+  image:
+    name: witekio/clang-format-checker
+    entrypoint: [""]
+  before_script: []
+  script:
+    - run-clang-format.py -r .
 
 melodic-build-on-schedule:
   extends: .build-on-schedule
@@ -48,3 +62,4 @@ noetic-release:
   extends: .release
   variables:
     ROS_DISTRO: noetic
+
