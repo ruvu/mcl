@@ -117,11 +117,7 @@ private:
     ruvu_mcl_msgs::LandmarkList msg;
     for (const auto & [_, landmark] : landmarks_) {
       ruvu_mcl_msgs::LandmarkEntry entry;
-      entry.pose.pose.position.x =
-        landmark.pose.getOrigin().getX();  // tf2::convert() fails for some reason
-      entry.pose.pose.position.y = landmark.pose.getOrigin().getY();
-      entry.pose.pose.position.z = landmark.pose.getOrigin().getZ();
-      tf2::convert(landmark.pose.getRotation(), entry.pose.pose.orientation);
+      tf2::toMsg(landmark.pose, entry.pose.pose);
       msg.landmarks.push_back(std::move(entry));
     }
     msg.header.frame_id = "map";
@@ -140,11 +136,9 @@ private:
 
   void markerCB(const visualization_msgs::InteractiveMarkerFeedbackConstPtr & feedback)
   {
-    tf2::Vector3 position;
-    tf2::Quaternion orientation;
-    tf2::fromMsg(feedback->pose.orientation, orientation);
-    tf2::fromMsg(feedback->pose.position, position);
-    landmarks_.at(feedback->marker_name) = tf2::Transform{orientation, position};
+    tf2::Transform pose;
+    tf2::fromMsg(feedback->pose, pose);
+    landmarks_.at(feedback->marker_name) = pose;
     interactive_marker_server_.applyChanges();
     if (feedback->event_type == visualization_msgs::InteractiveMarkerFeedback::MOUSE_UP) {
       ROS_INFO_STREAM(
