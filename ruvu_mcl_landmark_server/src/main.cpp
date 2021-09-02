@@ -11,6 +11,7 @@
 
 #include "./filesystem.hpp"
 #include "./interactive_markers.hpp"
+#include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "interactive_markers/interactive_marker_server.h"
 #include "ros/node_handle.h"
@@ -71,7 +72,6 @@ struct adl_serializer<Landmark>
     return Landmark{j.at("pose").get<tf2::Transform>(), j.at("id").get<int32_t>()};
   }
 };
-
 }  // namespace nlohmann
 
 class Node
@@ -80,9 +80,11 @@ public:
   Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   : landmarks_(), path_(), interactive_marker_server_("reflectors")
   {
-    pose_sub_ =
-      nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::add_landmark_cb, this);
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
+    add_landmark_sub_ =
+      nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::add_landmark_cb, this);
+    remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
+      "remove_landmark", 1, &Node::remove_landmark_cb, this);
 
     {
       std::string path;
@@ -133,6 +135,32 @@ private:
     landmarks_.emplace(landmark_name, landmark);
   }
 
+  void remove_landmark_cb(const geometry_msgs::PointStampedConstPtr & msg)
+  {
+    tf2::Vector3 point;
+    tf2::fromMsg(msg->point, point);
+    std::vector<std::pair<std::string, Landmark>> nearby_landmarks;
+    for (const auto & [landmark_name, landmark] : landmarks_) {
+      if (tf2::tf2Distance(point, landmark.pose.getOrigin()) < 1)
+        nearby_landmarks.push_back(make_pair(landmark_name, landmark));
+    }
+    if (nearby_landmarks.size() == 0) return;
+    std::sort(
+      begin(nearby_landmarks), end(nearby_landmarks),
+      [point](
+        const std::pair<std::string, Landmark> & lhs,
+        const std::pair<std::string, Landmark> & rhs) {
+        return tf2::tf2Distance2(point, lhs.second.pose.getOrigin()) <
+               tf2::tf2Distance2(point, rhs.second.pose.getOrigin());
+      });
+    landmarks_.erase(nearby_landmarks[0].first);
+    save_landmarks();
+    publish_landmarks(msg->header.stamp);
+    interactive_marker_server_.erase(nearby_landmarks[0].first);
+    interactive_marker_server_.applyChanges();
+    ROS_INFO_STREAM("Removed " << nearby_landmarks[0].first);
+  }
+
   void publish_landmarks(const ros::Time & stamp)
   {
     ruvu_mcl_msgs::LandmarkList msg;
@@ -175,7 +203,8 @@ private:
     }
   }
 
-  ros::Subscriber pose_sub_;
+  ros::Subscriber add_landmark_sub_;
+  ros::Subscriber remove_landmark_sub_;
   ros::Publisher landmarks_pub_;
 
   interactive_markers::InteractiveMarkerServer interactive_marker_server_;
