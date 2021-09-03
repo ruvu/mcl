@@ -298,6 +298,8 @@ bool Filter::should_process(
   }
 
   if (should_process_[sensor_id]) {
+    ROS_DEBUG_STREAM_NAMED(
+      name, "processing " << std::get<0>(sensor_id) << ' ' << std::get<1>(sensor_id));
     should_process_[sensor_id] = false;
     return true;
   } else {
