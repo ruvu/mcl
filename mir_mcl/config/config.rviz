@@ -312,6 +312,15 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: Landmark map
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /reflectors/update
+      Value: true
     - Angle Tolerance: 0.10000000149011612
       Class: rviz/Odometry
       Covariance:
@@ -442,22 +451,19 @@ Visualization Manager:
     Frame Rate: 30
   Name: root
   Tools:
+    - Class: rviz/MoveCamera
     - Class: rviz/Interact
       Hide Inactive Objects: true
-    - Class: rviz/MoveCamera
-    - Class: rviz/Select
-    - Class: rviz/FocusCamera
-    - Class: rviz/Measure
     - Class: rviz/SetInitialPose
       Theta std deviation: 0.2617993950843811
       Topic: /initialpose
       X std deviation: 0.5
       Y std deviation: 0.5
-    - Class: rviz/SetGoal
-      Topic: /move_base_simple/goal
-    - Class: rviz/PublishPoint
+    - Class: mir_mcl/AddLandmark
+      Topic: /add_landmark
+    - Class: mir_mcl/RemoveLandmark
       Single click: true
-      Topic: /clicked_point
+      Topic: /remove_landmark
   Value: true
   Views:
     Current:

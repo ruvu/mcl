@@ -23,6 +23,8 @@ Copyright 2021 RUVU Robotics B.V.
   <exec_depend>mir_gazebo</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>ruvu_gazebo_plugins</exec_depend>
+  <exec_depend>ruvu_rviz_plugins</exec_depend>
+
   <exec_depend>rviz</exec_depend>
   <exec_depend>topic_tools</exec_depend>
 
@@ -30,6 +32,7 @@ Copyright 2021 RUVU Robotics B.V.
 
   <export>
     <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>
 
 </package>
