@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<library path="lib/libruvu_rviz_plugins">
+  <class name="mir_mcl/AddLandmark"
+         type="ruvu_rviz_plugins::PoseTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Add a landmark to the map
+    </description>
+  </class>
+
+  <class name="mir_mcl/RemoveLandmark"
+         type="ruvu_rviz_plugins::PointTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Remove a landmark from the map
+    </description>
+  </class>
+</library>
