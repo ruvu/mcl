@@ -70,4 +70,9 @@ Copyright 2021 RUVU Robotics B.V.
   <node name="map_server" pkg="map_server" type="map_server" required="true"
         args="$(find mir_gazebo)/maps/maze.yaml">
   </node>
+
+  <!-- Landmark server -->
+  <node name="landmark_server" pkg="ruvu_mcl_landmark_server" type="landmark_server" required="true">
+    <param name="file_path" value="$(find mir_mcl)/maps/maze.json"/>
+  </node>
 </launch>
