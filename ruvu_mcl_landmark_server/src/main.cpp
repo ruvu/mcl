@@ -145,6 +145,7 @@ private:
         feedback->marker_name << " is now at " << feedback->pose.position.x << ", "
                               << feedback->pose.position.y << ", " << feedback->pose.position.z);
       saveLandmarks();
+      publishLandmarks(feedback->header.stamp);
     }
   }
 
