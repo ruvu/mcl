@@ -30,7 +30,7 @@ public:
   {
     private_nh.param("max_landmark_remove_dist", max_landmark_remove_dist_, 1.0);
 
-    landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmarks", 1, true);
+    landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
     add_landmark_sub_ =
       nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::addLandmarkCB, this);
     remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
