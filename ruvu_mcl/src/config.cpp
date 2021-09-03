@@ -71,6 +71,11 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     throw std::runtime_error(ss.str());
   }
 
+  landmark.z_hit = config.landmark_z_hit;
+  landmark.z_rand = config.landmark_z_rand;
+  landmark.sigma_hit = config.landmark_sigma_hit;
+  landmark.global_frame_id = config.global_frame_id;
+
   if (config.adaptive_type == ruvu_mcl::AMCL_kld_sampling) {
     KLDSamplingConfig c;
     c.min_particles = config.min_particles;

@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosbag
   roscpp
   ruvu_lint
+  ruvu_mcl_msgs
   tf2_eigen
   tf2_geometry_msgs
   tf2_ros
@@ -47,6 +48,7 @@ catkin_package(
   CATKIN_DEPENDS
     dynamic_reconfigure
     roscpp
+    ruvu_mcl_msgs
 )
 
 ###########
@@ -73,6 +75,8 @@ add_library(${PROJECT_NAME}
   src/resamplers/resampler.cpp
   src/rng.cpp
   src/sensor_models/beam_model.cpp
+  src/sensor_models/landmark.cpp
+  src/sensor_models/landmark_likelihood_field_model.cpp
   src/sensor_models/laser.cpp
   src/sensor_models/likelihood_field_model.cpp
 )
