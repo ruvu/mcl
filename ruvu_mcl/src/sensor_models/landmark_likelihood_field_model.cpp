@@ -52,6 +52,10 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       auto hit = laser_pose * measurement.pose;
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
+        // Check if ids of landmark and detection agree
+        if ( landmark.id != measurement.id ) continue;
+
+        // Check if incidence angle is within bounds
         auto angle_reflector_to_sensor = atan2(
           laser_pose.getOrigin().getY() - landmark.pose.getOrigin().getY(),
           laser_pose.getOrigin().getX() - landmark.pose.getOrigin().getX());
@@ -61,6 +65,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
         auto incidence_angle =
           remainder(angle_reflector_to_sensor - yaw, 2 * M_PI);  // Normalized to [-pi, pi]
         if (fabs(incidence_angle) > M_PI / 2) continue;
+
         auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
         if (distance < z) z = distance;
       }
