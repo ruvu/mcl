@@ -52,16 +52,17 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       auto hit = laser_pose * measurement.pose;
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
-        auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
         auto angle_reflector_to_sensor = atan2(
           laser_pose.getOrigin().getY() - landmark.pose.getOrigin().getY(),
           laser_pose.getOrigin().getX() - landmark.pose.getOrigin().getX());
         double roll, pitch, yaw;
         tf2::Matrix3x3(landmark.pose.getRotation())
           .getRPY(roll, pitch, yaw);  // Reflector orientation
-        auto observation_angle =
+        auto incidence_angle =
           remainder(angle_reflector_to_sensor - yaw, 2 * M_PI);  // Normalized to [-pi, pi]
-        if (distance < z && fabs(observation_angle) <= M_PI / 2) z = distance;
+        if (fabs(incidence_angle) > M_PI / 2) continue;
+        auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
+        if (distance < z) z = distance;
       }
 
       // Gaussian model
