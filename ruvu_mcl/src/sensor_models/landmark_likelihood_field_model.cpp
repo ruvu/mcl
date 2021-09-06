@@ -53,7 +53,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
         // Check if ids of landmark and detection agree
-        if ( landmark.id != measurement.id ) continue;
+        if (landmark.id != measurement.id) continue;
 
         // Check if incidence angle is within bounds
         auto angle_reflector_to_sensor = atan2(
