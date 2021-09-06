@@ -2,6 +2,8 @@
 
 #include "./landmark_likelihood_field_model.hpp"
 
+#include <math.h>
+
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -46,11 +48,20 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
 
       // Part 1: Get distance from the hit to closest obstacle.
       // Off-map penalized as max distance
-      auto hit = particle.pose * measurement.pose;
+      auto laser_pose = particle.pose * data.pose;
+      auto hit = laser_pose * measurement.pose;
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
         auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
-        if (distance < z) z = distance;
+        auto angle_reflector_to_sensor = atan2(
+          laser_pose.getOrigin().getY() - landmark.pose.getOrigin().getY(),
+          laser_pose.getOrigin().getX() - landmark.pose.getOrigin().getX());
+        double roll, pitch, yaw;
+        tf2::Matrix3x3(landmark.pose.getRotation())
+          .getRPY(roll, pitch, yaw);  // Reflector orientation
+        auto observation_angle =
+          remainder(angle_reflector_to_sensor - yaw, 2 * M_PI);  // Normalized to [-pi, pi]
+        if (distance < z && fabs(observation_angle) <= M_PI / 2) z = distance;
       }
 
       // Gaussian model

@@ -167,10 +167,7 @@ void Filter::landmark_cb(
     tf2::fromMsg(tfs.transform, tf);
   }
 
-  LandmarkList landmark_list(*landmarks);
-  for (auto & landmark : landmark_list.landmarks) {
-    landmark.pose = tf * landmark.pose;
-  }
+  LandmarkList landmark_list(*landmarks, tf);
 
   landmark_model_->sensor_update(&filter_, landmark_list);
 

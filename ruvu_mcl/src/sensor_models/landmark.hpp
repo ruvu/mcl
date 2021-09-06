@@ -26,7 +26,7 @@ struct Landmark
 
   /**
    * Landmarks that are from the landmark map are assumed to be transformed to the global frame.
-   * Landmark from measurments are assumed to be transformed to the robot frame.
+   * Landmark from measurements are assumed to be in the sensor frame.
    */
   tf2::Transform pose;
   int id;
@@ -35,7 +35,13 @@ struct Landmark
 class LandmarkList
 {
 public:
-  LandmarkList(const ruvu_mcl_msgs::LandmarkList & msg);
+  LandmarkList(
+    const ruvu_mcl_msgs::LandmarkList & msg,
+    const tf2::Transform & pose = tf2::Transform::getIdentity());
 
+  /**
+   * LandmarkLists from measurements should contain a pose with the transform from robot frame to sensor frame.
+   */
   std::vector<Landmark> landmarks;
+  tf2::Transform pose;
 };
