@@ -42,13 +42,13 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
 
   for (auto & particle : pf->particles) {
     double p = 1.0;
+    auto laser_pose = particle.pose * data.pose;
 
     for (const auto & measurement : data.landmarks) {
       double pz = 0.0;
 
       // Part 1: Get distance from the hit to closest obstacle.
       // Off-map penalized as max distance
-      auto laser_pose = particle.pose * data.pose;
       auto hit = laser_pose * measurement.pose;
       double z = std::numeric_limits<double>::infinity();
       for (const auto & landmark : landmarks_.landmarks) {
@@ -56,14 +56,10 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
         if (landmark.id != measurement.id) continue;
 
         // Check if incidence angle is within bounds
-        auto angle_reflector_to_sensor = atan2(
-          laser_pose.getOrigin().getY() - landmark.pose.getOrigin().getY(),
-          laser_pose.getOrigin().getX() - landmark.pose.getOrigin().getX());
-        double roll, pitch, yaw;
-        tf2::Matrix3x3(landmark.pose.getRotation())
-          .getRPY(roll, pitch, yaw);  // Reflector orientation
-        auto incidence_angle =
-          remainder(angle_reflector_to_sensor - yaw, 2 * M_PI);  // Normalized to [-pi, pi]
+        auto vector_reflector_to_sensor = (laser_pose.getOrigin() - landmark.pose.getOrigin()).normalized();
+        tf2::Transform reflector_orientation(landmark.pose.getRotation());
+        auto vector_reflector_orientation = reflector_orientation * tf2::Vector3{1, 0, 0};
+        auto incidence_angle = acos(vector_reflector_to_sensor.dot(vector_reflector_orientation));
         if (fabs(incidence_angle) > M_PI / 2) continue;
 
         auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
