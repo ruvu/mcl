@@ -199,12 +199,14 @@ void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
   ROS_INFO_NAMED(name, "map received");
   map_ = map;
+  laser_ = nullptr;
 }
 
 void Filter::landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 {
   ROS_INFO_NAMED(name, "landmark list received");
   landmarks_ = std::make_shared<LandmarkList>(*landmarks);
+  landmark_model_ = nullptr;
 }
 
 void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
