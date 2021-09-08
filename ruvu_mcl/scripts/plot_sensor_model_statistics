@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+# Copyright 2021 RUVU Robotics B.V.
+
+import rospy
+import matplotlib.pyplot as plt
+import numpy as np
+import sys
+from ruvu_mcl_msgs.msg import ParticleStatistics
+
+
+class Plotter:
+    def __init__(self, nr_sensor_models):
+        self.nr_sensor_models = int(nr_sensor_models)
+
+        self.plot_axes = {}  # map the sensor models to the figure axes
+
+        _, self.axes = plt.subplots(1, self.nr_sensor_models)
+
+        self.sub = rospy.Subscriber("mcl/sensor_model_statistics", ParticleStatistics, self.statistics_cb)
+        plt.show()
+
+    def statistics_cb(self, msg):
+        weight_updates = np.array(msg.weight_updates)
+        weight_updates = -np.sort(-weight_updates)  # Sort descending
+        # Plot data
+        if msg.sensor_model in self.plot_axes:
+            rospy.logdebug("Updating sensor model: %s", msg.sensor_model)
+            self.plot_axes[msg.sensor_model].get_lines()[0].set_data(
+                np.linspace(1, len(weight_updates), len(weight_updates)), weight_updates)
+            self.plot_axes[msg.sensor_model].relim()
+            self.plot_axes[msg.sensor_model].autoscale_view()
+        else:
+            column = len(self.plot_axes)
+            if column < self.nr_sensor_models:
+                rospy.loginfo("Adding new sensor model %s to column: %s", msg.sensor_model, column)
+                # Map sensor model to axes:
+                if self.nr_sensor_models == 1:
+                    self.plot_axes[msg.sensor_model] = self.axes
+                else:
+                    self.plot_axes[msg.sensor_model] = self.axes[column]
+                # Plot:
+                self.plot_axes[msg.sensor_model].plot(weight_updates, "b.", ms=1)
+                self.plot_axes[msg.sensor_model].set_title(msg.sensor_model)
+                self.plot_axes[msg.sensor_model].set_xlabel('Sorted particle id [-]')
+                self.plot_axes[msg.sensor_model].set_ylabel('Weight update [-]')
+                self.plot_axes[msg.sensor_model].set_xlim(0, len(weight_updates))
+            else:
+                rospy.logwarn_throttle(10, 'Received statistics data from model: %s, but there is no subplot left '
+                                           'to visualize')
+        plt.pause(0.001)
+
+
+if __name__ == '__main__':
+    rospy.init_node('sensor_model_statistics_plotter')
+    if not len(sys.argv) == 2:
+        rospy.logerr("Usage: rosrun ruvu_mcl plot_sensor_model_statistics <NR_SENSOR_MODEL_SUBPLOTS>")
+    else:
+        Plotter(sys.argv[1])

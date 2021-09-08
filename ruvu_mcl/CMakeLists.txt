@@ -130,6 +130,7 @@ install(TARGETS ${PROJECT_NAME}
 catkin_install_python(PROGRAMS
     scripts/add_map_to_rosbag
     scripts/plot_benchmark_results
+    scripts/plot_sensor_model_statistics
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

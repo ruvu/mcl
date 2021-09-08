@@ -6,6 +6,7 @@
 
 #include "../particle_filter.hpp"
 #include "ros/node_handle.h"
+#include "ruvu_mcl_msgs/ParticleStatistics.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
@@ -16,6 +17,7 @@ LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
   assert(config_.z_hit + config_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("landmark_likelihood_field_model", 1);
+  statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
 }
 
 void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
@@ -33,6 +35,7 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
+  ruvu_mcl_msgs::ParticleStatistics statistics;
 
   for (auto & particle : pf->particles) {
     double p = 0.0;
@@ -94,6 +97,11 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
     // Normalize weight update
     p /= data.landmarks.size();
 
+    // Gather data for sensor model statistics
+    if (statistics_pub_.getNumSubscribers()) {
+      statistics.weight_updates.push_back(p);
+    }
+
     particle.weight *= p;
     total_weight += particle.weight;
     first = false;
@@ -105,4 +113,8 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
   }
 
   debug_pub_.publish(marker);
+  if (statistics_pub_.getNumSubscribers()) {
+    statistics.sensor_model = typeid(this).name();
+    statistics_pub_.publish(statistics);
+  }
 }

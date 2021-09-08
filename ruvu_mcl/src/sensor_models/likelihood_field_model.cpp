@@ -9,6 +9,7 @@
 #include "../map.hpp"
 #include "../particle_filter.hpp"
 #include "ros/node_handle.h"
+#include "ruvu_mcl_msgs/ParticleStatistics.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
@@ -19,6 +20,7 @@ LikelihoodFieldModel::LikelihoodFieldModel(
   assert(config_.z_hit + config_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("likelihood_field_Model", 1);
+  statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
 }
 
 void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
@@ -36,6 +38,7 @@ void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & 
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
+  ruvu_mcl_msgs::ParticleStatistics statistics;
   auto step = (data.ranges.size() - 1) / (config_.max_beams - 1);
   for (auto & particle : pf->particles) {
     double p = 1.0;
@@ -94,6 +97,11 @@ void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & 
     // Normalize weight update
     p /= config_.max_beams;
 
+    // Gather data for sensor model statistics
+    if (statistics_pub_.getNumSubscribers()) {
+      statistics.weight_updates.push_back(p);
+    }
+
     particle.weight *= p;
     total_weight += particle.weight;
     first = false;
@@ -105,4 +113,8 @@ void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & 
   }
 
   debug_pub_.publish(marker);
+  if (statistics_pub_.getNumSubscribers()) {
+    statistics.sensor_model = typeid(this).name();
+    statistics_pub_.publish(std::move(statistics));
+  }
 }

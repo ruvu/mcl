@@ -34,4 +34,5 @@ private:
   const LandmarkLikelihoodFieldModelConfig config_;
   const LandmarkList landmarks_;
   ros::Publisher debug_pub_;
+  ros::Publisher statistics_pub_;
 };
