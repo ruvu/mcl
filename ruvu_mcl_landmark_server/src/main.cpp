@@ -33,6 +33,8 @@ public:
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
     add_landmark_sub_ =
       nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::addLandmarkCB, this);
+    change_landmark_id_sub_ =
+      nh.subscribe<ruvu_mcl_msgs::LandmarkEntry>("change_landmark_id", 1, &Node::changeLandmarkIdCB, this);
     remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
       "remove_landmark", 1, &Node::removeLandmarkCB, this);
 
@@ -86,16 +88,13 @@ private:
     landmarks_.emplace(landmark_name, landmark);
   }
 
-  void removeLandmarkCB(const geometry_msgs::PointStampedConstPtr & msg)
+  std::vector<std::pair<std::string, Landmark>> getNearbyLandmarks(const tf2::Vector3 & point)
   {
-    tf2::Vector3 point;
-    tf2::fromMsg(msg->point, point);
     std::vector<std::pair<std::string, Landmark>> nearby_landmarks;
     for (const auto & [landmark_name, landmark] : landmarks_) {
       if (tf2::tf2Distance(point, landmark.pose.getOrigin()) <= max_landmark_remove_dist_)
         nearby_landmarks.push_back(make_pair(landmark_name, landmark));
     }
-    if (nearby_landmarks.size() == 0) return;
     std::sort(
       begin(nearby_landmarks), end(nearby_landmarks),
       [point](
@@ -104,6 +103,29 @@ private:
         return tf2::tf2Distance2(point, lhs.second.pose.getOrigin()) <
                tf2::tf2Distance2(point, rhs.second.pose.getOrigin());
       });
+    return nearby_landmarks;
+  }
+
+  void changeLandmarkIdCB(const ruvu_mcl_msgs::LandmarkEntryConstPtr & msg)
+  {
+    tf2::Vector3 point;
+    tf2::fromMsg(msg->pose.pose.position, point);
+
+    auto nearby_landmarks = getNearbyLandmarks(point);
+    if (nearby_landmarks.size() == 0) return;
+    landmarks_.at(nearby_landmarks[0].first).id = msg->id;
+    ROS_INFO_STREAM("Changed id of " << nearby_landmarks[0].first << " from " << nearby_landmarks[0].second.id <<
+                                                                     " to " << msg->id);
+    saveLandmarks();
+    publishLandmarks(ros::Time::now());
+  }
+
+  void removeLandmarkCB(const geometry_msgs::PointStampedConstPtr & msg)
+  {
+    tf2::Vector3 point;
+    tf2::fromMsg(msg->point, point);
+    auto nearby_landmarks = getNearbyLandmarks(point);
+    if (nearby_landmarks.size() == 0) return;
     landmarks_.erase(nearby_landmarks[0].first);
     saveLandmarks();
     publishLandmarks(msg->header.stamp);
@@ -150,6 +172,7 @@ private:
   }
 
   ros::Subscriber add_landmark_sub_;
+  ros::Subscriber change_landmark_id_sub_;
   ros::Subscriber remove_landmark_sub_;
   ros::Publisher landmarks_pub_;
   double max_landmark_remove_dist_;
