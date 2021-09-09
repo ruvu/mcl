@@ -58,6 +58,7 @@ void Filter::configure(const Config & config)
 
   // they will configure themself on next scan_cb
   laser_.reset();
+  landmark_model_.reset();
 
   if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
