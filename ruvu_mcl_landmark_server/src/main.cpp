@@ -114,8 +114,15 @@ private:
     auto nearby_landmarks = getNearbyLandmarks(point);
     if (nearby_landmarks.size() == 0) return;
     landmarks_.at(nearby_landmarks[0].first).id = msg->id;
-    ROS_INFO_STREAM("Changed id of " << nearby_landmarks[0].first << " from " << nearby_landmarks[0].second.id <<
-                                                                     " to " << msg->id);
+    ROS_INFO_STREAM(
+          "Changed id of " << nearby_landmarks[0].first << " from " << nearby_landmarks[0].second.id << " to "
+                           << msg->id);
+    visualization_msgs::InteractiveMarker int_marker;
+    interactive_marker_server_.get(nearby_landmarks[0].first, int_marker);
+    int_marker.description = int_marker.description = nearby_landmarks[0].first + ", id: " +
+                             (msg->id ? std::to_string(msg->id) : "<none>");
+    interactive_marker_server_.insert(int_marker, boost::bind(&Node::markerCB, this, _1));
+    interactive_marker_server_.applyChanges();
     saveLandmarks();
     publishLandmarks(ros::Time::now());
   }
