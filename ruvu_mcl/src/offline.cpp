@@ -69,10 +69,12 @@ public:
     auto map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
     auto landmark_list_pub = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
     auto tf_pub = nh.advertise<tf2_msgs::TFMessage>("/tf", 100);
+    auto tf_static_pub = nh.advertise<tf2_msgs::TFMessage>("/tf_static", 100, true);
+
     ros::WallDuration{0.1}.sleep();  // wait for topics to connect
 
-    std::vector<std::string> topics = {"/scan",          "/map",         "/landmarks",
-                                       "/landmark_list", "/initialpose", "/tf"};
+    std::vector<std::string> topics = {"/scan",        "/map", "/landmarks", "/landmark_list",
+                                       "/initialpose", "/tf",  "/tf_static"};
     rosbag::View view(bag, rosbag::TopicQuery(topics));
 
     ros::WallDuration sleep{private_nh.param("sleep", 0.0)};
@@ -102,7 +104,13 @@ public:
           msg.instantiate<geometry_msgs::PoseWithCovarianceStamped>()) {
         filter_.initial_pose_cb(initialpose);
       } else if (tf2_msgs::TFMessageConstPtr tf = msg.instantiate<tf2_msgs::TFMessage>()) {
-        tf_pub.publish(tf);
+        if (msg.getTopic() == "/tf") {
+          tf_pub.publish(tf);
+        } else if (msg.getTopic() == "/tf_static") {
+          tf_static_pub.publish(tf);
+        } else {
+          ROS_WARN_STREAM("Unsupported message type " << msg.getTopic());
+        }
       } else {
         ROS_WARN_STREAM("Unsupported message type " << msg.getTopic());
       }
