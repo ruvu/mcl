@@ -37,10 +37,12 @@ geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covarianc
   avg_pose.header.frame_id = frame_id;
 
   for (const auto & particle : particles) {
+    // the four components of mean are: average x position, average y position,
+    // average direction x-component and average direction y-component
     mean[0] += particle.weight * particle.pose.getOrigin().getX();
     mean[1] += particle.weight * particle.pose.getOrigin().getY();
-    mean[2] += particle.weight * cos(tf2::getYaw(particle.pose.getRotation()));
-    mean[3] += particle.weight * sin(tf2::getYaw(particle.pose.getRotation()));
+    mean[2] += particle.weight * particle.pose.getBasis().getColumn(0).getX();
+    mean[3] += particle.weight * particle.pose.getBasis().getColumn(0).getY();
 
     // Compute covariance in linear components
     for (size_t j = 0; j < 2; j++) {
