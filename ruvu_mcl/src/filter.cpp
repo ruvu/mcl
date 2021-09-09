@@ -87,10 +87,9 @@ void Filter::configure(const Config & config)
 
 Filter::~Filter() = default;
 
-void Filter::scan_cb(
-  const sensor_msgs::LaserScanConstPtr & scan, const std::string & sensor_topic_name)
+void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
-  if (!odometry_update(scan->header, sensor_topic_name)) return;
+  if (!odometry_update(scan->header, MeasurementType::LASER)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -144,10 +143,9 @@ void Filter::scan_cb(
   broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
 }
 
-void Filter::landmark_cb(
-  const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name)
+void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 {
-  if (!odometry_update(landmarks->header, sensor_topic_name)) return;
+  if (!odometry_update(landmarks->header, MeasurementType::LANDMARK)) return;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
@@ -234,7 +232,8 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
     broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
-bool Filter::odometry_update(const std_msgs::Header & header, const std::string sensor_topic_name)
+bool Filter::odometry_update(
+  const std_msgs::Header & header, const MeasurementType measurement_type)
 {
   assert(model_);
 
@@ -255,8 +254,7 @@ bool Filter::odometry_update(const std_msgs::Header & header, const std::string 
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
-  auto sensor_id = std::make_tuple(sensor_topic_name, header.frame_id);
-  if (!should_process(diff, sensor_id)) {
+  if (!should_process(diff, {measurement_type, header.frame_id})) {
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
     return false;
   }
@@ -285,8 +283,7 @@ tf2::Transform Filter::get_odom_pose(const ros::Time & time)
   return odom_pose_tf;
 }
 
-bool Filter::should_process(
-  const tf2::Transform & diff, std::tuple<std::string, std::string> & sensor_id)
+bool Filter::should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key)
 {
   if (
     diff.getOrigin().length() >= config_.update_min_d ||
@@ -297,10 +294,10 @@ bool Filter::should_process(
     }
   }
 
-  if (should_process_[sensor_id]) {
+  if (should_process_[measurment_key]) {
     ROS_DEBUG_STREAM_NAMED(
-      name, "processing " << std::get<0>(sensor_id) << ' ' << std::get<1>(sensor_id));
-    should_process_[sensor_id] = false;
+      name, "processing " << std::get<0>(measurment_key) << ' ' << std::get<1>(measurment_key));
+    should_process_[measurment_key] = false;
     return true;
   } else {
     return false;
@@ -327,4 +324,16 @@ void Filter::broadcast_tf(
   transform_msg.child_frame_id = config_.odom_frame_id;
   transform_msg.transform = tf2::toMsg(pose * odom_pose.inverse());
   transform_br_.sendTransform(std::move(transform_msg));
+}
+
+std::ostream & operator<<(std::ostream & out, const Filter::MeasurementType & measurement_type)
+{
+  switch (measurement_type) {
+    case Filter::MeasurementType::LASER:
+      return out << "laser";
+    case Filter::MeasurementType::LANDMARK:
+      return out << "landmark";
+    default:
+      throw std::logic_error("unknown measurement type");
+  }
 }

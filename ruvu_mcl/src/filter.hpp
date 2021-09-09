@@ -61,18 +61,27 @@ public:
 
   void configure(const Config & config);
 
-  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan, const std::string & sensor_topic_name);
-  void landmark_cb(
-    const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name);
+  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  void landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
 
 private:
-  bool odometry_update(const std_msgs::Header & header, const std::string sensor_topic_name);
+  enum class MeasurementType { LASER, LANDMARK };
+
+  /**
+   * For each x meters moved, each sensor should be processed once. To do this a map will be
+   * constructed on MeasurementKey. This means measurments from the same frame_id, but with a
+   * different measurement type will still be processed.
+   */
+  using MeasurementKey = std::tuple<MeasurementType, std::string>;
+
+  friend std::ostream & operator<<(std::ostream & out, const MeasurementType & measurement_type);
+
+  bool odometry_update(const std_msgs::Header & header, const MeasurementType measurement_type);
   tf2::Transform get_odom_pose(const ros::Time & time);
-  bool should_process(
-    const tf2::Transform & diff, std::tuple<std::string, std::string> & sensor_id);
+  bool should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key);
   void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
   void broadcast_tf(
     const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
@@ -101,8 +110,10 @@ private:
   /**
    * @brief If a measurement from a frame_id should be processed
    */
-  std::map<std::tuple<std::string, std::string>, bool> should_process_;
+  std::map<MeasurementKey, bool> should_process_;
   std::unique_ptr<Resampler> resampler_;
   int resample_count_;
   std::unique_ptr<AdaptiveMethod> adaptive_;
 };
+
+std::ostream & operator<<(std::ostream & out, const Filter::MeasurementType & measurement_type);

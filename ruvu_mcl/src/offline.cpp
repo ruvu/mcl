@@ -83,7 +83,7 @@ public:
 
       if (sensor_msgs::LaserScanConstPtr scan = msg.instantiate<sensor_msgs::LaserScan>()) {
         scan_pub.publish(scan);
-        filter_.scan_cb(scan, msg.getTopic());
+        filter_.scan_cb(scan);
       } else if (nav_msgs::OccupancyGridConstPtr map = msg.instantiate<nav_msgs::OccupancyGrid>()) {
         map_pub.publish(map);
         filter_.map_cb(map);
@@ -92,7 +92,7 @@ public:
           msg.instantiate<ruvu_mcl_msgs::LandmarkList>()) {
         if (msg.getTopic() == "/landmarks") {
           landmark_pub.publish(landmarks);
-          filter_.landmark_cb(landmarks, msg.getTopic());
+          filter_.landmark_cb(landmarks);
         } else if (msg.getTopic() == "/landmark_list") {
           landmark_list_pub.publish(landmarks);
           filter_.landmark_list_cb(landmarks);
