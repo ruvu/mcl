@@ -31,9 +31,8 @@ public:
   ~Node();  // to handle forward declares
 
 private:
-  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan, const std::string & sensor_topic_name);
-  void landmark_cb(
-    const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks, const std::string & sensor_topic_name);
+  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  void landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmark_list);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
