@@ -58,10 +58,8 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
         // Check if incidence angle is within bounds
         auto vector_reflector_to_sensor =
           (laser_pose.getOrigin() - landmark.pose.getOrigin()).normalized();
-        tf2::Transform reflector_orientation(landmark.pose.getRotation());
-        auto vector_reflector_orientation = reflector_orientation * tf2::Vector3{1, 0, 0};
-        auto incidence_angle = acos(vector_reflector_to_sensor.dot(vector_reflector_orientation));
-        if (fabs(incidence_angle) > M_PI / 2) continue;
+        auto reflector_direction = landmark.pose.getBasis().getColumn(0);
+        if (vector_reflector_to_sensor.dot(reflector_direction) <= 0) continue;
 
         auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
         if (distance < z) z = distance;
