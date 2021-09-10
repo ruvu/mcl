@@ -8,6 +8,7 @@
 
 #include <ros/console.h>
 #include <ruvu_mcl_msgs/AddLandmark.h>
+#include <rviz/properties/bool_property.h>
 #include <rviz/visualization_manager.h>
 #include <tf/transform_datatypes.h>
 
@@ -49,7 +50,13 @@ private:
 AddLandmarkTool::AddLandmarkTool()
 {
   client_ = nh_.serviceClient<ruvu_mcl_msgs::AddLandmark>("add_landmark");
+
+  id_prompt_property_ = new rviz::BoolProperty(
+    "Prompt for id", true, "Whether or not the tool should prompt for an ID input.",
+    getPropertyContainer(), SLOT(setPromptId()), this);
 }
+
+void AddLandmarkTool::setPromptId() { prompt_id_ = id_prompt_property_->getBool(); }
 
 void AddLandmarkTool::onInitialize()
 {
@@ -66,16 +73,23 @@ void AddLandmarkTool::onPoseSet(double x, double y, double theta)
   tf::Pose p(quat, tf::Point(x, y, 0.0));
   tf::poseTFToMsg(p, req.request.landmark.pose.pose);
 
-  LandmarkIdDialog dialog;
+  if (prompt_id_) {
+    LandmarkIdDialog dialog;
 
-  if (dialog.exec() == QDialog::Accepted) {
-    int id = dialog.getIdInput();
+    if (dialog.exec() == QDialog::Accepted) {
+      int id = dialog.getIdInput();
 
-    ROS_INFO_STREAM("Setting id: " << id);
-    req.request.landmark.id = id;
-    req.request.header.frame_id = context_->getFixedFrame().toStdString();
-    client_.call(req);
+      ROS_DEBUG_STREAM("Setting id: " << id);
+      req.request.landmark.id = id;
+    } else {
+      return;
+    }
+  } else {
+    req.request.landmark.id = 0;
   }
+
+  req.request.header.frame_id = context_->getFixedFrame().toStdString();
+  client_.call(req);
 }
 }  // namespace ruvu_mcl_rviz_plugins
 

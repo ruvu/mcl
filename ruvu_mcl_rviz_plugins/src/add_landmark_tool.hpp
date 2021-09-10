@@ -10,7 +10,7 @@
 
 namespace rviz
 {
-class StringProperty;
+class BoolProperty;
 }
 
 namespace ruvu_mcl_rviz_plugins
@@ -26,9 +26,15 @@ public:
 protected:
   virtual void onPoseSet(double x, double y, double theta);
 
+private Q_SLOTS:
+  void setPromptId();
+
 private:
   ros::NodeHandle nh_;
 
   ros::ServiceClient client_;
+
+  rviz::BoolProperty * id_prompt_property_;
+  bool prompt_id_;
 };
 }  // namespace ruvu_mcl_rviz_plugins
