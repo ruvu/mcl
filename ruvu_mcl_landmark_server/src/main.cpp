@@ -32,7 +32,7 @@ public:
 
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
     add_landmark_sub_ =
-      nh.subscribe<geometry_msgs::PoseStamped>("add_landmark", 1, &Node::addLandmarkCB, this);
+      nh.subscribe<ruvu_mcl_msgs::LandmarkEntry>("add_landmark", 1, &Node::addLandmarkCB, this);
     change_landmark_id_sub_ = nh.subscribe<ruvu_mcl_msgs::LandmarkEntry>(
       "change_landmark_id", 1, &Node::changeLandmarkIdCB, this);
     remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
@@ -62,20 +62,12 @@ public:
   }
 
 private:
-  void addLandmarkCB(const geometry_msgs::PoseStampedConstPtr & msg)
+  void addLandmarkCB(const ruvu_mcl_msgs::LandmarkEntryConstPtr & msg)
   {
-    tf2::Vector3 position;
-    tf2::Quaternion orientation;
-    tf2::fromMsg(msg->pose.orientation, orientation);
-    tf2::fromMsg(msg->pose.position, position);
-    if (fabs(orientation.length2() - 1) > 1e-6) {
-      ROS_WARN("input quaternion is not normalized, skipping pose");
-      return;
-    }
-    ROS_INFO("Added landmark_%u", next_landmark_number_);
-    addLandmark(tf2::Transform{orientation, position});
-    saveLandmarks();
-    publishLandmarks(msg->header.stamp);
+    tf2::Transform pose;
+    tf2::fromMsg(msg->pose.pose, pose);
+    Landmark landmark(pose, msg->id);
+    addLandmark(landmark);
   }
 
   void addLandmark(Landmark landmark)
