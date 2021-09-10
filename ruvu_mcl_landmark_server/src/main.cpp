@@ -17,6 +17,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "interactive_markers/interactive_marker_server.h"
 #include "ros/node_handle.h"
+#include "ruvu_mcl_msgs/AddLandmark.h"
 #include "ruvu_mcl_msgs/LandmarkList.h"
 #include "tf2/LinearMath/Transform.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -26,13 +27,16 @@ class Node
 {
 public:
   Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
-  : landmarks_(), path_(), interactive_marker_server_("reflectors"), next_landmark_number_(0)
+  : landmarks_(),
+    path_(),
+    interactive_marker_server_("reflectors"),
+    next_landmark_number_(0),
+    frame_id_("map")
   {
     private_nh.param("max_landmark_remove_dist", max_landmark_remove_dist_, 1.0);
 
     landmarks_pub_ = nh.advertise<ruvu_mcl_msgs::LandmarkList>("landmark_list", 1, true);
-    add_landmark_sub_ =
-      nh.subscribe<ruvu_mcl_msgs::LandmarkEntry>("add_landmark", 1, &Node::addLandmarkCB, this);
+    add_landmark_server_ = nh.advertiseService("add_landmark", &Node::addLandmarkCB, this);
     change_landmark_id_sub_ = nh.subscribe<ruvu_mcl_msgs::LandmarkEntry>(
       "change_landmark_id", 1, &Node::changeLandmarkIdCB, this);
     remove_landmark_sub_ = nh.subscribe<geometry_msgs::PointStamped>(
@@ -62,15 +66,21 @@ public:
   }
 
 private:
-  void addLandmarkCB(const ruvu_mcl_msgs::LandmarkEntryConstPtr & msg)
+  bool addLandmarkCB(
+    ruvu_mcl_msgs::AddLandmarkRequest & req, ruvu_mcl_msgs::AddLandmarkResponse & res)
   {
+    if (req.header.frame_id != frame_id_) {
+      ROS_ERROR_STREAM(
+        "Landmarks must be added in the frame of the landmark server, which is " << frame_id_);
+      return false;
+    }
     tf2::Transform pose;
-    tf2::fromMsg(msg->pose.pose, pose);
-    Landmark landmark(pose, msg->id);
-    addLandmark(landmark);
+    tf2::fromMsg(req.landmark.pose.pose, pose);
+    Landmark landmark(pose, req.landmark.id);
+    return addLandmark(landmark);
   }
 
-  void addLandmark(Landmark landmark)
+  bool addLandmark(Landmark landmark)
   {
     std::string landmark_name = "landmark_" + std::to_string(next_landmark_number_);
     next_landmark_number_++;
@@ -78,6 +88,7 @@ private:
     interactive_marker_server_.insert(interactive_marker_, boost::bind(&Node::markerCB, this, _1));
     interactive_marker_server_.applyChanges();
     landmarks_.emplace(landmark_name, landmark);
+    return true;
   }
 
   std::vector<std::pair<std::string, Landmark>> getNearbyLandmarks(const tf2::Vector3 & point)
@@ -141,7 +152,7 @@ private:
       tf2::toMsg(landmark.pose, entry.pose.pose);
       msg.landmarks.push_back(std::move(entry));
     }
-    msg.header.frame_id = "map";
+    msg.header.frame_id = frame_id_;
     msg.header.stamp = stamp;
     landmarks_pub_.publish(msg);
   }
@@ -170,7 +181,7 @@ private:
     }
   }
 
-  ros::Subscriber add_landmark_sub_;
+  ros::ServiceServer add_landmark_server_;
   ros::Subscriber change_landmark_id_sub_;
   ros::Subscriber remove_landmark_sub_;
   ros::Publisher landmarks_pub_;
@@ -180,6 +191,8 @@ private:
   interactive_markers::InteractiveMarkerServer interactive_marker_server_;
   std::map<std::string, Landmark> landmarks_;
   std::filesystem::path path_;
+
+  std::string frame_id_;
 };
 
 int main(int argc, char ** argv)

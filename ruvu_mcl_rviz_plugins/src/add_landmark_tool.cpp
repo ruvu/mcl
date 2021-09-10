@@ -7,7 +7,8 @@
 #include "./add_landmark_tool.hpp"
 
 #include <ros/console.h>
-#include <ruvu_mcl_msgs/LandmarkEntry.h>
+#include <ruvu_mcl_msgs/AddLandmark.h>
+#include <rviz/visualization_manager.h>
 #include <tf/transform_datatypes.h>
 
 #include <QHBoxLayout>
@@ -47,7 +48,7 @@ private:
 
 AddLandmarkTool::AddLandmarkTool()
 {
-  publisher_ = nh_.advertise<ruvu_mcl_msgs::LandmarkEntry>("add_landmark", 1);
+  client_ = nh_.serviceClient<ruvu_mcl_msgs::AddLandmark>("add_landmark");
 }
 
 void AddLandmarkTool::onInitialize()
@@ -58,12 +59,12 @@ void AddLandmarkTool::onInitialize()
 
 void AddLandmarkTool::onPoseSet(double x, double y, double theta)
 {
-  ruvu_mcl_msgs::LandmarkEntry landmark;
+  ruvu_mcl_msgs::AddLandmark req;
 
   tf::Quaternion quat;
   quat.setRPY(0.0, 0.0, theta);
   tf::Pose p(quat, tf::Point(x, y, 0.0));
-  tf::poseTFToMsg(p, landmark.pose.pose);
+  tf::poseTFToMsg(p, req.request.landmark.pose.pose);
 
   LandmarkIdDialog dialog;
 
@@ -71,8 +72,9 @@ void AddLandmarkTool::onPoseSet(double x, double y, double theta)
     int id = dialog.getIdInput();
 
     ROS_INFO_STREAM("Setting id: " << id);
-    landmark.id = id;
-    publisher_.publish(landmark);
+    req.request.landmark.id = id;
+    req.request.header.frame_id = context_->getFixedFrame().toStdString();
+    client_.call(req);
   }
 }
 }  // namespace ruvu_mcl_rviz_plugins

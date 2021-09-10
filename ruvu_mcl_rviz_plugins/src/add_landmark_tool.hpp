@@ -29,6 +29,6 @@ protected:
 private:
   ros::NodeHandle nh_;
 
-  ros::Publisher publisher_;
+  ros::ServiceClient client_;
 };
 }  // namespace ruvu_mcl_rviz_plugins
