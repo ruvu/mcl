@@ -70,6 +70,8 @@ add_library(${PROJECT_NAME}
   src/motion_models/differential_motion_model.cpp
   src/motion_models/motion_model.cpp
   src/node.cpp
+  src/offline/bag_buffer.cpp
+  src/offline/bag_player.cpp
   src/particle_filter.cpp
   src/resamplers/low_variance.cpp
   src/resamplers/resampler.cpp
