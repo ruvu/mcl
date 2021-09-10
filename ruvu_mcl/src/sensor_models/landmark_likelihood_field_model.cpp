@@ -27,8 +27,9 @@ LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
 
 double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
 {
-  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
+  if (data.landmarks.size() == 0) return false;
 
+  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;
   marker.header.stamp = ros::Time::now();
@@ -41,7 +42,7 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
   double total_weight = 0.0;
 
   for (auto & particle : pf->particles) {
-    double p = 1.0;
+    double p = 0.0;
     auto laser_pose = particle.pose * data.pose;
 
     for (const auto & measurement : data.landmarks) {
@@ -96,6 +97,9 @@ double LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const La
         marker.colors.push_back(std::move(color));
       }
     }
+
+    // Normalize weight update
+    p /= data.landmarks.size();
 
     particle.weight *= p;
     total_weight += particle.weight;
