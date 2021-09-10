@@ -15,6 +15,11 @@ add_message_files(
     LandmarkList.msg
 )
 
+add_service_files(
+  FILES
+  AddLandmark.srv
+)
+
 generate_messages(
   DEPENDENCIES
     std_msgs
