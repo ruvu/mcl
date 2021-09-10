@@ -1,4 +1,7 @@
 # Copyright 2021 RUVU Robotics B.V.
 
+*CMakeLists.txt.user
 *.pyc
 .idea/
+*.autosave
+*.swp
