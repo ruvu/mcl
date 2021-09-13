@@ -67,7 +67,7 @@ public:
 
 private:
   bool addLandmarkCB(
-    ruvu_mcl_msgs::AddLandmarkRequest & req, ruvu_mcl_msgs::AddLandmarkResponse & res)
+    ruvu_mcl_msgs::AddLandmarkRequest & req, ruvu_mcl_msgs::AddLandmarkResponse & res)  // NOLINT
   {
     if (req.header.frame_id != frame_id_) {
       ROS_ERROR_STREAM(

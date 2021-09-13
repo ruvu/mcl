@@ -82,4 +82,5 @@ install(FILES
 ## Testing ##
 #############
 
+set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
 ruvu_lint_add_test()
