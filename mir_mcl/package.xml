@@ -24,6 +24,7 @@ Copyright 2021 RUVU Robotics B.V.
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>ruvu_gazebo_plugins</exec_depend>
   <exec_depend>ruvu_mcl_landmark_server</exec_depend>
+  <exec_depend>ruvu_mcl_rviz_plugins</exec_depend>
   <exec_depend>ruvu_rviz_plugins</exec_depend>
 
   <exec_depend>rviz</exec_depend>

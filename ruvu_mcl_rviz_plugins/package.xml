@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ruvu_mcl_rviz_plugins</name>
+  <version>0.0.0</version>
+  <description>The ruvu_mcl_rviz_plugins package</description>
+
+  <maintainer email="rokus@ruvu.nl">Rokus Ottervanger</maintainer>
+
+  <license>TODO</license>
+
+  <depend>ruvu_mcl_msgs</depend>
+  <depend>rviz</depend>
+  <depend>qtbase5-dev</depend>
+  <test_depend>ruvu_lint</test_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+    <rviz plugin="${prefix}/plugin_description.xml"/>
+  </export>
+
+</package>

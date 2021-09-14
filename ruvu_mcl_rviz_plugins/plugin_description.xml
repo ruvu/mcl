@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<library path="lib/libruvu_mcl_rviz_plugins">
+  <class name="ruvu_mcl_rviz_plugins/AddLandmarkWithId"
+         type="ruvu_mcl_rviz_plugins::AddLandmarkTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Add a new landmark with ID to the landmark server
+    </description>
+  </class>
+</library>

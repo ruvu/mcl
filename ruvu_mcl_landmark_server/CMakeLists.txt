@@ -61,7 +61,7 @@ install(
 
 #############
 
-set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces, -runtime/explicit")
+set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")
 ruvu_lint_add_test()
 
 ## Add gtest based cpp test target and link libraries
