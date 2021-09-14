@@ -53,15 +53,16 @@ AddLandmarkTool::AddLandmarkTool()
 
   id_prompt_property_ = new rviz::BoolProperty(
     "Prompt for id", true, "Whether or not the tool should prompt for an ID input.",
-    getPropertyContainer(), SLOT(setPromptId()), this);
+    getPropertyContainer(), SLOT(getPromptIdProperty()), this);
 }
 
-void AddLandmarkTool::setPromptId() { prompt_id_ = id_prompt_property_->getBool(); }
+void AddLandmarkTool::getPromptIdProperty() { prompt_id_ = id_prompt_property_->getBool(); }
 
 void AddLandmarkTool::onInitialize()
 {
   PoseTool::onInitialize();
   setName("Add landmark with ID");
+  getPromptIdProperty();
 }
 
 void AddLandmarkTool::onPoseSet(double x, double y, double theta)
@@ -86,9 +87,11 @@ void AddLandmarkTool::onPoseSet(double x, double y, double theta)
     }
   } else {
     req.request.landmark.id = 0;
+    ROS_DEBUG_STREAM("Adding node with id: " << req.request.landmark.id);
   }
 
   req.request.header.frame_id = context_->getFixedFrame().toStdString();
+  req.request.header.stamp = ros::Time::now();
   client_.call(req);
 }
 }  // namespace ruvu_mcl_rviz_plugins

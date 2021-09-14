@@ -27,7 +27,7 @@ protected:
   virtual void onPoseSet(double x, double y, double theta);
 
 private Q_SLOTS:
-  void setPromptId();
+  void getPromptIdProperty();
 
 private:
   ros::NodeHandle nh_;
