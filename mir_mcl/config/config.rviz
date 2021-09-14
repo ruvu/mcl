@@ -13,8 +13,8 @@ Panels:
   - Class: rviz/Tool Properties
     Expanded:
       - /2D Pose Estimate1
-      - /2D Nav Goal1
-      - /Publish Point1
+      - /Add landmark with ID1
+      - /Remove Landmark1
     Name: Tool Properties
     Splitter Ratio: 0.5886790156364441
   - Class: rviz/Views
@@ -459,8 +459,8 @@ Visualization Manager:
       Topic: /initialpose
       X std deviation: 0.5
       Y std deviation: 0.5
-    - Class: mir_mcl/AddLandmark
-      Topic: /add_landmark
+    - Class: ruvu_mcl_rviz_plugins/AddLandmarkWithId
+      Prompt for id: true
     - Class: mir_mcl/RemoveLandmark
       Single click: true
       Topic: /remove_landmark
