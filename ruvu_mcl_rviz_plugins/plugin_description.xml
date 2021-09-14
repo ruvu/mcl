@@ -4,7 +4,7 @@ Copyright 2021 RUVU Robotics B.V.
 -->
 
 <library path="lib/libruvu_mcl_rviz_plugins">
-  <class name="ruvu_mcl_rviz_plugins/AddLandmark"
+  <class name="ruvu_mcl_rviz_plugins/AddLandmarkWithId"
          type="ruvu_mcl_rviz_plugins::AddLandmarkTool"
          base_class_type="rviz::Tool">
     <description>
