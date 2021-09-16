@@ -48,8 +48,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
       auto point_laser = particle.pose * data.pose.getOrigin();
       auto point_hit =
-        particle.pose *
-        (data.pose * tf2::Vector3{data.range_max * tf2Cos(a), data.range_max * tf2Sin(a), 0});
+        particle.pose * (data.pose * (tf2::Vector3{tf2Cos(a), tf2Sin(a), 0} * data.range_max));
       double map_range = map_->calc_range(point_laser, point_hit);
       if (std::isinf(map_range)) continue;  // TODO(Ramon): don't skip infs
 
