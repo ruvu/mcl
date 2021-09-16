@@ -23,6 +23,7 @@ LikelihoodFieldModel::LikelihoodFieldModel(
 
 double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
+  if (data.ranges.size() == 0 || config_.max_beams <= 1) return false;
   // Likelihood field range finder model (Page 143 Probabilistc Robotics)
 
   visualization_msgs::Marker marker;
@@ -89,6 +90,9 @@ double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData 
         marker.colors.push_back(std::move(color));
       }
     }
+
+    // Normalize weight update
+    p /= config_.max_beams;
 
     particle.weight *= p;
     total_weight += particle.weight;

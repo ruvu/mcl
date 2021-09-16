@@ -22,6 +22,7 @@ BeamModel::BeamModel(
 
 double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
+  if (data.ranges.size() == 0 || parameters_.max_beams <= 1) return false;
   // inspired by:
   // https://github.com/ros-planning/navigation2/blob/f23d915608a94039ff91008014730971a8795c15/nav2_amcl/src/sensors/laser/beam_model.cpp
 
@@ -37,7 +38,7 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
   double total_weight = 0.0;
   auto step = (data.ranges.size() - 1) / (parameters_.max_beams - 1);
   for (auto & particle : pf->particles) {
-    double p = 1.0;
+    double p = 0.0;
 
     for (std::size_t i = 0; i < data.ranges.size(); i += step) {
       double obs_range = data.ranges[i];
@@ -98,6 +99,9 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
         marker.colors.push_back(std::move(color));
       }
     }
+
+    // Normalize weight update
+    p /= parameters_.max_beams;
 
     particle.weight *= p;
     total_weight += particle.weight;
