@@ -28,6 +28,17 @@
 
 constexpr auto name = "filter";
 
+std::unique_ptr<Laser> create_laser_model(Config config, nav_msgs::OccupancyGridConstPtr map)
+{
+  ROS_INFO_NAMED(name, "adding a laser sensor model");
+  if (auto c = std::get_if<BeamModelConfig>(&config.laser))
+    return std::make_unique<BeamModel>(*c, std::make_shared<OccupancyMap>(*map));
+  else if (auto c = std::get_if<LikelihoodFieldModelConfig>(&config.laser))
+    return std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map));
+  else
+    throw std::logic_error("no laser model configured");
+}
+
 Filter::Filter(
   ros::NodeHandle nh, ros::NodeHandle private_nh,
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
@@ -57,8 +68,8 @@ void Filter::configure(const Config & config)
   config_ = config;
 
   // they will configure themself on next scan_cb
-  laser_.reset();
-  landmark_model_.reset();
+  laser_ = nullptr;
+  landmark_model_ = nullptr;
 
   if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
@@ -99,18 +110,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
   if (!laser_) {
-    ROS_INFO_NAMED(name, "adding a laser sensor model");
-
-    // TODO(Ramon): A copy is made of the map for each sensor, but hey should all use the same
-    // shared pointer
-    std::unique_ptr<Laser> sensor;
-    if (auto c = std::get_if<BeamModelConfig>(&config_.laser))
-      sensor = std::make_unique<BeamModel>(*c, std::make_shared<OccupancyMap>(*map_));
-    else if (auto c = std::get_if<LikelihoodFieldModelConfig>(&config_.laser))
-      sensor = std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map_));
-    else
-      throw std::logic_error("no laser model configured");
-    laser_ = std::move(sensor);
+    laser_ = create_laser_model(config_, map_);
   }
 
   tf2::Transform tf;
