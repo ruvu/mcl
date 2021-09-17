@@ -271,15 +271,10 @@ bool Filter::odometry_update(
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
 {
-  geometry_msgs::Pose odom_pose;
-  tf2::toMsg(tf2::Transform::getIdentity(), odom_pose);
-
   // don't use .transform() because this could run offline without a listener thread
   auto tf = buffer_->lookupTransform(config_.odom_frame_id, config_.base_frame_id, time);
-  tf2::doTransform(odom_pose, odom_pose, tf);
-
   tf2::Transform odom_pose_tf;
-  tf2::convert(odom_pose, odom_pose_tf);
+  tf2::fromMsg(tf.transform, odom_pose_tf);
   return odom_pose_tf;
 }
 
