@@ -29,10 +29,11 @@ ros::Duration duration_from_bag(const rosbag::Bag & bag)
     for (const auto & tf : tfs->transforms) ts.push_back(tf.header.stamp);
   }
 
-  ROS_INFO("Loaded %zu tf messages", ts.size());
+  ROS_INFO_NAMED(name, "loaded %zu tf messages", ts.size());
   if (!ts.size()) throw std::runtime_error("Can't find any scans in the bagfile");
 
-  ROS_INFO("Loaded tf messages, first=%f last=%f", ts.front().toSec(), ts.back().toSec());
+  ROS_INFO_NAMED(
+    name, "loaded tf messages, first=%f last=%f", ts.front().toSec(), ts.back().toSec());
   return ts.back() - ts.front();
 }
 

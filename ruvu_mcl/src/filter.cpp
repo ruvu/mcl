@@ -241,7 +241,7 @@ bool Filter::odometry_update(
   try {
     odom_pose = get_odom_pose(header.stamp);
   } catch (const tf2::TransformException & e) {
-    ROS_WARN("Failed to compute odom pose, skipping measurement (%s)", e.what());
+    ROS_WARN_NAMED(name, "failed to compute odom pose, skipping measurement (%s)", e.what());
     return false;
   }
 
