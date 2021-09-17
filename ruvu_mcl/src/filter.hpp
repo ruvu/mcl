@@ -10,6 +10,7 @@
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
+#include "tf2/transform_datatypes.h"
 #include "tf2_ros/transform_broadcaster.h"
 
 // forward declare
@@ -99,7 +100,7 @@ private:
   Config config_;
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
-  tf2::Transform last_pose_;
+  tf2::Stamped<tf2::Transform> last_pose_;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
