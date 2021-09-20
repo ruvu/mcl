@@ -28,6 +28,17 @@
 
 constexpr auto name = "filter";
 
+std::unique_ptr<Laser> create_laser_model(Config config, nav_msgs::OccupancyGridConstPtr map)
+{
+  ROS_INFO_NAMED(name, "adding a laser sensor model");
+  if (auto c = std::get_if<BeamModelConfig>(&config.laser))
+    return std::make_unique<BeamModel>(*c, std::make_shared<OccupancyMap>(*map));
+  else if (auto c = std::get_if<LikelihoodFieldModelConfig>(&config.laser))
+    return std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map));
+  else
+    throw std::logic_error("no laser model configured");
+}
+
 Filter::Filter(
   ros::NodeHandle nh, ros::NodeHandle private_nh,
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
@@ -57,8 +68,8 @@ void Filter::configure(const Config & config)
   config_ = config;
 
   // they will configure themself on next scan_cb
-  laser_.reset();
-  landmark_model_.reset();
+  laser_ = nullptr;
+  landmark_model_ = nullptr;
 
   if (auto c = std::get_if<DifferentialMotionModelConfig>(&config.model))
     model_ = std::make_unique<DifferentialMotionModel>(*c, rng_);
@@ -99,18 +110,7 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     return;
   }
   if (!laser_) {
-    ROS_INFO_NAMED(name, "adding a laser sensor model");
-
-    // TODO(Ramon): A copy is made of the map for each sensor, but hey should all use the same
-    // shared pointer
-    std::unique_ptr<Laser> sensor;
-    if (auto c = std::get_if<BeamModelConfig>(&config_.laser))
-      sensor = std::make_unique<BeamModel>(*c, std::make_shared<OccupancyMap>(*map_));
-    else if (auto c = std::get_if<LikelihoodFieldModelConfig>(&config_.laser))
-      sensor = std::make_unique<LikelihoodFieldModel>(*c, std::make_shared<DistanceMap>(*map_));
-    else
-      throw std::logic_error("no laser model configured");
-    laser_ = std::move(sensor);
+    laser_ = create_laser_model(config_, map_);
   }
 
   tf2::Transform tf;
@@ -241,7 +241,7 @@ bool Filter::odometry_update(
   try {
     odom_pose = get_odom_pose(header.stamp);
   } catch (const tf2::TransformException & e) {
-    ROS_WARN("Failed to compute odom pose, skipping measurement (%s)", e.what());
+    ROS_WARN_NAMED(name, "failed to compute odom pose, skipping measurement (%s)", e.what());
     return false;
   }
 
@@ -271,15 +271,10 @@ bool Filter::odometry_update(
 
 tf2::Transform Filter::get_odom_pose(const ros::Time & time)
 {
-  geometry_msgs::Pose odom_pose;
-  tf2::toMsg(tf2::Transform::getIdentity(), odom_pose);
-
   // don't use .transform() because this could run offline without a listener thread
   auto tf = buffer_->lookupTransform(config_.odom_frame_id, config_.base_frame_id, time);
-  tf2::doTransform(odom_pose, odom_pose, tf);
-
   tf2::Transform odom_pose_tf;
-  tf2::convert(odom_pose, odom_pose_tf);
+  tf2::fromMsg(tf.transform, odom_pose_tf);
   return odom_pose_tf;
 }
 

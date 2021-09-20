@@ -51,6 +51,8 @@ namespace ruvu_mcl_msgs
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
 
+std::unique_ptr<Laser> create_laser_model(Config config, nav_msgs::OccupancyGridConstPtr map);
+
 class Filter
 {
 public:
