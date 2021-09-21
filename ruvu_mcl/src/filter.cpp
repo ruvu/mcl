@@ -139,7 +139,10 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   // Create output
   auto ps = filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
   publish_data(ps);
-  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
+  tf2::Transform pose;
+  tf2::fromMsg(ps.pose.pose, pose);
+  last_pose_.setData(pose);  // store last_pose_ for later use
+  last_pose_.stamp_ = scan->header.stamp;
   broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
 }
 
@@ -187,7 +190,10 @@ void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
   auto ps =
     filter_.get_pose_with_covariance_stamped(landmarks->header.stamp, config_.global_frame_id);
   publish_data(ps);
-  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
+  tf2::Transform pose;
+  tf2::fromMsg(ps.pose.pose, pose);
+  last_pose_.setData(pose);  // store last_pose_ for later use
+  last_pose_.stamp_ = landmarks->header.stamp;
   broadcast_tf(last_pose_, last_odom_pose_.value(), landmarks->header.stamp);
 }
 
@@ -227,8 +233,11 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   auto ps =
     filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
   publish_data(ps);
-  tf2::convert(ps.pose.pose, last_pose_);  // store last_pose_ for later use
-  if (last_odom_pose_)                     // before first scan_cb, we can't calculate the tf
+  tf2::Transform pose;
+  tf2::fromMsg(ps.pose.pose, pose);
+  last_pose_.setData(pose);  // store last_pose_ for later use
+  last_pose_.stamp_ = initial_pose->header.stamp;
+  if (last_odom_pose_)  // before first scan_cb, we can't calculate the tf
     broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
@@ -248,13 +257,21 @@ bool Filter::odometry_update(
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first odometry update, recording the odom pose");
     last_odom_pose_ = odom_pose;
+    last_pose_.stamp_ = header.stamp;
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
+    return false;
+  }
+
+  if (header.stamp <= last_pose_.stamp_) {
+    ROS_DEBUG_STREAM_NAMED(
+      name, "skipping out-of-order measurement, " << header.stamp << " <= " << last_pose_.stamp_);
     return false;
   }
 
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
   if (!should_process(diff, {measurement_type, header.frame_id})) {
+    last_pose_.stamp_ = header.stamp;
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
     return false;
   }
