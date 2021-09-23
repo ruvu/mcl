@@ -17,6 +17,7 @@
 #include "./resamplers/low_variance.hpp"
 #include "./rng.hpp"
 #include "./sensor_models/beam_model.hpp"
+#include "./sensor_models/gaussian_landmark_model.hpp"
 #include "./sensor_models/landmark_likelihood_field_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
@@ -159,7 +160,12 @@ void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
   }
   if (!landmark_model_) {
     ROS_INFO_NAMED(name, "adding a landmark sensor model");
-    landmark_model_ = std::make_unique<LandmarkLikelihoodFieldModel>(config_.landmark, *landmarks_);
+    if (auto c = std::get_if<GaussianLandmarkModelConfig>(&config_.landmark))
+      landmark_model_ = std::make_unique<GaussianLandmarkModel>(*c, *landmarks_);
+    else if (auto c = std::get_if<LandmarkLikelihoodFieldModelConfig>(&config_.landmark))
+      landmark_model_ = std::make_unique<LandmarkLikelihoodFieldModel>(*c, *landmarks_);
+    else
+      throw std::logic_error("no landmark model configured");
   }
 
   tf2::Transform tf;

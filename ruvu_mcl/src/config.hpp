@@ -45,6 +45,13 @@ struct LikelihoodFieldModelConfig
   std::string global_frame_id;  // for visualization
 };
 
+struct GaussianLandmarkModelConfig
+{
+  double landmark_sigma_r;
+  double landmark_sigma_t;
+  std::string global_frame_id;  // for visualization
+};
+
 struct LandmarkLikelihoodFieldModelConfig
 {
   double z_hit;
@@ -88,7 +95,7 @@ struct Config
   std::array<double, 36> initial_cov;
 
   std::variant<BeamModelConfig, LikelihoodFieldModelConfig> laser;
-  LandmarkLikelihoodFieldModelConfig landmark;
+  std::variant<GaussianLandmarkModelConfig, LandmarkLikelihoodFieldModelConfig> landmark;
   std::variant<DifferentialMotionModelConfig> model;
   std::variant<FixedConfig, KLDSamplingConfig, SplitAndMergeConfig> adaptive;
 

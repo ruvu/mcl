@@ -13,3 +13,5 @@ LandmarkList::LandmarkList(const ruvu_mcl_msgs::LandmarkList & msg, const tf2::T
     landmarks.emplace_back(Landmark(pose, landmark.id));
   }
 }
+
+LandmarkModel::~LandmarkModel() = default;

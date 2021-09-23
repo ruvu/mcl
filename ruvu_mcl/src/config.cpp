@@ -71,10 +71,24 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     throw std::runtime_error(ss.str());
   }
 
-  landmark.z_hit = config.landmark_z_hit;
-  landmark.z_rand = config.landmark_z_rand;
-  landmark.sigma_hit = config.landmark_sigma_hit;
-  landmark.global_frame_id = config.global_frame_id;
+  if (config.landmark_model_type == ruvu_mcl::AMCL_landmark_gaussian_const) {
+    GaussianLandmarkModelConfig c;
+    c.landmark_sigma_r = config.landmark_sigma_r;
+    c.landmark_sigma_t = config.landmark_sigma_t;
+    c.global_frame_id = config.global_frame_id;
+    landmark = c;
+  } else if (config.landmark_model_type == ruvu_mcl::AMCL_landmark_likelihood_field_const) {
+    LandmarkLikelihoodFieldModelConfig c;
+    c.z_hit = config.landmark_z_hit;
+    c.z_rand = config.landmark_z_rand;
+    c.sigma_hit = config.landmark_sigma_hit;
+    c.global_frame_id = config.global_frame_id;
+    landmark = c;
+  } else {
+    std::ostringstream ss;
+    ss << "sensor model " << config.laser_model_type << " is not yet implemented";
+    throw std::runtime_error(ss.str());
+  }
 
   if (config.adaptive_type == ruvu_mcl::AMCL_kld_sampling) {
     KLDSamplingConfig c;
