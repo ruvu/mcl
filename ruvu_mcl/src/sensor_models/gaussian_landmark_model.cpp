@@ -21,6 +21,7 @@ GaussianLandmarkModel::GaussianLandmarkModel(
   const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks)
 : config_(config), landmarks_(landmarks)
 {
+  assert(config.z_rand >= 0 && config.z_rand <= 1);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
 }
@@ -72,6 +73,8 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         // pick the landmark with the highest probability
         if (q > pz) pz = q;
       }
+
+      pz = (1 - config_.z_rand) * pz + config_.z_rand;
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);
