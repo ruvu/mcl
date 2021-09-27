@@ -29,7 +29,7 @@ Map::Map(const nav_msgs::OccupancyGrid & msg)
     msg.info.resolution, msg.data.size() / 1024.0 / 1024.0);
 }
 
-Map::operator nav_msgs::OccupancyGrid()
+Map::operator nav_msgs::OccupancyGrid() const
 {
   nav_msgs::OccupancyGrid msg;
   msg.info.resolution = scale;
@@ -206,7 +206,7 @@ DistanceMap::DistanceMap(const nav_msgs::OccupancyGrid & msg) : Map(msg)
     debug_pub_.publish(static_cast<nav_msgs::OccupancyGrid>(*this));
 }
 
-DistanceMap::operator nav_msgs::OccupancyGrid()
+DistanceMap::operator nav_msgs::OccupancyGrid() const
 {
   auto msg = Map::operator nav_msgs::OccupancyGrid();
   msg.data.resize(cells.size());

@@ -49,11 +49,11 @@ class BagPlayer
 {
 public:
   /* Constructor expecting the filename of a bag */
-  BagPlayer(const std::string & filename);
+  explicit BagPlayer(const std::string & filename);
 
   /* Register a callback for a specific topic and type */
   template <class T>
-  void register_callback(const std::string & topic, BagCallbackT<T> f);
+  void register_callback(const std::string & topic, BagCallbackT<T> cb);
 
   /* Set the speed to playback.  1.0 is the default.
    * 2.0 would be twice as fast, 0.5 is half realtime.  */
@@ -67,7 +67,7 @@ public:
   rosbag::Bag bag;
 
 private:
-  ros::Time real_time(const ros::Time & msg_time);
+  ros::Time real_time(const ros::Time & msg_time) const;
 
   std::map<std::string, BagCallback> cbs_;
   ros::Time bag_start_;

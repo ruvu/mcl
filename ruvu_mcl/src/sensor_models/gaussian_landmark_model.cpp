@@ -29,7 +29,7 @@ GaussianLandmarkModel::GaussianLandmarkModel(
 void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
 {
   // This algorithm is based on the landmark model known correspondence (Page 150 Probabilistc Robotics)
-  if (data.landmarks.size() == 0) return;
+  if (data.landmarks.empty()) return;
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;
@@ -86,14 +86,14 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         geometry_msgs::Point p1, p2;
         tf2::toMsg(particle.pose.getOrigin(), p1);
         tf2::toMsg(hit.getOrigin(), p2);
-        marker.points.push_back(std::move(p1));
-        marker.points.push_back(std::move(p2));
+        marker.points.push_back(p1);
+        marker.points.push_back(p2);
         std_msgs::ColorRGBA color;
         color.a = 1;
         color.b = pz;
         color.r = 1 - pz;
         marker.colors.push_back(color);
-        marker.colors.push_back(std::move(color));
+        marker.colors.push_back(color);
       }
     }
 
@@ -108,5 +108,5 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     particle.weight /= total_weight;
   }
 
-  debug_pub_.publish(std::move(marker));
+  debug_pub_.publish(marker);
 }

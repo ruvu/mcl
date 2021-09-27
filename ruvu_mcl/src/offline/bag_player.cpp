@@ -40,9 +40,9 @@
 #include "ros/init.h"
 #include "rosbag/view.h"
 
-BagPlayer::BagPlayer(const std::string & fname)
+BagPlayer::BagPlayer(const std::string & filename)
 {
-  bag.open(fname, rosbag::bagmode::Read);
+  bag.open(filename, rosbag::bagmode::Read);
   ros::Time::init();
   rosbag::View v(bag);
   bag_start_ = v.getBeginTime();
@@ -56,7 +56,7 @@ void BagPlayer::set_playback_speed(double scale)
   if (scale > 0.0) playback_speed_ = scale;
 }
 
-ros::Time BagPlayer::real_time(const ros::Time & msg_time)
+ros::Time BagPlayer::real_time(const ros::Time & msg_time) const
 {
   return play_start_ + (msg_time - bag_start_) * (1 / playback_speed_);
 }

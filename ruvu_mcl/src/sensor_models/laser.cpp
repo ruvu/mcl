@@ -14,7 +14,7 @@ LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform &
   pose(pose)
 {
   ranges.reserve(scan.ranges.size());
-  for (auto & range : scan.ranges) {
+  for (const auto & range : scan.ranges) {
     // https://www.ros.org/reps/rep-0117.html
 
     // Represents expected pre-REP logic and is the only necessary condition for most applications.

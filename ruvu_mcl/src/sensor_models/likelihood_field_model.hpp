@@ -26,7 +26,7 @@ public:
    * @param data Laser data to use
    * @return if it was succesful
    */
-  double sensor_update(ParticleFilter * pf, const LaserData & data) override;
+  void sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
   const LikelihoodFieldModelConfig config_;

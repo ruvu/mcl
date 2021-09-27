@@ -12,8 +12,8 @@ struct Config;
 class Fixed : public AdaptiveMethod
 {
 public:
-  Fixed(const Config & config);
-  int calc_needed_particles(ParticleFilter * pf);
+  explicit Fixed(const Config & config);
+  int calc_needed_particles(const ParticleFilter & pf) const override;
 
 private:
   size_t max_particles_;

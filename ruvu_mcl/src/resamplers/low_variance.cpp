@@ -10,23 +10,23 @@
 
 constexpr auto name = "low_variance";
 
-LowVariance::LowVariance(std::shared_ptr<Rng> rng) : rng_(rng) {}
+LowVariance::LowVariance(const std::shared_ptr<Rng> & rng) : rng_(rng) {}
 
 bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
 {
-  assert(pf->particles.size());
+  assert(!pf->particles.empty());
   ROS_DEBUG_NAMED(name, "resample");
   // Low-variance resampling (Page 86 Probabilistc Robotics)
   double step_size = 1. / needed_particles;
-  auto uniform_dist = rng_->uniform_distribution(0, step_size);
+  auto gen_uniform = rng_->uniform_distribution(0, step_size);
 
   ParticleFilter pf_resampled;
   pf_resampled.particles.reserve(needed_particles);
-  float r = uniform_dist();
+  double r = gen_uniform();
   double c = pf->particles.at(0).weight;
   int i = 0;
   for (int m = 0; m < needed_particles; m++) {
-    float u = r + m * step_size;
+    double u = r + m * step_size;
     while (u > c) {
       i++;
       c += pf->particles.at(i).weight;

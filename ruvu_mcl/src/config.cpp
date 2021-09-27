@@ -10,7 +10,7 @@ void normalize(std::initializer_list<double *> zs)
 {
   double z_total =
     std::accumulate(zs.begin(), zs.end(), 0.0, [](double acc, double * z) { return acc + *z; });
-  for (auto & z : zs) *z /= z_total;
+  for (double * z : zs) *z /= z_total;
 }
 
 Config::Config(const ruvu_mcl::AMCLConfig & config)
