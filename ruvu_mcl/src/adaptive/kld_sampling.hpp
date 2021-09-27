@@ -5,7 +5,7 @@
 #include "./adaptive_method.hpp"
 
 // forward declare
-class KLDSamplingConfig;
+struct KLDSamplingConfig;
 class ParticleFilter;
 
 class KLDSampling : public AdaptiveMethod

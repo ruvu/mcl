@@ -7,7 +7,7 @@
 
 // forward declare
 class ParticleFilter;
-class Config;
+struct Config;
 
 class Fixed : public AdaptiveMethod
 {
