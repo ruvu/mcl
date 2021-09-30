@@ -28,9 +28,9 @@ GaussianLandmarkModel::GaussianLandmarkModel(
 
 void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
 {
+  // This algorithm is based on the landmark model known correspondence (Page 150 Probabilistc Robotics)
   if (data.landmarks.size() == 0) return;
 
-  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;
   marker.header.stamp = ros::Time::now();

@@ -22,9 +22,8 @@ BeamModel::BeamModel(
 
 double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
+  // This algorithm is based on the beam range finder model (Page 129 Probabilistc Robotics)
   if (data.ranges.size() == 0 || parameters_.max_beams <= 1) return false;
-  // inspired by:
-  // https://github.com/ros-planning/navigation2/blob/f23d915608a94039ff91008014730971a8795c15/nav2_amcl/src/sensors/laser/beam_model.cpp
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = parameters_.global_frame_id;

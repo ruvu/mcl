@@ -27,9 +27,9 @@ LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
 
 void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
 {
+  // This algorithm is based on the likelihood field range finder model (Page 143 Probabilistc Robotics)
   if (data.landmarks.size() == 0) return;
 
-  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;
   marker.header.stamp = ros::Time::now();
