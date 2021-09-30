@@ -63,6 +63,7 @@ add_library(${PROJECT_NAME}
   src/adaptive/fixed.cpp
   src/adaptive/kld_sampling.cpp
   src/adaptive/split_and_merge.cpp
+  src/adaptive/utils.cpp
   src/cloud_publisher.cpp
   src/config.cpp
   src/filter.cpp
@@ -224,4 +225,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_split_and_merge test/test_split_and_merge.cpp)
   target_link_libraries(test_split_and_merge ${PROJECT_NAME})
+
+  catkin_add_gtest(test_adaptive_utils test/test_adaptive_utils.cpp)
+  target_link_libraries(test_adaptive_utils ${PROJECT_NAME})
 endif()

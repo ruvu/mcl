@@ -2,28 +2,14 @@
 
 #include "./kld_sampling.hpp"
 
-#include <boost/functional/hash.hpp>
-#include <tuple>
 #include <unordered_set>
 
 #include "../particle_filter.hpp"
+#include "./utils.hpp"
 #include "ros/console.h"
 #include "tf2/utils.h"
 
 KLDSampling::KLDSampling(const KLDSamplingConfig & config) : config_(config) {}
-
-using Key = std::tuple<int, int, int>;
-
-struct KeyHasher
-{
-  std::size_t operator()(const Key & key) const noexcept
-  {
-    std::size_t seed = 0;
-    boost::hash_combine(seed, 1);
-    boost::hash_combine(seed, 2);
-    return seed;
-  }
-};
 
 int KLDSampling::calc_needed_particles(const ParticleFilter & pf) const
 {
