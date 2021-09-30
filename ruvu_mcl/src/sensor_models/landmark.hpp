@@ -45,3 +45,17 @@ public:
   std::vector<Landmark> landmarks;
   tf2::Transform pose;
 };
+
+class LandmarkModel
+{
+public:
+  virtual ~LandmarkModel();
+
+  /*
+   * @brief Run a sensor update on the particles with landmark data
+   * @param pf Particle filter to use
+   * @param data Landmark data to use
+   * @return if it was succesful
+   */
+  virtual void sensor_update(ParticleFilter * pf, const LandmarkList & data) = 0;
+};

@@ -1,33 +1,34 @@
 // Copyright 2021 RUVU Robotics B.V.
 
-#include "./landmark_likelihood_field_model.hpp"
+#include "./gaussian_landmark_model.hpp"
 
-#include <math.h>
-
-#include <algorithm>
-#include <limits>
-#include <memory>
 #include <utility>
 
-#include "../map.hpp"
 #include "../particle_filter.hpp"
 #include "ros/node_handle.h"
-#include "ruvu_mcl_msgs/LandmarkList.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
-LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
-  const LandmarkLikelihoodFieldModelConfig & config, const LandmarkList & landmarks)
+/**
+ * @brief computes the probability of its argument a under a zero-centered distribution with variance var
+ * @param a
+ * @param var
+ * @return probability
+ */
+double prob(double a, double var) { return exp(-a * a / 2 / var); }
+
+GaussianLandmarkModel::GaussianLandmarkModel(
+  const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks)
 : config_(config), landmarks_(landmarks)
 {
-  assert(config_.z_hit + config_.z_rand <= 1.0);
+  assert(config.z_rand >= 0 && config.z_rand <= 1);
   ros::NodeHandle nh("~");
-  debug_pub_ = nh.advertise<visualization_msgs::Marker>("landmark_likelihood_field_model", 1);
+  debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
 }
 
-void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
+void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
 {
-  // This algorithm is based on the likelihood field range finder model (Page 143 Probabilistc Robotics)
+  // This algorithm is based on the landmark model known correspondence (Page 150 Probabilistc Robotics)
   if (data.landmarks.size() == 0) return;
 
   visualization_msgs::Marker marker;
@@ -42,16 +43,13 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
   double total_weight = 0.0;
 
   for (auto & particle : pf->particles) {
-    double p = 0.0;
     auto laser_pose = particle.pose * data.pose;
 
+    double p = 1;
     for (const auto & measurement : data.landmarks) {
-      double pz = 0.0;
-
-      // Part 1: Get distance from the hit to closest obstacle.
-      // Off-map penalized as max distance
       auto hit = laser_pose * measurement.pose;
-      double z = std::numeric_limits<double>::infinity();
+
+      double pz = 0;
       for (const auto & landmark : landmarks_.landmarks) {
         // Check if ids of landmark and detection agree
         if (landmark.id != measurement.id) continue;
@@ -62,25 +60,26 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
         auto reflector_direction = landmark.pose.getBasis().getColumn(0);
         if (vector_reflector_to_sensor.dot(reflector_direction) <= 0) continue;
 
-        auto distance = (landmark.pose.getOrigin() - hit.getOrigin()).length();
-        if (distance < z) z = distance;
+        // range difference
+        auto r_hat_diff = (landmark.pose.getOrigin() - hit.getOrigin()).length();
+
+        // bearring difference
+        auto t_hat_diff = landmark.pose.getOrigin().angle(hit.getOrigin());
+
+        // likelihood of a landmark measurement
+        auto q = prob(r_hat_diff, pow(config_.landmark_sigma_r, 2)) *
+                 prob(t_hat_diff, pow(config_.landmark_sigma_t, 2));
+
+        // pick the landmark with the highest probability
+        if (q > pz) pz = q;
       }
 
-      // Gaussian model
-      // NOTE: this should have a normalization of 1/(sqrt(2pi)*sigma)
-      pz += config_.z_hit * exp(-(z * z) / (2 * config_.sigma_hit * config_.sigma_hit));
-      // Part 2: random measurements
-      pz += config_.z_rand;
-
-      // TODO(?): outlier rejection for short readings
-      // TODO(?): Use covariance for weighing measurement influence?
+      pz = (1 - config_.z_rand) * pz + config_.z_rand;
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);
-      //      p *= pz;
-      // here we have an ad-hoc weighting scheme for combining beam probs
-      // works well, though...
-      p += pz * pz * pz;
+
+      p *= pz;
 
       if (first) {
         // draw lines from the robot to the ray traced "hit"
@@ -98,15 +97,13 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
       }
     }
 
-    // Normalize weight update
-    p /= data.landmarks.size();
-
     particle.weight *= p;
     total_weight += particle.weight;
     first = false;
   }
 
   // Normalize weights
+  assert(total_weight > 0);
   for (auto & particle : pf->particles) {
     particle.weight /= total_weight;
   }

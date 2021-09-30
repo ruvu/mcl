@@ -13,14 +13,13 @@ namespace ruvu_mcl_msgs
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
 
-class LandmarkLikelihoodFieldModel : public LandmarkModel
+class GaussianLandmarkModel : public LandmarkModel
 {
 public:
   /*
-   * @brief LikelihoodFieldModel constructor
+   * @brief GaussianLandmarkModel constructor
    */
-  LandmarkLikelihoodFieldModel(
-    const LandmarkLikelihoodFieldModelConfig & config, const LandmarkList & landmarks);
+  GaussianLandmarkModel(const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks);
 
   /*
    * @brief Run a sensor update on the particles with landmark data
@@ -31,7 +30,7 @@ public:
   void sensor_update(ParticleFilter * pf, const LandmarkList & data) override;
 
 private:
-  const LandmarkLikelihoodFieldModelConfig config_;
+  const GaussianLandmarkModelConfig config_;
   const LandmarkList landmarks_;
   ros::Publisher debug_pub_;
 };

@@ -23,8 +23,8 @@ LikelihoodFieldModel::LikelihoodFieldModel(
 
 double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
+  // This algorithm is based on the likelihood field range finder model (Page 143 Probabilistc Robotics)
   if (data.ranges.size() == 0 || config_.max_beams <= 1) return false;
-  // Likelihood field range finder model (Page 143 Probabilistc Robotics)
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;

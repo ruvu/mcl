@@ -15,7 +15,7 @@
 
 // forward declare
 class AdaptiveMethod;
-class LandmarkLikelihoodFieldModel;
+class LandmarkModel;
 class LandmarkList;
 class Laser;
 class MotionModel;
@@ -108,7 +108,7 @@ private:
   nav_msgs::OccupancyGridConstPtr map_;
   std::shared_ptr<LandmarkList> landmarks_;
   std::unique_ptr<Laser> laser_;
-  std::unique_ptr<LandmarkLikelihoodFieldModel> landmark_model_;
+  std::unique_ptr<LandmarkModel> landmark_model_;
 
   /**
    * @brief If a measurement from a frame_id should be processed

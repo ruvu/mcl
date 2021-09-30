@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME}
   src/sensor_models/beam_model.cpp
   src/sensor_models/landmark.cpp
   src/sensor_models/landmark_likelihood_field_model.cpp
+  src/sensor_models/gaussian_landmark_model.cpp
   src/sensor_models/laser.cpp
   src/sensor_models/likelihood_field_model.cpp
 )
