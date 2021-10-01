@@ -23,7 +23,7 @@ public:
   std::vector<Particle> particles;
 
   void normalize_weights();
-  double calc_effective_sample_size();
+  double calc_effective_sample_size() const;
   geometry_msgs::PoseWithCovarianceStamped get_pose_with_covariance_stamped(
-    const ros::Time stamp, const std::string frame_id);
+    const ros::Time & stamp, const std::string & frame_id) const;
 };

@@ -52,8 +52,6 @@ namespace ruvu_mcl_msgs
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
 
-std::unique_ptr<Laser> create_laser_model(Config config, nav_msgs::OccupancyGridConstPtr map);
-
 class Filter
 {
 public:
@@ -82,12 +80,12 @@ private:
 
   friend std::ostream & operator<<(std::ostream & out, const MeasurementType & measurement_type);
 
-  bool odometry_update(const std_msgs::Header & header, const MeasurementType measurement_type);
-  tf2::Transform get_odom_pose(const ros::Time & time);
+  bool odometry_update(const std_msgs::Header & header, const MeasurementType & measurement_type);
+  tf2::Transform get_odom_pose(const ros::Time & time) const;
   bool should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key);
   void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
   void broadcast_tf(
-    const tf2::Transform pose, const tf2::Transform odom_pose, const ros::Time stamp);
+    const tf2::Transform & pose, const tf2::Transform & odom_pose, const ros::Time & stamp);
 
   // data input
   std::shared_ptr<const tf2_ros::Buffer> buffer_;

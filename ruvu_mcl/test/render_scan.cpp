@@ -9,7 +9,7 @@
 #include "ros/topic.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
-Magick::Image cells_to_image(const OccupancyMap::CellsType cells)
+Magick::Image cells_to_image(const OccupancyMap::CellsType & cells)
 {
   Magick::Image img;
   img.size(Magick::Geometry{

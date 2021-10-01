@@ -40,18 +40,16 @@ void CloudPublisher::publish(const std_msgs::Header & header, const ParticleFilt
     c.a = particle.weight / max_weight;
     c.b = 1;
     m.colors.push_back(c);
-    m.colors.push_back(std::move(c));
-    {
-      geometry_msgs::Point tmp;
-      tf2::toMsg(particle.pose * p1, tmp);
-      m.points.push_back(std::move(tmp));
-    }
-    {
-      geometry_msgs::Point tmp;
-      tf2::toMsg(particle.pose * -p1, tmp);
-      m.points.push_back(std::move(tmp));
-    }
+    m.colors.push_back(c);
+
+    geometry_msgs::Point front;
+    tf2::toMsg(particle.pose * p1, front);
+    m.points.push_back(front);
+
+    geometry_msgs::Point back;
+    tf2::toMsg(particle.pose * -p1, back);
+    m.points.push_back(back);
   }
 
-  cloud_pub_.publish(std::move(m));
+  cloud_pub_.publish(m);
 }

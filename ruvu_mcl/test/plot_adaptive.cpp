@@ -44,8 +44,8 @@ int main(int argc, char ** argv)
     }
   }
 
-  if (cov_data.size() == 0) std::cout << "No covariance data found!\n";
-  if (nr_particles.size() == 0) std::cout << "No filter size data found\n";
+  if (cov_data.empty()) std::cout << "No covariance data found!\n";
+  if (nr_particles.empty()) std::cout << "No filter size data found\n";
 
   Gnuplot gp;
   gp << "set multiplot layout 2,1 rowsfirst\n";

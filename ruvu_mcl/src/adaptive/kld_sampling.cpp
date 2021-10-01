@@ -25,11 +25,11 @@ struct KeyHasher
   }
 };
 
-int KLDSampling::calc_needed_particles(ParticleFilter * pf)
+int KLDSampling::calc_needed_particles(const ParticleFilter & pf) const
 {
   // Discretize particles:
   std::unordered_set<Key, KeyHasher> grid_clusters;
-  for (auto & particle : pf->particles) {
+  for (auto & particle : pf.particles) {
     int i = particle.pose.getOrigin().getX() / config_.xy_grid_size;
     int j = particle.pose.getOrigin().getY() / config_.xy_grid_size;
     int k = tf2::getYaw(particle.pose.getRotation()) / config_.theta_grid_size;
@@ -39,7 +39,7 @@ int KLDSampling::calc_needed_particles(ParticleFilter * pf)
   return calc_n_particles(grid_clusters.size());
 }
 
-int KLDSampling::calc_n_particles(int n_bins)
+int KLDSampling::calc_n_particles(int n_bins) const
 {
   // From the paper: KLD-Sampling: Adaptive Particle Filters
   if (n_bins <= 1) return config_.max_particles;

@@ -10,14 +10,14 @@ class ParticleFilter;
 class SplitAndMerge : public AdaptiveMethod
 {
 public:
-  SplitAndMerge(const Config & config);
+  explicit SplitAndMerge(const Config & config);
 
-  void after_odometry_update(ParticleFilter * pf) override { merge_particles(pf); }
-  void after_sensor_update(ParticleFilter * pf) override { split_particles(pf); }
+  void after_odometry_update(ParticleFilter * pf) const override { merge_particles(pf); }
+  void after_sensor_update(ParticleFilter * pf) const override { split_particles(pf); }
+  int calc_needed_particles(const ParticleFilter & pf) const override;
 
-  void merge_particles(ParticleFilter * pf);
-  void split_particles(ParticleFilter * pf);
-  int calc_needed_particles(ParticleFilter * pf);
+  void merge_particles(ParticleFilter * pf) const;
+  void split_particles(ParticleFilter * pf) const;
 
 private:
   SplitAndMergeConfig adaptive_config_;

@@ -35,7 +35,7 @@ SplitAndMerge::SplitAndMerge(const Config & config)
   config_ = config;
 }
 
-void SplitAndMerge::merge_particles(ParticleFilter * pf)
+void SplitAndMerge::merge_particles(ParticleFilter * pf) const
 {
   // Based on paper: Monte Carlo localization for mobile robot using adaptive particle merging and splitting technique
 
@@ -64,7 +64,7 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
       double sum_cos_theta = 0;
       double sum_sin_theta = 0;
       double sum_weight = 0;
-      for (auto & particle : cluster.second) {
+      for (const auto & particle : cluster.second) {
         sum_x += particle.pose.getOrigin().getX();
         sum_y += particle.pose.getOrigin().getY();
         sum_cos_theta += cos(tf2::getYaw(particle.pose.getRotation()));
@@ -88,7 +88,7 @@ void SplitAndMerge::merge_particles(ParticleFilter * pf)
   pf->particles = merged_particles;
 }
 
-void SplitAndMerge::split_particles(ParticleFilter * pf)
+void SplitAndMerge::split_particles(ParticleFilter * pf) const
 {
   std::vector<Particle> spawn_particles;
   for (auto & particle : pf->particles) {
@@ -99,7 +99,7 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
     if (spawn > 0) {
       particle.weight /= spawn + 1;
       for (int i = 0; i < spawn; i++) {
-        spawn_particles.push_back(std::move(particle));
+        spawn_particles.push_back(particle);
       }
     }
   }
@@ -107,9 +107,12 @@ void SplitAndMerge::split_particles(ParticleFilter * pf)
   ROS_DEBUG_NAMED(
     name, "splitting increased particles from %zu to %zu particles", pf->particles.size(),
     pf->particles.size() + spawn_particles.size());
-  for (auto particle : spawn_particles) {
-    pf->particles.push_back(std::move(particle));
+  for (const auto & particle : spawn_particles) {
+    pf->particles.push_back(particle);
   }
 }
 
-int SplitAndMerge::calc_needed_particles(ParticleFilter * pf) { return pf->particles.size(); }
+int SplitAndMerge::calc_needed_particles(const ParticleFilter & pf) const
+{
+  return pf.particles.size();
+}

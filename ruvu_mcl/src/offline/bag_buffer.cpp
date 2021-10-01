@@ -20,7 +20,7 @@ ros::Duration duration_from_bag(const rosbag::Bag & bag)
   }
 
   ROS_INFO("Loaded %zu tf messages", ts.size());
-  if (!ts.size()) throw std::runtime_error("Can't find any scans in the bagfile");
+  if (ts.empty()) throw std::runtime_error("Can't find any scans in the bagfile");
 
   ROS_INFO("Loaded tf messages, first=%f last=%f", ts.front().toSec(), ts.back().toSec());
   return ts.back() - ts.front();

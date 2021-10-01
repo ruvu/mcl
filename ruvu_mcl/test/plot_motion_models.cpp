@@ -20,8 +20,7 @@ ParticleFilter run_differential_motion_model(
     pf.particles.emplace_back(tf2::Transform::getIdentity(), 1. / n);
   }
 
-  model.odometry_update(
-    &pf, tf2::Transform::getIdentity(), tf2::Transform{tf2::Quaternion::getIdentity(), t});
+  model.odometry_update(&pf, tf2::Transform{tf2::Quaternion::getIdentity(), t});
 
   return pf;
 }

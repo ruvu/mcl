@@ -18,7 +18,7 @@ void ParticleFilter::normalize_weights()
 }
 
 // https://people.eecs.berkeley.edu/~pabbeel/cs287-fa13/optreadings/GrisettiStachnissBurgard_gMapping_T-RO2006.pdf
-double ParticleFilter::calc_effective_sample_size()
+double ParticleFilter::calc_effective_sample_size() const
 {
   double sq_weight = 0;
   for (const auto & particle : particles) {
@@ -28,7 +28,7 @@ double ParticleFilter::calc_effective_sample_size()
 }
 
 geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covariance_stamped(
-  const ros::Time stamp, const std::string frame_id)
+  const ros::Time & stamp, const std::string & frame_id) const
 {
   std::array<double, 36> cov = {0};
   double mean[4] = {0};
@@ -62,7 +62,7 @@ geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covarianc
 
   // Covariance in angular component
   cov[35] = -2 * log(sqrt(mean[2] * mean[2] + mean[3] * mean[3]));
-  assert(cov.size() == avg_pose.pose.covariance.size());
+  static_assert(cov.size() == avg_pose.pose.covariance.size());
   std::copy(cov.begin(), cov.end(), avg_pose.pose.covariance.begin());
 
   // Mean pose

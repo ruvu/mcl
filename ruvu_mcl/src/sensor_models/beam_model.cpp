@@ -20,10 +20,10 @@ BeamModel::BeamModel(
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
 }
 
-double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
+void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
   // This algorithm is based on the beam range finder model (Page 129 Probabilistc Robotics)
-  if (data.ranges.size() == 0 || parameters_.max_beams <= 1) return false;
+  if (data.ranges.empty() || parameters_.max_beams <= 1) return;
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = parameters_.global_frame_id;
@@ -88,14 +88,14 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
         tf2::toMsg(point_laser, p1);
         tf2::toMsg(
           particle.pose * (data.pose * (tf2::Vector3{tf2Cos(a), tf2Sin(a), 0} * map_range)), p2);
-        marker.points.push_back(std::move(p1));
-        marker.points.push_back(std::move(p2));
+        marker.points.push_back(p1);
+        marker.points.push_back(p2);
         std_msgs::ColorRGBA color;
         color.a = 1;
         color.b = pz;
         color.r = 1 - pz;
         marker.colors.push_back(color);
-        marker.colors.push_back(std::move(color));
+        marker.colors.push_back(color);
       }
     }
 
@@ -112,7 +112,5 @@ double BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
     particle.weight /= total_weight;
   }
 
-  debug_pub_.publish(std::move(marker));
-
-  return true;
+  debug_pub_.publish(marker);
 }

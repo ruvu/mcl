@@ -40,5 +40,5 @@ public:
    * @param data Laser data to use
    * @return if it was succesful
    */
-  virtual double sensor_update(ParticleFilter * pf, const LaserData & data) = 0;
+  virtual void sensor_update(ParticleFilter * pf, const LaserData & data) = 0;
 };

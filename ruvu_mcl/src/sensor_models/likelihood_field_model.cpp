@@ -21,10 +21,10 @@ LikelihoodFieldModel::LikelihoodFieldModel(
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("likelihood_field_Model", 1);
 }
 
-double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
+void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 {
   // This algorithm is based on the likelihood field range finder model (Page 143 Probabilistc Robotics)
-  if (data.ranges.size() == 0 || config_.max_beams <= 1) return false;
+  if (data.ranges.empty() || config_.max_beams <= 1) return;
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = config_.global_frame_id;
@@ -79,15 +79,15 @@ double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData 
         geometry_msgs::Point p1, p2;
         tf2::toMsg(point_laser, p1);
         tf2::toMsg(hit, p2);
-        marker.points.push_back(std::move(p1));
-        marker.points.push_back(std::move(p2));
+        marker.points.push_back(p1);
+        marker.points.push_back(p2);
         std_msgs::ColorRGBA color;
         color.a = 1;
         color.b = pz;
         color.r = 1 - pz;
         color.r = std::min(z, 1.0);
         marker.colors.push_back(color);
-        marker.colors.push_back(std::move(color));
+        marker.colors.push_back(color);
       }
     }
 
@@ -104,7 +104,5 @@ double LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData 
     particle.weight /= total_weight;
   }
 
-  debug_pub_.publish(std::move(marker));
-
-  return true;
+  debug_pub_.publish(marker);
 }

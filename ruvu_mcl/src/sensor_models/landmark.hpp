@@ -21,7 +21,7 @@ ROS_DECLARE_MESSAGE(LandmarkList)
 
 struct Landmark
 {
-  Landmark(const tf2::Transform & pose) : pose(pose), id(0) {}
+  explicit Landmark(const tf2::Transform & pose) : pose(pose), id(0) {}
   Landmark(const tf2::Transform & pose, int id) : pose(pose), id(id) {}
 
   /**
@@ -35,7 +35,7 @@ struct Landmark
 class LandmarkList
 {
 public:
-  LandmarkList(
+  explicit LandmarkList(
     const ruvu_mcl_msgs::LandmarkList & msg,
     const tf2::Transform & pose = tf2::Transform::getIdentity());
 

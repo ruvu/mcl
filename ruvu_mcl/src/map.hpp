@@ -21,7 +21,7 @@ struct Map
   double scale;
 
   explicit Map(const nav_msgs::OccupancyGrid & msg);
-  operator nav_msgs::OccupancyGrid();
+  explicit operator nav_msgs::OccupancyGrid() const;
 
   std::pair<Eigen::Index, Eigen::Index> world2map(const tf2::Vector3 & v) const;
 };
@@ -55,7 +55,7 @@ struct DistanceMap : Map
   ros::Publisher debug_pub_;
 
   explicit DistanceMap(const nav_msgs::OccupancyGrid & msg);
-  operator nav_msgs::OccupancyGrid();
+  explicit operator nav_msgs::OccupancyGrid() const;
 
   double closest_obstacle(const tf2::Vector3 & v) const;
   bool is_valid(Eigen::Index i, Eigen::Index j) const;  // TODO(Ramon): move to baseclass

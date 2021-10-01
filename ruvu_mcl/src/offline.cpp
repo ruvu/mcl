@@ -92,12 +92,11 @@ int main(int argc, char ** argv)
     });
 
   player.register_callback<tf2_msgs::TFMessage>(
-    "/tf", [&filter, &tf_pub](const tf2_msgs::TFMessageConstPtr & tf) { tf_pub.publish(tf); });
+    "/tf", [&tf_pub](const tf2_msgs::TFMessageConstPtr & tf) { tf_pub.publish(tf); });
 
   player.register_callback<tf2_msgs::TFMessage>(
-    "/tf_static", [&filter, &tf_static_pub](const tf2_msgs::TFMessageConstPtr & tf) {
-      tf_static_pub.publish(tf);
-    });
+    "/tf_static",
+    [&tf_static_pub](const tf2_msgs::TFMessageConstPtr & tf) { tf_static_pub.publish(tf); });
 
   player.start_play();
 

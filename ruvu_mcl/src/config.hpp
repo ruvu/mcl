@@ -82,7 +82,7 @@ struct SplitAndMergeConfig
 
 struct Config
 {
-  Config(const ruvu_mcl::AMCLConfig & config);
+  explicit Config(const ruvu_mcl::AMCLConfig & config);
   Config() = default;
 
   size_t min_particles;
