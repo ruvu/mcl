@@ -270,6 +270,9 @@ bool Filter::odometry_update(
   }
 
   if (header.stamp <= last_pose_.stamp_) {
+    // If we get a message from a sensor with an outdated timestamp, we can't process it because
+    // we'd have to roll the particles back. Also, if the filter is run, we will publish a TF
+    // message. So we also need to prevent sending TF messages with the same timestamp.
     ROS_DEBUG_STREAM_NAMED(
       name, "skipping out-of-order measurement, " << header.stamp << " <= " << last_pose_.stamp_);
     return false;
@@ -278,7 +281,6 @@ bool Filter::odometry_update(
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
   if (!should_process(diff, {measurement_type, header.frame_id})) {
-    last_pose_.stamp_ = header.stamp;
     broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
     return false;
   }
