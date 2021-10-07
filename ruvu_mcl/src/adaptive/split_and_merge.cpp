@@ -3,30 +3,16 @@
 #include "./split_and_merge.hpp"
 
 #include <algorithm>
-#include <boost/functional/hash.hpp>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "../particle_filter.hpp"
+#include "./utils.hpp"
 #include "ros/console.h"
 #include "tf2/utils.h"
 
 constexpr auto name = "split_and_merge";
-
-using Key = std::tuple<int, int, int>;
-
-struct KeyHasher
-{
-  std::size_t operator()(const Key & key) const noexcept
-  {
-    std::size_t seed = 0;
-    boost::hash_combine(seed, 1);
-    boost::hash_combine(seed, 2);
-    return seed;
-  }
-};
 
 SplitAndMerge::SplitAndMerge(const Config & config)
 {
