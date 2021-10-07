@@ -75,6 +75,7 @@ void BagPlayer::start_play()
     if (cbs_.find(m.getTopic()) == cbs_.end()) continue;
 
     ros::Time::sleepUntil(real_time(m.getTime()));
+    ros::spinOnce();  // handle dynamic reconfigure calls
 
     last_message_time_ = m.getTime(); /* this is the recorded time */
     auto cb = cbs_[m.getTopic()];
