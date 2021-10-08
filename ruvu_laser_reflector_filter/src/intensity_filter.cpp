@@ -68,6 +68,11 @@ private:
     landmark_list.header = scan->header;
 
     for (size_t i = 0; i < scan->ranges.size(); i++) {
+      // This comparison looks ugly, but handles NaNs correctly :)
+      if (!(scan->range_min <= scan->ranges[i] && scan->ranges[i] <= scan->range_max)) {
+        // This is an invalid measurement.
+        continue;
+      }
       if (scan->intensities[i] >= threshold_function(scan->ranges[i])) {
         ruvu_mcl_msgs::LandmarkEntry landmark;
         double angle = scan->angle_min + i * scan->angle_increment;
