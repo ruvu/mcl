@@ -19,7 +19,7 @@ public:
   /*
    * @brief GaussianLandmarkModel constructor
    */
-  GaussianLandmarkModel(const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks);
+  GaussianLandmarkModel(const GaussianLandmarkModelConfig & config, const LandmarkList & map);
 
   /*
    * @brief Run a sensor update on the particles with landmark data
@@ -31,7 +31,7 @@ public:
 
 private:
   const GaussianLandmarkModelConfig config_;
-  const LandmarkList landmarks_;
+  const LandmarkList map_;
   ros::Publisher debug_pub_;
   ros::Publisher statistics_pub_;
 };

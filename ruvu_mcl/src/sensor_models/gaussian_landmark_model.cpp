@@ -19,13 +19,15 @@
 double prob(double a, double var) { return exp(-a * a / 2 / var); }
 
 GaussianLandmarkModel::GaussianLandmarkModel(
-  const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks)
-: config_(config), landmarks_(landmarks)
+  const GaussianLandmarkModelConfig & config, const LandmarkList & map)
+: config_(config), map_(map)
 {
   assert(config.z_rand >= 0 && config.z_rand <= 1);
-  ros::NodeHandle nh("~");
-  debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
-  statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
+  if (ros::isInitialized()) {
+    ros::NodeHandle nh("~");
+    debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
+    statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
+  }
 }
 
 void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
@@ -34,12 +36,14 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
   if (data.landmarks.empty()) return;
 
   visualization_msgs::Marker marker;
-  marker.header.frame_id = config_.global_frame_id;
-  marker.header.stamp = ros::Time::now();
-  marker.type = visualization_msgs::Marker::LINE_LIST;
-  marker.action = visualization_msgs::Marker::MODIFY;
-  tf2::toMsg(tf2::Transform::getIdentity(), marker.pose);
-  marker.scale.x = 0.01;
+  if (debug_pub_.getNumSubscribers()) {
+    marker.header.frame_id = config_.global_frame_id;
+    marker.header.stamp = ros::Time::now();
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+    marker.action = visualization_msgs::Marker::MODIFY;
+    tf2::toMsg(tf2::Transform::getIdentity(), marker.pose);
+    marker.scale.x = 0.01;
+  }
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
@@ -53,7 +57,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
       auto hit = laser_pose * measurement.pose;
 
       double pz = 0;
-      for (const auto & landmark : landmarks_.landmarks) {
+      for (const auto & landmark : map_.landmarks) {
         // Check if ids of landmark and detection agree
         if (landmark.id != measurement.id) continue;
 
@@ -116,7 +120,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     particle.weight /= total_weight;
   }
 
-  debug_pub_.publish(marker);
+  if (debug_pub_.getNumSubscribers()) debug_pub_.publish(marker);
   if (statistics_pub_.getNumSubscribers()) {
     statistics.sensor_model = typeid(this).name();
     statistics_pub_.publish(std::move(statistics));
