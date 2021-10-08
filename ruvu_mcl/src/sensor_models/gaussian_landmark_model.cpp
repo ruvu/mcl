@@ -54,8 +54,6 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
     double p = 1;
     for (const auto & measurement : data.landmarks) {
-      auto hit = laser_pose * measurement.pose;
-
       double pz = 0;
       for (const auto & landmark : map_.landmarks) {
         // Check if ids of landmark and detection agree
@@ -67,11 +65,14 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         auto reflector_direction = landmark.pose.getBasis().getColumn(0);
         if (vector_reflector_to_sensor.dot(reflector_direction) <= 0) continue;
 
+        auto landmark_pose_LASER = laser_pose.inverseTimes(landmark.pose);
+
         // range difference
-        auto r_hat_diff = (landmark.pose.getOrigin() - hit.getOrigin()).length();
+        auto r_hat_diff =
+          landmark_pose_LASER.getOrigin().length() - measurement.pose.getOrigin().length();
 
         // bearring difference
-        auto t_hat_diff = landmark.pose.getOrigin().angle(hit.getOrigin());
+        auto t_hat_diff = landmark_pose_LASER.getOrigin().angle(measurement.pose.getOrigin());
 
         // likelihood of a landmark measurement
         auto q = prob(r_hat_diff, pow(config_.landmark_sigma_r, 2)) *
@@ -85,14 +86,13 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);
-
       p *= pz;
 
       if (first) {
         // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
         tf2::toMsg(particle.pose.getOrigin(), p1);
-        tf2::toMsg(hit.getOrigin(), p2);
+        tf2::toMsg(laser_pose * measurement.pose.getOrigin(), p2);
         marker.points.push_back(p1);
         marker.points.push_back(p2);
         std_msgs::ColorRGBA color;
