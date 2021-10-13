@@ -55,6 +55,7 @@ add_dependencies(intensity_filter ${PROJECT_NAME}_gencfg)
 
 catkin_install_python(PROGRAMS
   scripts/intensity_vs_distance
+  scripts/sick_extended_data_visualization
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
