@@ -62,10 +62,6 @@ class Plotter():
         return y
 
 
-def __main__(argc, argv):
-    rospy.init_node()
-
-
 if __name__ == "__main__":
     rospy.init_node('intensity_vs_distance_plotter')
 
