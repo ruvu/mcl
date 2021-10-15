@@ -29,11 +29,10 @@ public:
     threshold_floor_ = config.threshold_floor;
     threshold_decay_ = config.threshold_decay;
     threshold_multiplier_ = config.threshold_multiplier;
-    publish_markers_ = config.publish_markers;
     marker_diameter_ = config.marker_diameter;
   }
 
-  void publish_markers(ruvu_mcl_msgs::LandmarkList landmark_list)
+  visualization_msgs::Marker create_marker(ruvu_mcl_msgs::LandmarkList landmark_list)
   {
     visualization_msgs::Marker m;
     m.header = landmark_list.header;
@@ -56,7 +55,7 @@ public:
       m.points.push_back(landmark.pose.pose.position);
       m.colors.push_back(c);
     }
-    marker_pub_.publish(std::move(m));
+    return m;
   }
 
 private:
@@ -81,10 +80,9 @@ private:
         landmark_list.landmarks.push_back(std::move(landmark));
       }
     }
-    if (landmark_list.landmarks.size() > 0) {
-      landmarks_pub_.publish(landmark_list);
-      if (publish_markers_) publish_markers(landmark_list);
-    }
+
+    landmarks_pub_.publish(landmark_list);
+    if (marker_pub_.getNumSubscribers() > 0) marker_pub_.publish(create_marker(landmark_list));
   }
 
   double threshold_function(const double range)
@@ -95,7 +93,6 @@ private:
   int threshold_multiplier_;
   double threshold_decay_;
   int threshold_floor_;
-  bool publish_markers_;
   double marker_diameter_;
   ros::Subscriber scan_sub_;
   ros::Publisher landmarks_pub_;
