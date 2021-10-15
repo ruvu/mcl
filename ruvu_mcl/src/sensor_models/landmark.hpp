@@ -35,6 +35,8 @@ struct Landmark
 class LandmarkList
 {
 public:
+  LandmarkList() : landmarks(), pose(tf2::Transform::getIdentity()) {}
+
   explicit LandmarkList(
     const ruvu_mcl_msgs::LandmarkList & msg,
     const tf2::Transform & pose = tf2::Transform::getIdentity());

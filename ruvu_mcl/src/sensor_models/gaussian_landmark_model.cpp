@@ -19,13 +19,15 @@
 double prob(double a, double var) { return exp(-a * a / 2 / var); }
 
 GaussianLandmarkModel::GaussianLandmarkModel(
-  const GaussianLandmarkModelConfig & config, const LandmarkList & landmarks)
-: config_(config), landmarks_(landmarks)
+  const GaussianLandmarkModelConfig & config, const LandmarkList & map)
+: config_(config), map_(map)
 {
   assert(config.z_rand >= 0 && config.z_rand <= 1);
-  ros::NodeHandle nh("~");
-  debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
-  statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
+  if (ros::isInitialized()) {
+    ros::NodeHandle nh("~");
+    debug_pub_ = nh.advertise<visualization_msgs::Marker>("gaussian_landmark_model", 1);
+    statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
+  }
 }
 
 void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkList & data)
@@ -34,12 +36,14 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
   if (data.landmarks.empty()) return;
 
   visualization_msgs::Marker marker;
-  marker.header.frame_id = config_.global_frame_id;
-  marker.header.stamp = ros::Time::now();
-  marker.type = visualization_msgs::Marker::LINE_LIST;
-  marker.action = visualization_msgs::Marker::MODIFY;
-  tf2::toMsg(tf2::Transform::getIdentity(), marker.pose);
-  marker.scale.x = 0.01;
+  if (debug_pub_.getNumSubscribers()) {
+    marker.header.frame_id = config_.global_frame_id;
+    marker.header.stamp = ros::Time::now();
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+    marker.action = visualization_msgs::Marker::MODIFY;
+    tf2::toMsg(tf2::Transform::getIdentity(), marker.pose);
+    marker.scale.x = 0.01;
+  }
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
@@ -50,10 +54,8 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
     double p = 1;
     for (const auto & measurement : data.landmarks) {
-      auto hit = laser_pose * measurement.pose;
-
       double pz = 0;
-      for (const auto & landmark : landmarks_.landmarks) {
+      for (const auto & landmark : map_.landmarks) {
         // Check if ids of landmark and detection agree
         if (landmark.id != measurement.id) continue;
 
@@ -63,11 +65,14 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         auto reflector_direction = landmark.pose.getBasis().getColumn(0);
         if (vector_reflector_to_sensor.dot(reflector_direction) <= 0) continue;
 
+        auto landmark_pose_LASER = laser_pose.inverseTimes(landmark.pose);
+
         // range difference
-        auto r_hat_diff = (landmark.pose.getOrigin() - hit.getOrigin()).length();
+        auto r_hat_diff =
+          landmark_pose_LASER.getOrigin().length() - measurement.pose.getOrigin().length();
 
         // bearring difference
-        auto t_hat_diff = landmark.pose.getOrigin().angle(hit.getOrigin());
+        auto t_hat_diff = landmark_pose_LASER.getOrigin().angle(measurement.pose.getOrigin());
 
         // likelihood of a landmark measurement
         auto q = prob(r_hat_diff, pow(config_.landmark_sigma_r, 2)) *
@@ -81,14 +86,13 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);
-
       p *= pz;
 
       if (first) {
         // draw lines from the robot to the ray traced "hit"
         geometry_msgs::Point p1, p2;
         tf2::toMsg(particle.pose.getOrigin(), p1);
-        tf2::toMsg(hit.getOrigin(), p2);
+        tf2::toMsg(laser_pose * measurement.pose.getOrigin(), p2);
         marker.points.push_back(p1);
         marker.points.push_back(p2);
         std_msgs::ColorRGBA color;
@@ -116,7 +120,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     particle.weight /= total_weight;
   }
 
-  debug_pub_.publish(marker);
+  if (debug_pub_.getNumSubscribers()) debug_pub_.publish(marker);
   if (statistics_pub_.getNumSubscribers()) {
     statistics.sensor_model = typeid(this).name();
     statistics_pub_.publish(std::move(statistics));

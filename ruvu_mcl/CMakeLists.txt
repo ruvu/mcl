@@ -229,4 +229,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_adaptive_utils test/test_adaptive_utils.cpp)
   target_link_libraries(test_adaptive_utils ${PROJECT_NAME})
+
+  catkin_add_gtest(test_gaussian_landmark_model test/test_gaussian_landmark_model.cpp)
+  target_link_libraries(test_gaussian_landmark_model ${PROJECT_NAME})
 endif()
