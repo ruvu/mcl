@@ -32,4 +32,5 @@ private:
   const LikelihoodFieldModelConfig config_;
   const std::shared_ptr<const DistanceMap> map_;
   ros::Publisher debug_pub_;
+  ros::Publisher statistics_pub_;
 };

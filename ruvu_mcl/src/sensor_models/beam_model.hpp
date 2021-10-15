@@ -31,4 +31,5 @@ private:
   const BeamModelConfig parameters_;
   const std::shared_ptr<const OccupancyMap> map_;
   ros::Publisher debug_pub_;
+  ros::Publisher statistics_pub_;
 };

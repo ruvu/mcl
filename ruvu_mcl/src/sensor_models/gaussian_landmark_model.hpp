@@ -33,4 +33,5 @@ private:
   const GaussianLandmarkModelConfig config_;
   const LandmarkList landmarks_;
   ros::Publisher debug_pub_;
+  ros::Publisher statistics_pub_;
 };

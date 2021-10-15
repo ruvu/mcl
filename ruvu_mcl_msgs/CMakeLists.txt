@@ -13,6 +13,7 @@ add_message_files(
   FILES
     LandmarkEntry.msg
     LandmarkList.msg
+    ParticleStatistics.msg
 )
 
 add_service_files(

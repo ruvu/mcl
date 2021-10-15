@@ -8,6 +8,7 @@
 #include "../map.hpp"
 #include "../particle_filter.hpp"
 #include "ros/node_handle.h"
+#include "ruvu_mcl_msgs/ParticleStatistics.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
@@ -18,6 +19,7 @@ BeamModel::BeamModel(
   assert(parameters_.z_hit + parameters_.z_short + parameters_.z_max + parameters_.z_rand <= 1.0);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("beam_model", 1);
+  statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
 }
 
 void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
@@ -35,6 +37,7 @@ void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
 
   bool first = true;  // publish debug info for the first particle
   double total_weight = 0.0;
+  ruvu_mcl_msgs::ParticleStatistics statistics;
   auto step = (data.ranges.size() - 1) / (parameters_.max_beams - 1);
   for (auto & particle : pf->particles) {
     double p = 0.0;
@@ -102,6 +105,11 @@ void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
     // Normalize weight update
     p /= parameters_.max_beams;
 
+    // Gather data for sensor model statistics
+    if (statistics_pub_.getNumSubscribers()) {
+      statistics.weight_updates.push_back(p);
+    }
+
     particle.weight *= p;
     total_weight += particle.weight;
     first = false;
@@ -113,4 +121,8 @@ void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
   }
 
   debug_pub_.publish(marker);
+  if (statistics_pub_.getNumSubscribers()) {
+    statistics.sensor_model = typeid(this).name();
+    statistics_pub_.publish(std::move(statistics));
+  }
 }
