@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<launch>
+  <arg name="localization" default="true" doc="Enable localization"/>
+
+  <include file="$(find mir_mcl)/launch/move_base.launch"/>
+
+  <node if="$(arg localization)" name="mcl" pkg="ruvu_mcl" type="node" output="screen" />
+</launch>
