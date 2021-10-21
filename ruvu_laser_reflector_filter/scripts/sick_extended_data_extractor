@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+
+# Copyright 2021 RUVU Robotics B.V.
+
+import rospy
+from sick_safetyscanners.msg import ExtendedLaserScanMsg
+from sensor_msgs.msg import LaserScan
+from copy import deepcopy
+
+
+class Node:
+    def __init__(self):
+        self.sub = rospy.Subscriber("extended_laser_scan", ExtendedLaserScanMsg, self._scan_callback)
+        self.reflectors_pub = rospy.Publisher("extended_laser_scan/reflectors", LaserScan, queue_size=1)
+        self.medians_pub = rospy.Publisher("extended_laser_scan/reflector_medians", LaserScan, queue_size=1)
+
+    def _scan_callback(self, msg):
+        reflector_output = deepcopy(msg.laser_scan)
+        reflector_output.ranges = []
+
+        medians_output = deepcopy(msg.laser_scan)
+        medians_output.ranges = []
+
+        for range, reflector, median in zip(msg.laser_scan.ranges, msg.reflektor_status, msg.reflektor_median):
+            reflector_output.ranges.append(range if reflector else -1)
+            medians_output.ranges.append(range if median else -1)
+
+        self.reflectors_pub.publish(reflector_output)
+        self.medians_pub.publish(medians_output)
+
+
+if __name__ == "__main__":
+    rospy.init_node('sick_extended_data_extractor')
+
+    plotter = Node()
+    rospy.spin()

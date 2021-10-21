@@ -13,6 +13,7 @@
   <depend>ruvu_mcl_msgs</depend>
 
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sick_safetyscanners</exec_depend>
   <exec_depend>rospy</exec_depend>
 
   <test_depend>ruvu_lint</test_depend>
