@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2021 RUVU Robotics B.V.
+-->
+
+<launch>
+  <include file="$(find mir_navigation)/launch/move_base.xml">
+    <arg name="with_virtual_walls" value="false"/>
+  </include>
+</launch>

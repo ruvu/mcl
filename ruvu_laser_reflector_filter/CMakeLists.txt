@@ -10,8 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   ruvu_mcl_msgs
 )
 
-catkin_python_setup()
-
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
