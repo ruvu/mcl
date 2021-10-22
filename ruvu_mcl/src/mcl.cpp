@@ -1,17 +1,13 @@
 // Copyright 2021 RUVU Robotics B.V.
 
-#include "./filter.hpp"
+#include "./mcl.hpp"
 
 #include <algorithm>
 #include <memory>
-#include <string>
-#include <tuple>
-#include <utility>
 
 #include "./adaptive/fixed.hpp"
 #include "./adaptive/kld_sampling.hpp"
 #include "./adaptive/split_and_merge.hpp"
-#include "./cloud_publisher.hpp"
 #include "./map.hpp"
 #include "./motion_models/differential_motion_model.hpp"
 #include "./resamplers/low_variance.hpp"
@@ -20,14 +16,11 @@
 #include "./sensor_models/gaussian_landmark_model.hpp"
 #include "./sensor_models/landmark_likelihood_field_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "ruvu_mcl_msgs/LandmarkList.h"
-#include "sensor_msgs/LaserScan.h"
+#include "ros/node_handle.h"
 #include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
-#include "tf2_ros/buffer.h"
 
-constexpr auto name = "filter";
+constexpr auto name = "mcl";
 
 std::unique_ptr<Laser> create_laser_model(
   const Config & config, const nav_msgs::OccupancyGridConstPtr & map)
@@ -41,11 +34,8 @@ std::unique_ptr<Laser> create_laser_model(
     throw std::logic_error("no laser model configured");
 }
 
-Filter::Filter(
-  ros::NodeHandle nh, ros::NodeHandle private_nh,
-  const std::shared_ptr<const tf2_ros::Buffer> & buffer)
-: buffer_(buffer),
-  cloud_pub_(nh, private_nh),
+Mcl::Mcl(ros::NodeHandle nh, ros::NodeHandle private_nh)
+: cloud_pub_(nh, private_nh),
   count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
   pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
   config_(),
@@ -64,7 +54,7 @@ Filter::Filter(
 {
 }
 
-void Filter::configure(const Config & config)
+void Mcl::configure(const Config & config)
 {
   ROS_INFO_NAMED(name, "configure call");
   config_ = config;
@@ -98,32 +88,24 @@ void Filter::configure(const Config & config)
   }
 }
 
-Filter::~Filter() = default;
+Mcl::~Mcl() = default;
 
-void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
+bool Mcl::scan_cb(const LaserData & scan, const tf2::Transform & odom_pose)
 {
-  if (!odometry_update(scan->header, MeasurementType::LASER)) return;
+  if (!odometry_update(scan.header, MeasurementType::LASER, odom_pose)) return false;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
 
   if (!map_) {
     ROS_WARN_NAMED(name, "no map yet received, skipping sensor model");
-    return;
+    return false;
   }
   if (!laser_) {
     laser_ = create_laser_model(config_, map_);
   }
 
-  tf2::Transform tf;
-  {
-    auto tfs =
-      buffer_->lookupTransform(config_.base_frame_id, scan->header.frame_id, scan->header.stamp);
-    tf2::fromMsg(tfs.transform, tf);
-  }
-
-  LaserData data(*scan, tf);
-  laser_->sensor_update(&filter_, data);
+  laser_->sensor_update(&filter_, scan);
 
   adaptive_->after_sensor_update(&filter_);
 
@@ -139,25 +121,25 @@ void Filter::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   }
 
   // Create output
-  auto ps = filter_.get_pose_with_covariance_stamped(scan->header.stamp, config_.global_frame_id);
+  auto ps = filter_.get_pose_with_covariance_stamped(scan.header.stamp, config_.global_frame_id);
   publish_data(ps);
   tf2::Transform pose;
   tf2::fromMsg(ps.pose.pose, pose);
   last_pose_.setData(pose);  // store last_pose_ for later use
-  last_pose_.stamp_ = scan->header.stamp;
-  broadcast_tf(last_pose_, last_odom_pose_.value(), scan->header.stamp);
+  last_pose_.stamp_ = scan.header.stamp;
+  return true;
 }
 
-void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+bool Mcl::landmark_cb(const LandmarkList & landmarks, const tf2::Transform & odom_pose)
 {
-  if (!odometry_update(landmarks->header, MeasurementType::LANDMARK)) return;
+  if (!odometry_update(landmarks.header, MeasurementType::LANDMARK, odom_pose)) return false;
 
   assert(adaptive_);
   adaptive_->after_odometry_update(&filter_);
 
   if (!landmarks_) {
     ROS_WARN_NAMED(name, "no landmark list yet received, skipping sensor model");
-    return;
+    return false;
   }
   if (!landmark_model_) {
     ROS_INFO_NAMED(name, "adding a landmark sensor model");
@@ -169,16 +151,7 @@ void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
       throw std::logic_error("no landmark model configured");
   }
 
-  tf2::Transform tf;
-  {
-    auto tfs = buffer_->lookupTransform(
-      config_.base_frame_id, landmarks->header.frame_id, landmarks->header.stamp);
-    tf2::fromMsg(tfs.transform, tf);
-  }
-
-  LandmarkList landmark_list(*landmarks, tf);
-
-  landmark_model_->sensor_update(&filter_, landmark_list);
+  landmark_model_->sensor_update(&filter_, landmarks);
 
   adaptive_->after_sensor_update(&filter_);
 
@@ -195,30 +168,30 @@ void Filter::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 
   // Create output
   auto ps =
-    filter_.get_pose_with_covariance_stamped(landmarks->header.stamp, config_.global_frame_id);
+    filter_.get_pose_with_covariance_stamped(landmarks.header.stamp, config_.global_frame_id);
   publish_data(ps);
   tf2::Transform pose;
   tf2::fromMsg(ps.pose.pose, pose);
   last_pose_.setData(pose);  // store last_pose_ for later use
-  last_pose_.stamp_ = landmarks->header.stamp;
-  broadcast_tf(last_pose_, last_odom_pose_.value(), landmarks->header.stamp);
+  last_pose_.stamp_ = landmarks.header.stamp;
+  return true;
 }
 
-void Filter::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
+void Mcl::map_cb(const nav_msgs::OccupancyGridConstPtr & map)
 {
   ROS_INFO_NAMED(name, "map received");
   map_ = map;
   laser_ = nullptr;
 }
 
-void Filter::landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+void Mcl::landmark_list_cb(const LandmarkList & landmarks)
 {
   ROS_INFO_NAMED(name, "landmark list received");
-  landmarks_ = std::make_shared<LandmarkList>(*landmarks);
+  landmarks_ = std::make_shared<LandmarkList>(landmarks);
   landmark_model_ = nullptr;
 }
 
-void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
+void Mcl::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
 {
   const auto & p = initial_pose->pose;
   ROS_INFO_NAMED(
@@ -244,29 +217,28 @@ void Filter::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConst
   tf2::fromMsg(ps.pose.pose, pose);
   last_pose_.setData(pose);  // store last_pose_ for later use
   last_pose_.stamp_ = initial_pose->header.stamp;
-  if (last_odom_pose_)  // before first scan_cb, we can't calculate the tf
-    broadcast_tf(last_pose_, last_odom_pose_.value(), initial_pose->header.stamp);
 }
 
-bool Filter::odometry_update(
-  const std_msgs::Header & header, const MeasurementType & measurement_type)
+void Mcl::request_nomotion_update()
+{
+  for (auto & key : should_process_) {
+    key.second = true;
+  }
+}
+
+bool Mcl::odometry_update(
+  const std_msgs::Header & header, const MeasurementType & measurement_type,
+  tf2::Transform odom_pose)
 {
   assert(model_);
-
-  tf2::Transform odom_pose;
-  try {
-    odom_pose = get_odom_pose(header.stamp);
-  } catch (const tf2::TransformException & e) {
-    ROS_WARN_NAMED(name, "failed to compute odom pose, skipping measurement (%s)", e.what());
-    return false;
-  }
 
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first odometry update, recording the odom pose");
     last_odom_pose_ = odom_pose;
     last_pose_.stamp_ = header.stamp;
-    broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
-    return false;
+    // call should_process to record the frame_id
+    should_process(tf2::Transform::getIdentity(), {measurement_type, header.frame_id});
+    return true;
   }
 
   if (header.stamp <= last_pose_.stamp_) {
@@ -278,8 +250,6 @@ bool Filter::odometry_update(
   auto diff = last_odom_pose_->inverseTimes(odom_pose);
 
   if (!should_process(diff, {measurement_type, header.frame_id})) {
-    last_pose_.stamp_ = header.stamp;
-    broadcast_tf(last_pose_, last_odom_pose_.value(), header.stamp);
     return false;
   }
 
@@ -293,16 +263,7 @@ bool Filter::odometry_update(
   return true;
 }
 
-tf2::Transform Filter::get_odom_pose(const ros::Time & time) const
-{
-  // don't use .transform() because this could run offline without a listener thread
-  auto tf = buffer_->lookupTransform(config_.odom_frame_id, config_.base_frame_id, time);
-  tf2::Transform odom_pose_tf;
-  tf2::fromMsg(tf.transform, odom_pose_tf);
-  return odom_pose_tf;
-}
-
-bool Filter::should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key)
+bool Mcl::should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key)
 {
   if (
     diff.getOrigin().length() >= config_.update_min_d ||
@@ -311,6 +272,10 @@ bool Filter::should_process(const tf2::Transform & diff, const MeasurementKey & 
     for (auto & s : should_process_) {
       s.second = true;
     }
+  }
+
+  if (should_process_.find(measurment_key) == should_process_.end()) {
+    should_process_[measurment_key] = true;
   }
 
   if (should_process_[measurment_key]) {
@@ -323,7 +288,7 @@ bool Filter::should_process(const tf2::Transform & diff, const MeasurementKey & 
   }
 }
 
-void Filter::publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps)
+void Mcl::publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps)
 {
   cloud_pub_.publish(ps.header, filter_);
   std_msgs::UInt32 count;
@@ -332,25 +297,12 @@ void Filter::publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps)
   pose_pub_.publish(ps);
 }
 
-void Filter::broadcast_tf(
-  const tf2::Transform & pose, const tf2::Transform & odom_pose, const ros::Time & stamp)
-{
-  // Broadcast transform
-  geometry_msgs::TransformStamped transform_msg;
-  transform_msg.header.stamp = stamp + ros::Duration(config_.transform_tolerance);
-
-  transform_msg.header.frame_id = config_.global_frame_id;
-  transform_msg.child_frame_id = config_.odom_frame_id;
-  transform_msg.transform = tf2::toMsg(pose * odom_pose.inverse());
-  transform_br_.sendTransform(transform_msg);
-}
-
-std::ostream & operator<<(std::ostream & out, const Filter::MeasurementType & measurement_type)
+std::ostream & operator<<(std::ostream & out, const Mcl::MeasurementType & measurement_type)
 {
   switch (measurement_type) {
-    case Filter::MeasurementType::LASER:
+    case Mcl::MeasurementType::LASER:
       return out << "laser";
-    case Filter::MeasurementType::LANDMARK:
+    case Mcl::MeasurementType::LANDMARK:
       return out << "landmark";
     default:
       throw std::logic_error("unknown measurement type");

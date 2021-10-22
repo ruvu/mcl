@@ -32,10 +32,9 @@ Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
   landmark_filter_.registerCallback(&Node::landmark_cb, this);
   reconfigure_server_.setCallback([this](const ruvu_mcl::AMCLConfig & config, uint32_t level) {
     ROS_INFO_NAMED(name, "reconfigure call");
-    Config c{config};
-    laser_scan_filter_.setTargetFrame(c.odom_frame_id);
-    landmark_filter_.setTargetFrame(c.odom_frame_id);
-    filter_.configure(c);
+    laser_scan_filter_.setTargetFrame(config.odom_frame_id);
+    landmark_filter_.setTargetFrame(config.odom_frame_id);
+    filter_.configure(config);
   });
 }
 

@@ -66,8 +66,9 @@ add_library(${PROJECT_NAME}
   src/adaptive/utils.cpp
   src/cloud_publisher.cpp
   src/config.cpp
-  src/filter.cpp
   src/map.cpp
+  src/mcl.cpp
+  src/mcl_ros.cpp
   src/motion_models/differential_motion_model.cpp
   src/motion_models/motion_model.cpp
   src/node.cpp
@@ -78,9 +79,9 @@ add_library(${PROJECT_NAME}
   src/resamplers/resampler.cpp
   src/rng.cpp
   src/sensor_models/beam_model.cpp
+  src/sensor_models/gaussian_landmark_model.cpp
   src/sensor_models/landmark.cpp
   src/sensor_models/landmark_likelihood_field_model.cpp
-  src/sensor_models/gaussian_landmark_model.cpp
   src/sensor_models/laser.cpp
   src/sensor_models/likelihood_field_model.cpp
 )

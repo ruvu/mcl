@@ -5,7 +5,7 @@
 #include "ruvu_mcl_msgs/LandmarkList.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 LandmarkList::LandmarkList(const ruvu_mcl_msgs::LandmarkList & msg, const tf2::Transform & pose)
-: landmarks(), pose(pose)
+: header(msg.header), pose(pose), landmarks()
 {
   for (const auto & landmark : msg.landmarks) {
     tf2::Transform pose;

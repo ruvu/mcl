@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ros/message_forward.h"
+#include "std_msgs/Header.h"
 #include "tf2/LinearMath/Transform.h"
 
 // forward declare
@@ -17,16 +18,19 @@ class ParticleFilter;
 class LaserData
 {
 public:
-  double angle_min;
-  double angle_increment;
-  double range_max;
-  std::vector<double> ranges;
-  using RangeType = decltype(ranges)::value_type;
-  tf2::Transform pose;  // how the laser is mounted relative to base_link
+  using RangeType = double;
 
   LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose);
 
   double get_angle(std::size_t i) const;
+
+  std_msgs::Header header;
+  tf2::Transform pose;  // how the laser is mounted relative to base_link
+
+  double angle_min;
+  double angle_increment;
+  double range_max;
+  std::vector<RangeType> ranges;
 };
 
 class Laser

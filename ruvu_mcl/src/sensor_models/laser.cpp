@@ -7,11 +7,12 @@
 #include "sensor_msgs/LaserScan.h"
 
 LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose)
-: angle_min(scan.angle_min),
+: header(scan.header),
+  pose(pose),
+  angle_min(scan.angle_min),
   angle_increment(scan.angle_increment),
   range_max(scan.range_max),
-  ranges(),
-  pose(pose)
+  ranges()
 {
   ranges.reserve(scan.ranges.size());
   for (const auto & range : scan.ranges) {
