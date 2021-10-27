@@ -35,7 +35,6 @@ Copyright 2021 RUVU Robotics B.V.
 
   <export>
     <gazebo_ros gazebo_model_path="${prefix}/models"/>
-    <rviz plugin="${prefix}/plugin_description.xml"/>
   </export>
 
 </package>

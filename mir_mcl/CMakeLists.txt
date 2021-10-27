@@ -16,12 +16,6 @@ catkin_package()
 #############
 
 install(
-  FILES
-    plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-install(
   DIRECTORY
     config
     launch
