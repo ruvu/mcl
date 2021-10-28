@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "../src/config.hpp"
 #include "../src/particle_filter.hpp"
 #include "../src/sensor_models/gaussian_landmark_model.hpp"
 #include "ros/console.h"
