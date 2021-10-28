@@ -43,7 +43,7 @@ TEST_F(GaussianLandmarkModelTest, test_empty)
   ASSERT_DOUBLE_EQ(pf.particles.front().weight, 1);
 }
 
-TEST_F(GaussianLandmarkModelTest, test_perfect_in_front)
+TEST_F(GaussianLandmarkModelTest, test_range)
 {
   LandmarkList map;
   tf2::Quaternion q;
@@ -51,45 +51,40 @@ TEST_F(GaussianLandmarkModelTest, test_perfect_in_front)
   map.landmarks.emplace_back(tf2::Transform{q, tf2::Vector3{1, 0, 0}});
   SetUp(map);
   pf.particles.emplace_back(tf2::Transform::getIdentity(), 1);
-
-  LandmarkList data;
-  data.landmarks.emplace_back(
-    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
-  model->sensor_update(&pf, data);
-  ASSERT_DOUBLE_EQ(pf.particles.front().weight, 1);
-}
-
-TEST_F(GaussianLandmarkModelTest, test_wrong_distance)
-{
-  LandmarkList map;
-  map.landmarks.emplace_back(tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
-  SetUp(map);
   pf.particles.emplace_back(
-    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{0, 0, 0}}, 1);
-  pf.particles.emplace_back(tf2::Transform::getIdentity(), 1);  // to counter normalization
-
-  LandmarkList data;
-  data.landmarks.emplace_back(
-    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1.1, 0, 0}});
-  model->sensor_update(&pf, data);
-  ASSERT_NEAR(pf.particles.front().weight, 0.5, 0.01);
-}
-
-TEST_F(GaussianLandmarkModelTest, test_wrong_angle)
-{
-  LandmarkList map;
-  map.landmarks.emplace_back(tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
-  SetUp(map);
-  tf2::Quaternion q;
-  q.setRPY(0, 0, 0.1);
-  pf.particles.emplace_back(tf2::Transform{q, tf2::Vector3{0, 0, 0}}, 1);
-  pf.particles.emplace_back(tf2::Transform::getIdentity(), 1);  // to counter normalization
+    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{config.landmark_sigma_r, 0, 0}}, 1);
+  pf.particles.emplace_back(
+    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{-10, 0, 0}}, 1);
 
   LandmarkList data;
   data.landmarks.emplace_back(
     tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
   model->sensor_update(&pf, data);
-  ASSERT_NEAR(pf.particles.front().weight, 0.5, 0.01);
+  ASSERT_NEAR(pf.particles[0].weight, 0.572, 0.01);  // Perfect hit
+  ASSERT_NEAR(pf.particles[1].weight, 0.367, 0.01);  // 1x sigma
+  ASSERT_NEAR(pf.particles[2].weight, 0.057, 0.01);  // Random particle
+}
+
+TEST_F(GaussianLandmarkModelTest, test_angle)
+{
+  LandmarkList map;
+  tf2::Quaternion q;
+  q.setRPY(0, 0, M_PI);
+  map.landmarks.emplace_back(tf2::Transform{q, tf2::Vector3{1, 0, 0}});
+  SetUp(map);
+  pf.particles.emplace_back(tf2::Transform::getIdentity(), 1);
+  q.setRPY(0, 0, config.landmark_sigma_t);
+  pf.particles.emplace_back(tf2::Transform{q, tf2::Vector3{0, 0, 0}}, 1);
+  q.setRPY(0, 0, M_PI);
+  pf.particles.emplace_back(tf2::Transform{q, tf2::Vector3{0, 0, 0}}, 1);
+
+  LandmarkList data;
+  data.landmarks.emplace_back(
+    tf2::Transform{tf2::Quaternion::getIdentity(), tf2::Vector3{1, 0, 0}});
+  model->sensor_update(&pf, data);
+  ASSERT_NEAR(pf.particles[0].weight, 0.572, 0.01);  // Perfect hit
+  ASSERT_NEAR(pf.particles[1].weight, 0.367, 0.01);  // 1x sigma
+  ASSERT_NEAR(pf.particles[2].weight, 0.057, 0.01);  // Random particle
 }
 
 /**
