@@ -4,6 +4,7 @@
 
 #include <utility>
 
+#include "../config.hpp"
 #include "../particle_filter.hpp"
 #include "ros/node_handle.h"
 #include "ruvu_mcl_msgs/ParticleStatistics.h"
@@ -20,7 +21,11 @@ double prob(double a, double var) { return exp(-a * a / 2 / var); }
 
 GaussianLandmarkModel::GaussianLandmarkModel(
   const GaussianLandmarkModelConfig & config, const LandmarkList & map)
-: config_(config), map_(map)
+: z_rand_(config.z_rand),
+  landmark_var_r_(config.landmark_sigma_r * config.landmark_sigma_r),
+  landmark_var_t_(config.landmark_sigma_t * config.landmark_sigma_t),
+  global_frame_id_(config.global_frame_id),
+  map_(map)
 {
   assert(config.z_rand >= 0 && config.z_rand <= 1);
   if (ros::isInitialized()) {
@@ -37,7 +42,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
   visualization_msgs::Marker marker;
   if (debug_pub_.getNumSubscribers()) {
-    marker.header.frame_id = config_.global_frame_id;
+    marker.header.frame_id = global_frame_id_;
     marker.header.stamp = ros::Time::now();
     marker.type = visualization_msgs::Marker::LINE_LIST;
     marker.action = visualization_msgs::Marker::MODIFY;
@@ -75,14 +80,13 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         auto t_hat_diff = landmark_pose_LASER.getOrigin().angle(measurement.pose.getOrigin());
 
         // likelihood of a landmark measurement
-        auto q = prob(r_hat_diff, pow(config_.landmark_sigma_r, 2)) *
-                 prob(t_hat_diff, pow(config_.landmark_sigma_t, 2));
+        auto q = prob(r_hat_diff, landmark_var_r_) * prob(t_hat_diff, landmark_var_t_);
 
         // pick the landmark with the highest probability
         if (q > pz) pz = q;
       }
 
-      pz = (1 - config_.z_rand) * pz + config_.z_rand;
+      pz = (1 - z_rand_) * pz + z_rand_;
 
       assert(pz <= 1.0);
       assert(pz >= 0.0);
