@@ -462,7 +462,7 @@ Visualization Manager:
       Y std deviation: 0.5
     - Class: ruvu_mcl_rviz_plugins/AddLandmarkWithId
       Prompt for id: true
-    - Class: mir_mcl/RemoveLandmark
+    - Class: ruvu_mcl_rviz_plugins/RemoveLandmark
       Single click: true
       Topic: /remove_landmark
     - Class: rviz/SetGoal

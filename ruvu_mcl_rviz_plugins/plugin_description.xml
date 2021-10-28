@@ -11,4 +11,12 @@ Copyright 2021 RUVU Robotics B.V.
       Add a new landmark with ID to the landmark server
     </description>
   </class>
+
+  <class name="ruvu_mcl_rviz_plugins/RemoveLandmark"
+         type="rviz::PointTool"
+         base_class_type="rviz::Tool">
+    <description>
+      Removes a landmark from the landmark server
+    </description>
+  </class>
 </library>
