@@ -11,13 +11,13 @@
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 #include "tf2/transform_datatypes.h"
-#include "tf2_ros/transform_broadcaster.h"
 
 // forward declare
 class AdaptiveMethod;
 class LandmarkModel;
 class LandmarkList;
 class Laser;
+class LaserData;
 class MotionModel;
 class ParticleFilter;
 class Resampler;
@@ -31,10 +31,6 @@ namespace tf2
 {
 class Transform;
 }
-namespace tf2_ros
-{
-class Buffer;
-}
 namespace geometry_msgs
 {
 ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)
@@ -43,30 +39,23 @@ namespace nav_msgs
 {
 ROS_DECLARE_MESSAGE(OccupancyGrid)
 }
-namespace sensor_msgs
-{
-ROS_DECLARE_MESSAGE(LaserScan)
-}
-namespace ruvu_mcl_msgs
-{
-ROS_DECLARE_MESSAGE(LandmarkList)
-}
 
-class Filter
+class Mcl
 {
 public:
-  Filter(
-    ros::NodeHandle nh, ros::NodeHandle private_nh,
-    const std::shared_ptr<const tf2_ros::Buffer> & buffer);
-  ~Filter();  // to handle forward declares
+  Mcl(ros::NodeHandle nh, ros::NodeHandle private_nh);
+  ~Mcl();  // to handle forward declares
 
   void configure(const Config & config);
+  const Config & config() const { return config_; }
+  const tf2::Transform & pose() const { return last_pose_; }
 
-  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
-  void landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
+  bool scan_cb(const LaserData & scan, const tf2::Transform & odom_pose);
+  bool landmark_cb(const LandmarkList & landmarks, const tf2::Transform & odom_pose);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
-  void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
+  void landmark_list_cb(const LandmarkList & landmarks);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
+  void request_nomotion_update();
 
 private:
   enum class MeasurementType { LASER, LANDMARK };
@@ -80,21 +69,16 @@ private:
 
   friend std::ostream & operator<<(std::ostream & out, const MeasurementType & measurement_type);
 
-  bool odometry_update(const std_msgs::Header & header, const MeasurementType & measurement_type);
-  tf2::Transform get_odom_pose(const ros::Time & time) const;
+  bool odometry_update(
+    const std_msgs::Header & header, const MeasurementType & measurement_type,
+    tf2::Transform odom_pose);
   bool should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key);
   void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
-  void broadcast_tf(
-    const tf2::Transform & pose, const tf2::Transform & odom_pose, const ros::Time & stamp);
-
-  // data input
-  std::shared_ptr<const tf2_ros::Buffer> buffer_;
 
   // data output
   CloudPublisher cloud_pub_;
   ros::Publisher count_pub_;
   ros::Publisher pose_pub_;
-  tf2_ros::TransformBroadcaster transform_br_;
 
   // internals
   Config config_;
@@ -117,4 +101,4 @@ private:
   std::unique_ptr<AdaptiveMethod> adaptive_;
 };
 
-std::ostream & operator<<(std::ostream & out, const Filter::MeasurementType & measurement_type);
+std::ostream & operator<<(std::ostream & out, const Mcl::MeasurementType & measurement_type);

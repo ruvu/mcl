@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "ros/message_forward.h"
+#include "std_msgs/Header.h"
 #include "tf2/LinearMath/Transform.h"
 
 // forward declare
@@ -35,17 +36,18 @@ struct Landmark
 class LandmarkList
 {
 public:
-  LandmarkList() : landmarks(), pose(tf2::Transform::getIdentity()) {}
+  LandmarkList() : header(), pose(tf2::Transform::getIdentity()), landmarks() {}
 
   explicit LandmarkList(
     const ruvu_mcl_msgs::LandmarkList & msg,
     const tf2::Transform & pose = tf2::Transform::getIdentity());
 
+  std_msgs::Header header;
   /**
    * LandmarkLists from measurements should contain a pose with the transform from robot frame to sensor frame.
    */
-  std::vector<Landmark> landmarks;
   tf2::Transform pose;
+  std::vector<Landmark> landmarks;
 };
 
 class LandmarkModel

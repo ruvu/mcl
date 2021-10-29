@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "./filter.hpp"
+#include "./mcl_ros.hpp"
 #include "dynamic_reconfigure/server.h"
 #include "message_filters/subscriber.h"
 #include "ros/message_forward.h"
@@ -50,5 +50,5 @@ private:
   dynamic_reconfigure::Server<ruvu_mcl::AMCLConfig> reconfigure_server_;
 
   // internals
-  Filter filter_;
+  MclRos filter_;
 };

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "./filter.hpp"
+#include "./mcl_ros.hpp"
 #include "./offline/bag_buffer.hpp"
 #include "./offline/bag_player.hpp"
 #include "dynamic_reconfigure/server.h"
@@ -43,12 +43,12 @@ int main(int argc, char ** argv)
   player.set_playback_speed(private_nh.param("rate", std::numeric_limits<double>::infinity()));
 
   auto buffer = std::make_shared<BagBuffer>(player.bag);
-  Filter filter{nh, private_nh, buffer};
+  MclRos filter{nh, private_nh, buffer};
 
   dynamic_reconfigure::Server<ruvu_mcl::AMCLConfig> reconfigure_server;
   reconfigure_server.setCallback([&filter](const ruvu_mcl::AMCLConfig & config, uint32_t level) {
     ROS_INFO_NAMED(name, "reconfigure call");
-    filter.configure(Config{config});
+    filter.configure(config);
   });
 
   auto scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 100);
