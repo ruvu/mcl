@@ -90,7 +90,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     double p = 1;
     for (const auto & measurement : data.landmarks) {
       double pz_arg = std::numeric_limits<double>::max();
-
+      auto measurement_length = measurement.pose.getOrigin().length();
       // Only landmarks withing max_range around the laser have a chance to influence the particle
       // weight. We can use this to quickly prune the map with a KDTree.
       double max_range = measurement.pose.getOrigin().length() + max_confidence_range_;
@@ -115,8 +115,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         auto landmark_pose_LASER = laser_pose.inverseTimes(landmark.pose);
 
         // range difference
-        auto r_hat_diff =
-          landmark_pose_LASER.getOrigin().length() - measurement.pose.getOrigin().length();
+        auto r_hat_diff = landmark_pose_LASER.getOrigin().length() - measurement_length;
 
         // bearring difference
         auto t_hat_diff = landmark_pose_LASER.getOrigin().angle(measurement.pose.getOrigin());
