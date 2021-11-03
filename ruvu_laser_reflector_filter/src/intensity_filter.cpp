@@ -55,6 +55,7 @@ public:
     threshold_decay_ = config.threshold_decay;
     threshold_multiplier_ = config.threshold_multiplier;
     marker_diameter_ = config.marker_diameter;
+    clustering_ = config.clustering;
     clustering_max_gap_size_ = config.clustering_max_gap_size;
     clustering_max_cluster_size_ = config.clustering_max_cluster_size;
   }
@@ -94,9 +95,6 @@ private:
     ruvu_mcl_msgs::LandmarkList landmark_list;
     landmark_list.header = scan->header;
 
-    int cluster_start_idx = -1;
-    bool previous = false;
-    std::vector<euclidean_clustering::Point> clusters;
     for (size_t i = 0; i < scan->ranges.size(); i++) {
       // Check if intensity is worth passing through the filter
       // This comparison looks ugly, but handles NaN ranges correctly :)
@@ -104,45 +102,36 @@ private:
       bool pass_through = scan->intensities[i] >= threshold_function(scan->ranges[i]) && !invalid;
 
       if (pass_through) {
-        // This if serves to find (initial) cluster suggestions
-        if (!previous) {
-          cluster_start_idx = i;
-          previous = true;
-        }
-
         ruvu_mcl_msgs::LandmarkEntry landmark;
         double angle = scan->angle_min + i * scan->angle_increment;
         landmark.pose.pose.position.x = scan->ranges[i] * tf2Cos(angle);
         landmark.pose.pose.position.y = scan->ranges[i] * tf2Sin(angle);
         landmark_list.landmarks.push_back(std::move(landmark));
-        continue;
-      }
-      if (previous && (!pass_through || i == scan->ranges.size() - 1)) {
-        previous = false;
-        int median_idx = cluster_start_idx + (i - cluster_start_idx) / 2;
-        double angle = scan->angle_min + median_idx * scan->angle_increment;
-        double range = scan->ranges[median_idx];
-        clusters.push_back(euclidean_clustering::fromPolar(range, angle));
-        cluster_start_idx = -1;
       }
     }
 
-    std::vector<euclidean_clustering::Point> points = pointsFromLandmarkList(landmark_list);
+    // Publish reflector points
+    if (marker_pub_.getNumSubscribers() > 0 && landmark_list.landmarks.size()) {
+      auto landmarks_marker = create_marker(landmark_list, "reflector_points");
+      marker_pub_.publish(landmarks_marker);
+    }
 
     if (clustering_) {
+      std::vector<euclidean_clustering::Point> clusters;
+      std::vector<euclidean_clustering::Point> points = pointsFromLandmarkList(landmark_list);
       euclidean_clustering::greedyDistanceClustering(
         points, clusters, clustering_max_gap_size_, clustering_max_cluster_size_);
+      landmark_list = landmarkListFromPoints(clusters);
+      landmark_list.header = scan->header;
+
+      // Publish reflector clusters
+      if (marker_pub_.getNumSubscribers() > 0 && landmark_list.landmarks.size()) {
+        auto clusters_marker = create_marker(landmark_list, "reflector_clusters");
+        marker_pub_.publish(clusters_marker);
+      }
     }
 
     landmarks_pub_.publish(landmark_list);
-    if (marker_pub_.getNumSubscribers() > 0 && landmark_list.landmarks.size()) {
-      auto landmarks_marker = create_marker(landmark_list, "reflector_points");
-      ruvu_mcl_msgs::LandmarkList clusters_ll = landmarkListFromPoints(clusters);
-      clusters_ll.header = landmark_list.header;
-      auto clusters_marker = create_marker(clusters_ll, "reflector_clusters");
-      marker_pub_.publish(landmarks_marker);
-      marker_pub_.publish(clusters_marker);
-    }
   }
 
   double threshold_function(const double range)
