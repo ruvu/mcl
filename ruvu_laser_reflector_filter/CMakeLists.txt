@@ -37,11 +37,16 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(euclidean_clustering
+  src/euclidean_clustering.cpp
+)
+
 add_executable(intensity_filter
   src/intensity_filter.cpp
 )
 
 target_link_libraries(intensity_filter
+  euclidean_clustering
   ${catkin_LIBRARIES}
 )
 
@@ -59,6 +64,7 @@ catkin_install_python(PROGRAMS
 
 install(
   TARGETS
+    euclidean_clustering
     intensity_filter
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
