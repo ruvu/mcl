@@ -36,10 +36,17 @@ include_directories(
 )
 
 add_executable(landmark_server
-  src/main.cpp
   src/interactive_markers.cpp
+  src/main.cpp
 )
+target_link_libraries(landmark_server
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(landmark_server $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>)
 
+add_executable(generate_random_map
+  src/generate_random_map.cpp
+)
 target_link_libraries(landmark_server
   ${catkin_LIBRARIES}
 )
@@ -51,6 +58,7 @@ target_link_libraries(landmark_server $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_L
 
 install(
   TARGETS
+    generate_random_map
     landmark_server
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
