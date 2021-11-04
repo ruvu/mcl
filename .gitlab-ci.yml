@@ -6,7 +6,7 @@ include:
     file: ROS.gitlab-ci.yml
 
 variables:
-  WORKSPACE: project-mcl
+  WORKSPACE: common
   PACKAGES: >
     mir_mcl
     ruvu_mcl
