@@ -10,7 +10,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   set(EXTRA_FLAGS -Wno-format-nonliteral)
 else()
-  set(EXTRA_FLAGS -Wno-format-nonliteral -Wno-noexcept -Wstrict-overflow=2) # required for message_filter.h
+  set(EXTRA_FLAGS
+    -Wno-format-nonliteral # required for message_filter.h
+    -Wno-noexcept          # compilation on noetic
+    -Wstrict-overflow=1    # bug in gcc melodic & lower
+)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
