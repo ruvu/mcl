@@ -50,6 +50,7 @@ struct GaussianLandmarkModelConfig
   double z_rand;
   double landmark_sigma_r;
   double landmark_sigma_t;
+  double landmark_max_r_confidence = 0.99;
   std::string global_frame_id;  // for visualization
 };
 

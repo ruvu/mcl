@@ -24,6 +24,8 @@ Copyright 2021 RUVU Robotics B.V.
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
 
+  <build_depend>libkdtree++-dev</build_depend>
+
   <exec_depend>graphicsmagick</exec_depend>
 
   <test_depend>roslint</test_depend>

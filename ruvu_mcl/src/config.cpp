@@ -76,6 +76,7 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     c.z_rand = config.landmark_z_rand;
     c.landmark_sigma_r = config.landmark_sigma_r;
     c.landmark_sigma_t = config.landmark_sigma_t;
+    c.landmark_max_r_confidence = config.landmark_max_r_confidence;
     c.global_frame_id = config.global_frame_id;
     landmark = c;
   } else if (config.landmark_model_type == ruvu_mcl::AMCL_landmark_likelihood_field_const) {
