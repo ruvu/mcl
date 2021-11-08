@@ -37,16 +37,23 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(${PROJECT_NAME}
+  src/euclidean_clustering.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+
 add_executable(intensity_filter
   src/intensity_filter.cpp
 )
 
 target_link_libraries(intensity_filter
-  ${catkin_LIBRARIES}
+  ${PROJECT_NAME}
 )
-
-add_dependencies(intensity_filter ${PROJECT_NAME}_gencfg)
-
 #############
 ## Install ##
 #############
@@ -61,6 +68,12 @@ install(
   TARGETS
     intensity_filter
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
 set(ROSLINT_CPP_OPTS "--filter=-whitespace/braces")

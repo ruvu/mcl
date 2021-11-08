@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "dynamic_reconfigure/server.h"
+#include "euclidean_clustering.hpp"
 #include "ros/node_handle.h"
 #include "ruvu_laser_reflector_filter/ReflectorFilterConfig.h"
 #include "ruvu_mcl_msgs/LandmarkEntry.h"
@@ -13,6 +14,30 @@
 #include "tf2/LinearMath/Scalar.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
+
+std::vector<euclidean_clustering::Point> pointsFromLandmarkList(
+  const ruvu_mcl_msgs::LandmarkList & landmarks)
+{
+  std::vector<euclidean_clustering::Point> points;
+  points.resize(landmarks.landmarks.size());
+  for (int i = 0; i < landmarks.landmarks.size(); i++) {
+    points[i] = euclidean_clustering::Point(
+      landmarks.landmarks[i].pose.pose.position.x, landmarks.landmarks[i].pose.pose.position.y);
+  }
+  return points;
+}
+
+ruvu_mcl_msgs::LandmarkList landmarkListFromPoints(
+  const std::vector<euclidean_clustering::Point> & points)
+{
+  ruvu_mcl_msgs::LandmarkList landmarks;
+  landmarks.landmarks.resize(points.size());
+  for (int i = 0; i < points.size(); i++) {
+    landmarks.landmarks[i].pose.pose.position.x = points[i].x;
+    landmarks.landmarks[i].pose.pose.position.y = points[i].y;
+  }
+  return landmarks;
+}
 
 class Filter
 {
@@ -30,13 +55,17 @@ public:
     threshold_decay_ = config.threshold_decay;
     threshold_multiplier_ = config.threshold_multiplier;
     marker_diameter_ = config.marker_diameter;
+    clustering_ = config.clustering;
+    clustering_max_gap_size_ = config.clustering_max_gap_size;
+    clustering_max_cluster_size_ = config.clustering_max_cluster_size;
   }
 
-  visualization_msgs::Marker create_marker(ruvu_mcl_msgs::LandmarkList landmark_list)
+  visualization_msgs::Marker create_marker(
+    ruvu_mcl_msgs::LandmarkList landmark_list, const std::string & ns)
   {
     visualization_msgs::Marker m;
     m.header = landmark_list.header;
-    m.ns = "measured_landmarks";
+    m.ns = ns;
     m.id = 0;
     m.type = visualization_msgs::Marker::SPHERE_LIST;
     m.action = visualization_msgs::Marker::MODIFY;
@@ -67,12 +96,12 @@ private:
     landmark_list.header = scan->header;
 
     for (size_t i = 0; i < scan->ranges.size(); i++) {
-      // This comparison looks ugly, but handles NaNs correctly :)
-      if (!(scan->range_min <= scan->ranges[i] && scan->ranges[i] <= scan->range_max)) {
-        // This is an invalid measurement.
-        continue;
-      }
-      if (scan->intensities[i] >= threshold_function(scan->ranges[i])) {
+      // Check if intensity is worth passing through the filter
+      // This comparison looks ugly, but handles NaN ranges correctly :)
+      bool invalid = !(scan->range_min <= scan->ranges[i] && scan->ranges[i] <= scan->range_max);
+      bool pass_through = scan->intensities[i] >= threshold_function(scan->ranges[i]) && !invalid;
+
+      if (pass_through) {
         ruvu_mcl_msgs::LandmarkEntry landmark;
         double angle = scan->angle_min + i * scan->angle_increment;
         landmark.pose.pose.position.x = scan->ranges[i] * tf2Cos(angle);
@@ -81,8 +110,28 @@ private:
       }
     }
 
+    // Publish reflector points
+    if (marker_pub_.getNumSubscribers() > 0 && landmark_list.landmarks.size()) {
+      auto landmarks_marker = create_marker(landmark_list, "reflector_points");
+      marker_pub_.publish(landmarks_marker);
+    }
+
+    if (clustering_) {
+      std::vector<euclidean_clustering::Point> clusters;
+      std::vector<euclidean_clustering::Point> points = pointsFromLandmarkList(landmark_list);
+      euclidean_clustering::greedyDistanceClustering(
+        points, clusters, clustering_max_gap_size_, clustering_max_cluster_size_);
+      landmark_list = landmarkListFromPoints(clusters);
+      landmark_list.header = scan->header;
+
+      // Publish reflector clusters
+      if (marker_pub_.getNumSubscribers() > 0 && landmark_list.landmarks.size()) {
+        auto clusters_marker = create_marker(landmark_list, "reflector_clusters");
+        marker_pub_.publish(clusters_marker);
+      }
+    }
+
     landmarks_pub_.publish(landmark_list);
-    if (marker_pub_.getNumSubscribers() > 0) marker_pub_.publish(create_marker(landmark_list));
   }
 
   double threshold_function(const double range)
@@ -94,6 +143,9 @@ private:
   double threshold_decay_;
   int threshold_floor_;
   double marker_diameter_;
+  bool clustering_;
+  double clustering_max_gap_size_;
+  double clustering_max_cluster_size_;
   ros::Subscriber scan_sub_;
   ros::Publisher landmarks_pub_;
   ros::Publisher marker_pub_;
