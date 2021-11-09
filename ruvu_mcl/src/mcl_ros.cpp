@@ -46,7 +46,7 @@ void MclRos::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 
   if (updated) {
     broadcast_tf(mcl_.pose(), odom_pose, data.header.stamp);
-  } else {
+  } else if (!last_tf_broadcast_.header.frame_id.empty()) {  // Verify last_tf_broadcast_ is set
     broadcast_last_tf(data.header.stamp);
   }
 }
@@ -73,7 +73,7 @@ void MclRos::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 
   if (updated) {
     broadcast_tf(mcl_.pose(), odom_pose, data.header.stamp);
-  } else {
+  } else if (!last_tf_broadcast_.header.frame_id.empty()) {  // Verify last_tf_broadcast_ is set
     broadcast_last_tf(data.header.stamp);
   }
 }
