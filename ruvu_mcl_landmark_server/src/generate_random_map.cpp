@@ -1,4 +1,7 @@
+// Copyright 2021 RUVU Robotics B.V.
+
 #include <random>
+#include <vector>
 
 #include "./json_utils.hpp"
 #include "./landmark.hpp"
