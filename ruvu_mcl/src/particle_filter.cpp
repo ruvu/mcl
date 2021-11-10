@@ -3,6 +3,7 @@
 #include "./particle_filter.hpp"
 
 #include "algorithm"
+#include "ros/console.h"
 #include "string"
 #include "tf2/utils.h"
 
@@ -12,8 +13,22 @@ void ParticleFilter::normalize_weights()
   for (const auto & particle : particles) {
     total_weight += particle.weight;
   }
-  for (auto & particle : particles) {
-    particle.weight /= total_weight;
+  normalize_weights(total_weight);
+}
+
+void ParticleFilter::normalize_weights(double total_weight)
+{
+  if (total_weight > 0) {
+    for (auto & particle : particles) {
+      particle.weight /= total_weight;
+    }
+  } else {
+    ROS_ERROR(
+      "Total weight of particles is nonpositive, resetting particles to uniform weight "
+      "distribution");
+    for (auto & particle : particles) {
+      particle.weight = 1.0 / particles.size();
+    }
   }
 }
 

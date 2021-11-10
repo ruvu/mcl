@@ -108,9 +108,7 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
   }
 
   // Normalize weights
-  for (auto & particle : pf->particles) {
-    particle.weight /= total_weight;
-  }
+  pf->normalize_weights(total_weight);
 
   debug_pub_.publish(marker);
   if (statistics_pub_.getNumSubscribers()) {
