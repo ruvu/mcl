@@ -158,10 +158,7 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
   }
 
   // Normalize weights
-  assert(total_weight > 0);
-  for (auto & particle : pf->particles) {
-    particle.weight /= total_weight;
-  }
+  pf->normalize_weights(total_weight);
 
   if (debug_pub_.getNumSubscribers()) debug_pub_.publish(marker);
   if (statistics_pub_.getNumSubscribers()) {
