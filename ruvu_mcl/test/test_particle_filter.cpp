@@ -53,7 +53,7 @@ TEST_F(ParticleFilterTest, EffectiveSampleSize)
 TEST_F(ParticleFilterTest, Covariance)
 {
   pf.normalize_weights();
-  auto cov = pf.get_pose_with_covariance_stamped(ros::Time(), "map").pose.covariance;
+  auto cov = pf.get_pose_with_covariance().covariance;
 
   std::array<double, 4> sum_of_squares = {0};
   std::array<double, 4> sum = {0};
@@ -117,7 +117,7 @@ TEST_F(ParticleFilterCovarianceTest, Covariance)
   SetUp(0, 0.5);
   constexpr double eps = 5e-2;
 
-  auto cov = pf.get_pose_with_covariance_stamped(ros::Time(), "map").pose.covariance;
+  auto cov = pf.get_pose_with_covariance().covariance;
   EXPECT_NEAR(cov[0], pow(0.5, 2), eps);
   EXPECT_NEAR(cov[1], 0, eps);
   EXPECT_NEAR(cov[6], 0, eps);
@@ -129,7 +129,7 @@ TEST_F(ParticleFilterCovarianceTest, CovarianceWithOffset)
   SetUp(3, 0.5);
   constexpr double eps = 5e-2;
 
-  auto cov = pf.get_pose_with_covariance_stamped(ros::Time(), "map").pose.covariance;
+  auto cov = pf.get_pose_with_covariance().covariance;
   EXPECT_NEAR(cov[0], pow(0.5, 2), eps);
   EXPECT_NEAR(cov[1], 0, eps);
   EXPECT_NEAR(cov[6], 0, eps);
@@ -156,7 +156,7 @@ TEST_F(ParticleFilterCovarianceTest, CovarianceTransformed)
   // https://www.visiondummy.com/2014/04/geometric-interpretation-covariance-matrix/
   auto expected = r * s * s * r.transpose();
 
-  auto cov = pf.get_pose_with_covariance_stamped(ros::Time(), "map").pose.covariance;
+  auto cov = pf.get_pose_with_covariance().covariance;
   EXPECT_NEAR(cov[0], expected[0][0], eps);
   EXPECT_NEAR(cov[1], expected[0][1], eps);
   EXPECT_NEAR(cov[6], expected[1][0], eps);

@@ -2,7 +2,6 @@
 
 #include "./mcl.hpp"
 
-#include <algorithm>
 #include <memory>
 
 #include "./adaptive/fixed.hpp"
@@ -17,7 +16,6 @@
 #include "./sensor_models/landmark_likelihood_field_model.hpp"
 #include "./sensor_models/likelihood_field_model.hpp"
 #include "ros/node_handle.h"
-#include "std_msgs/UInt32.h"
 #include "tf2/utils.h"
 
 constexpr auto name = "mcl";
@@ -37,12 +35,10 @@ std::unique_ptr<Laser> create_laser_model(
 }
 
 Mcl::Mcl(ros::NodeHandle nh, ros::NodeHandle private_nh)
-: cloud_pub_(nh, private_nh),
-  count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
-  pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1)),
-  config_(),
+: config_(),
   rng_(std::make_unique<Rng>()),
   last_odom_pose_(),
+  last_filter_update_(),
   filter_(),
   model_(nullptr),
   map_(nullptr),
@@ -80,13 +76,8 @@ void Mcl::configure(const Config & config)
     throw std::logic_error("no adaptive algorithm configured");
 
   if (filter_.particles.empty()) {
-    auto p = boost::make_shared<geometry_msgs::PoseWithCovarianceStamped>();
-    p->header.stamp = ros::Time::now();
-    p->header.frame_id = config_.global_frame_id;
-    tf2::toMsg(config.initial_pose.getOrigin(), p->pose.pose.position);
-    p->pose.pose.orientation = tf2::toMsg(config.initial_pose.getRotation());
-    std::copy(config.initial_cov.begin(), config.initial_cov.end(), p->pose.covariance.begin());
-    initial_pose_cb(p);
+    PoseWithCovariance p{config.initial_pose, config.initial_cov};
+    initial_pose_cb(ros::Time::now(), p);
   }
 }
 
@@ -122,13 +113,7 @@ bool Mcl::scan_cb(const LaserData & scan, const tf2::Transform & odom_pose)
       resampler_->resample(&filter_, needed_particles);
   }
 
-  // Create output
-  auto ps = filter_.get_pose_with_covariance_stamped(scan.header.stamp, config_.global_frame_id);
-  publish_data(ps);
-  tf2::Transform pose;
-  tf2::fromMsg(ps.pose.pose, pose);
-  last_pose_.setData(pose);  // store last_pose_ for later use
-  last_pose_.stamp_ = scan.header.stamp;
+  last_filter_update_ = scan.header.stamp;
   return true;
 }
 
@@ -168,14 +153,7 @@ bool Mcl::landmark_cb(const LandmarkList & landmarks, const tf2::Transform & odo
       resampler_->resample(&filter_, needed_particles);
   }
 
-  // Create output
-  auto ps =
-    filter_.get_pose_with_covariance_stamped(landmarks.header.stamp, config_.global_frame_id);
-  publish_data(ps);
-  tf2::Transform pose;
-  tf2::fromMsg(ps.pose.pose, pose);
-  last_pose_.setData(pose);  // store last_pose_ for later use
-  last_pose_.stamp_ = landmarks.header.stamp;
+  last_filter_update_ = landmarks.header.stamp;
   return true;
 }
 
@@ -193,16 +171,17 @@ void Mcl::landmark_list_cb(const LandmarkList & landmarks)
   landmark_model_ = nullptr;
 }
 
-void Mcl::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose)
+void Mcl::initial_pose_cb(const ros::Time & stamp, const PoseWithCovariance & initial_pose)
 {
-  const auto & p = initial_pose->pose;
+  const auto & p = initial_pose.pose;
+  const auto & covariance = initial_pose.covariance;
   ROS_INFO_NAMED(
-    name, "initial pose received %.3f %.3f %.3f, spawning %lu new particles", p.pose.position.x,
-    p.pose.position.y, tf2::getYaw(p.pose.orientation), config_.max_particles);
+    name, "initial pose received %.3f %.3f %.3f, spawning %lu new particles", p.getOrigin().x(),
+    p.getOrigin().y(), tf2::getYaw(p.getRotation()), config_.max_particles);
 
-  auto dx = rng_->normal_distribution(p.pose.position.x, p.covariance[0 * 6 + 0]);
-  auto dy = rng_->normal_distribution(p.pose.position.y, p.covariance[1 * 6 + 1]);
-  auto dt = rng_->normal_distribution(tf2::getYaw(p.pose.orientation), p.covariance[5 * 6 + 5]);
+  auto dx = rng_->normal_distribution(p.getOrigin().x(), covariance[0 * 6 + 0]);
+  auto dy = rng_->normal_distribution(p.getOrigin().y(), covariance[1 * 6 + 1]);
+  auto dt = rng_->normal_distribution(tf2::getYaw(p.getRotation()), covariance[5 * 6 + 5]);
 
   filter_.particles.clear();
   for (size_t i = 0; i < config_.max_particles; ++i) {
@@ -212,13 +191,7 @@ void Mcl::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr
     filter_.particles.emplace_back(tf2::Transform{q, p}, 1. / config_.max_particles);
   }
 
-  auto ps =
-    filter_.get_pose_with_covariance_stamped(initial_pose->header.stamp, config_.global_frame_id);
-  publish_data(ps);
-  tf2::Transform pose;
-  tf2::fromMsg(ps.pose.pose, pose);
-  last_pose_.setData(pose);  // store last_pose_ for later use
-  last_pose_.stamp_ = initial_pose->header.stamp;
+  last_filter_update_ = stamp;
 }
 
 void Mcl::request_nomotion_update()
@@ -237,15 +210,15 @@ bool Mcl::odometry_update(
   if (!last_odom_pose_) {
     ROS_INFO_NAMED(name, "first odometry update, recording the odom pose");
     last_odom_pose_ = odom_pose;
-    last_pose_.stamp_ = header.stamp;
+    last_filter_update_ = header.stamp;
     // call should_process to record the frame_id
     should_process(tf2::Transform::getIdentity(), {measurement_type, header.frame_id});
     return true;
   }
 
-  if (header.stamp <= last_pose_.stamp_) {
+  if (header.stamp <= last_filter_update_) {
     ROS_DEBUG_STREAM_NAMED(
-      name, "skipping out-of-order measurement, " << header.stamp << " <= " << last_pose_.stamp_);
+      name, "skipping out-of-order measurement, " << header.stamp << " <= " << last_filter_update_);
     return false;
   }
 
@@ -288,15 +261,6 @@ bool Mcl::should_process(const tf2::Transform & diff, const MeasurementKey & mea
   } else {
     return false;
   }
-}
-
-void Mcl::publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps)
-{
-  cloud_pub_.publish(ps.header, filter_);
-  std_msgs::UInt32 count;
-  count.data = filter_.particles.size();
-  count_pub_.publish(count);
-  pose_pub_.publish(ps);
 }
 
 std::ostream & operator<<(std::ostream & out, const Mcl::MeasurementType & measurement_type)
