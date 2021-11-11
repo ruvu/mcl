@@ -81,11 +81,9 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     landmark = c;
   } else if (config.landmark_model_type == ruvu_mcl::AMCL_landmark_likelihood_field_const) {
     LandmarkLikelihoodFieldModelConfig c;
-    c.z_hit = config.landmark_z_hit;
     c.z_rand = config.landmark_z_rand;
     c.sigma_hit = config.landmark_sigma_hit;
     c.global_frame_id = config.global_frame_id;
-    normalize({&c.z_hit, &c.z_rand});
     landmark = c;
   } else {
     std::ostringstream ss;
