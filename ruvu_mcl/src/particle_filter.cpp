@@ -23,8 +23,12 @@ void ParticleFilter::normalize_weights(double total_weight)
       particle.weight /= total_weight;
     }
   } else {
+    // total_weight could be 0 due to very strange data input. We should print an error and
+    // continue. If total_weight is negative or NaN, there is a bigger problem.
+    assert(total_weight == 0);
     ROS_ERROR(
-      "Total weight of particles is nonpositive, resetting particles to uniform weight "
+      "Total weight of particles is 0. This probably means there is a bug in one of the sensor "
+      "models or they are configured incorrectly. Resetting particles to uniform weight "
       "distribution");
     for (auto & particle : particles) {
       particle.weight = 1.0 / particles.size();
