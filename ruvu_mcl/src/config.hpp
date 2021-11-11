@@ -56,7 +56,6 @@ struct GaussianLandmarkModelConfig
 
 struct LandmarkLikelihoodFieldModelConfig
 {
-  double z_hit;
   double z_rand;
   double sigma_hit;
   std::string global_frame_id;  // for visualization

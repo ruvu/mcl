@@ -14,7 +14,7 @@ LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
   const LandmarkLikelihoodFieldModelConfig & config, const LandmarkList & landmarks)
 : config_(config), landmarks_(landmarks)
 {
-  assert(config_.z_hit + config_.z_rand <= 1.0);
+  assert(config.z_rand >= 0 && config.z_rand <= 1);
   ros::NodeHandle nh("~");
   debug_pub_ = nh.advertise<visualization_msgs::Marker>("landmark_likelihood_field_model", 1);
   statistics_pub_ = nh.advertise<ruvu_mcl_msgs::ParticleStatistics>("sensor_model_statistics", 1);
@@ -64,7 +64,7 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
 
       // Gaussian model
       // NOTE: this should have a normalization of 1/(sqrt(2pi)*sigma)
-      pz += config_.z_hit * exp(-(z * z) / (2 * config_.sigma_hit * config_.sigma_hit));
+      pz += (1 - config_.z_rand) * exp(-(z * z) / (2 * config_.sigma_hit * config_.sigma_hit));
       // Part 2: random measurements
       pz += config_.z_rand;
 
