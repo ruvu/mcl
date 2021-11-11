@@ -22,6 +22,7 @@ stages:
 
 clang-format:
   stage: lint
+  interruptible: true
   image:
     name: witekio/clang-format-checker
     entrypoint: [""]
