@@ -13,15 +13,6 @@
 #include "tf2/transform_datatypes.h"
 
 // forward declare
-class AdaptiveMethod;
-class LandmarkModel;
-class LandmarkList;
-class Laser;
-class LaserData;
-class MotionModel;
-class ParticleFilter;
-class Resampler;
-class Rng;
 namespace ros
 {
 class NodeHandle;
@@ -39,6 +30,18 @@ namespace nav_msgs
 {
 ROS_DECLARE_MESSAGE(OccupancyGrid)
 }
+
+namespace ruvu_mcl
+{
+class AdaptiveMethod;
+class LandmarkModel;
+class LandmarkList;
+class Laser;
+class LaserData;
+class MotionModel;
+class ParticleFilter;
+class Resampler;
+class Rng;
 
 class Mcl
 {
@@ -102,3 +105,4 @@ private:
 };
 
 std::ostream & operator<<(std::ostream & out, const Mcl::MeasurementType & measurement_type);
+}  // namespace ruvu_mcl

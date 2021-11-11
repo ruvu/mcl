@@ -5,6 +5,8 @@
 #include <memory>
 #include <random>
 
+namespace ruvu_mcl
+{
 class Rng : public std::enable_shared_from_this<Rng>
 {
 public:
@@ -34,3 +36,4 @@ public:
 private:
   std::mt19937 generator;
 };
+}  // namespace ruvu_mcl

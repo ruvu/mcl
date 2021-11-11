@@ -9,6 +9,8 @@
 #include "ros/topic.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
+using ruvu_mcl::OccupancyMap;
+
 Magick::Image cells_to_image(const OccupancyMap::CellsType & cells)
 {
   Magick::Image img;

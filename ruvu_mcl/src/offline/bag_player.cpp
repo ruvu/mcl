@@ -40,6 +40,8 @@
 #include "ros/init.h"
 #include "rosbag/view.h"
 
+namespace ruvu_mcl
+{
 BagPlayer::BagPlayer(const std::string & filename)
 {
   bag.open(filename, rosbag::bagmode::Read);
@@ -82,3 +84,4 @@ void BagPlayer::start_play()
     cb(m);
   }
 }
+}  // namespace ruvu_mcl

@@ -9,6 +9,11 @@
 #include "../src/sensor_models/gaussian_landmark_model.hpp"
 #include "ros/console.h"
 
+using ruvu_mcl::GaussianLandmarkModel;
+using ruvu_mcl::GaussianLandmarkModelConfig;
+using ruvu_mcl::LandmarkList;
+using ruvu_mcl::ParticleFilter;
+
 class GaussianLandmarkModelTest : public ::testing::Test
 {
 protected:

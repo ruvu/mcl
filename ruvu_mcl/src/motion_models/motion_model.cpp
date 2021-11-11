@@ -2,4 +2,7 @@
 
 #include "./motion_model.hpp"
 
+namespace ruvu_mcl
+{
 MotionModel::~MotionModel() = default;
+}

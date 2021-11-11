@@ -8,9 +8,12 @@
 
 constexpr auto name = "fixed";
 
+namespace ruvu_mcl
+{
 Fixed::Fixed(const Config & config) : max_particles_(config.max_particles)
 {
   ROS_INFO_NAMED(name, "using a fixed number of particles");
 }
 
 int Fixed::calc_needed_particles(const ParticleFilter & pf) const { return max_particles_; }
+}  // namespace ruvu_mcl

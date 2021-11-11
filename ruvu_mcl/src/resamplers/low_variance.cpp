@@ -10,6 +10,8 @@
 
 constexpr auto name = "low_variance";
 
+namespace ruvu_mcl
+{
 LowVariance::LowVariance(const std::shared_ptr<Rng> & rng) : rng_(rng) {}
 
 bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
@@ -37,3 +39,4 @@ bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
   *pf = pf_resampled;
   return true;
 }
+}  // namespace ruvu_mcl

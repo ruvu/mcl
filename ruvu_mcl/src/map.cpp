@@ -14,6 +14,8 @@
 
 constexpr auto name = "map";
 
+namespace ruvu_mcl
+{
 Map::Map(const nav_msgs::OccupancyGrid & msg)
 {
   scale = msg.info.resolution;
@@ -233,3 +235,4 @@ bool DistanceMap::is_valid(Eigen::Index i, Eigen::Index j) const
 {
   return i >= 0 && i < cells.rows() && j >= 0 && j < cells.cols();
 }
+}  // namespace ruvu_mcl

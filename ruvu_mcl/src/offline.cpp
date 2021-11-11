@@ -19,6 +19,10 @@
 #include "sensor_msgs/LaserScan.h"
 #include "tf2_msgs/TFMessage.h"
 
+using ruvu_mcl::BagBuffer;
+using ruvu_mcl::BagPlayer;
+using ruvu_mcl::MclRos;
+
 constexpr auto name = "offline";
 
 int main(int argc, char ** argv)

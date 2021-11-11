@@ -9,6 +9,8 @@
 #include "ros/console.h"
 #include "tf2/utils.h"
 
+namespace ruvu_mcl
+{
 KLDSampling::KLDSampling(const KLDSamplingConfig & config) : config_(config) {}
 
 int KLDSampling::calc_needed_particles(const ParticleFilter & pf) const
@@ -40,3 +42,4 @@ int KLDSampling::calc_n_particles(int n_bins) const
   if (n > config_.max_particles) return config_.max_particles;
   return n;
 }
+}  // namespace ruvu_mcl

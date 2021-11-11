@@ -10,6 +10,10 @@
 #include "../src/resamplers/low_variance.hpp"
 #include "../src/rng.hpp"
 
+using ruvu_mcl::LowVariance;
+using ruvu_mcl::ParticleFilter;
+using ruvu_mcl::Rng;
+
 auto convert_to_gnuplot(const ParticleFilter & pf)
 {
   std::vector<std::pair<double, double>> points;

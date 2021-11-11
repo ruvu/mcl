@@ -9,8 +9,11 @@ namespace rosbag
 class Bag;
 }
 
+namespace ruvu_mcl
+{
 class BagBuffer : public tf2_ros::Buffer
 {
 public:
   explicit BagBuffer(const rosbag::Bag & bag);
 };
+}  // namespace ruvu_mcl

@@ -6,6 +6,8 @@
 
 #include "sensor_msgs/LaserScan.h"
 
+namespace ruvu_mcl
+{
 LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform & pose)
 : header(scan.header),
   pose(pose),
@@ -42,3 +44,4 @@ LaserData::LaserData(const sensor_msgs::LaserScan & scan, const tf2::Transform &
 double LaserData::get_angle(std::size_t i) const { return angle_min + i * angle_increment; }
 
 Laser::~Laser() = default;
+}  // namespace ruvu_mcl

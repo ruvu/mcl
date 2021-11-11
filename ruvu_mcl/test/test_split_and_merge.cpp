@@ -9,6 +9,11 @@
 #include "ros/console.h"
 #include "tf2/utils.h"
 
+using ruvu_mcl::Config;
+using ruvu_mcl::ParticleFilter;
+using ruvu_mcl::SplitAndMerge;
+using ruvu_mcl::SplitAndMergeConfig;
+
 class FilterTest : public ::testing::Test
 {
 protected:

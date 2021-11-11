@@ -10,6 +10,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
+namespace ruvu_mcl
+{
 LandmarkLikelihoodFieldModel::LandmarkLikelihoodFieldModel(
   const LandmarkLikelihoodFieldModelConfig & config, const LandmarkList & landmarks)
 : config_(config), landmarks_(landmarks)
@@ -116,3 +118,4 @@ void LandmarkLikelihoodFieldModel::sensor_update(ParticleFilter * pf, const Land
     statistics_pub_.publish(statistics);
   }
 }
+}  // namespace ruvu_mcl

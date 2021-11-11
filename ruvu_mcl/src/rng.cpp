@@ -2,6 +2,8 @@
 
 #include "./rng.hpp"
 
+namespace ruvu_mcl
+{
 Rng::Rng() : generator(std::random_device{}()) {}
 
 Rng::Rng(uint_fast32_t seed) : generator(seed) {}
@@ -31,3 +33,4 @@ std::function<double()> Rng::uniform_distribution(double a, double b)
     return d(self->generator);
   };
 }
+}  // namespace ruvu_mcl

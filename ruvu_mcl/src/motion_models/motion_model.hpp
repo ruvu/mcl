@@ -7,6 +7,9 @@ namespace tf2
 {
 class Transform;
 }
+
+namespace ruvu_mcl
+{
 class ParticleFilter;
 
 class MotionModel
@@ -22,3 +25,4 @@ public:
    */
   virtual void odometry_update(ParticleFilter * pf, const tf2::Transform & delta) = 0;
 };
+}  // namespace ruvu_mcl

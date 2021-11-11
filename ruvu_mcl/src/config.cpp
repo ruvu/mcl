@@ -6,6 +6,8 @@
 
 #include "ruvu_mcl/AMCLConfig.h"
 
+namespace ruvu_mcl
+{
 void normalize(std::initializer_list<double *> zs)
 {
   double z_total =
@@ -112,3 +114,4 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
   base_frame_id = config.base_frame_id;
   global_frame_id = config.global_frame_id;
 }
+}  // namespace ruvu_mcl

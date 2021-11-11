@@ -5,7 +5,6 @@
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 
-class ParticleFilter;
 namespace ros
 {
 class NodeHandle;
@@ -14,6 +13,10 @@ namespace std_msgs
 {
 ROS_DECLARE_MESSAGE(Header)
 }
+
+namespace ruvu_mcl
+{
+class ParticleFilter;
 
 class CloudPublisher
 {
@@ -24,3 +27,4 @@ public:
 private:
   ros::Publisher cloud_pub_;
 };
+}  // namespace ruvu_mcl

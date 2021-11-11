@@ -2,6 +2,8 @@
 
 #pragma once
 
+namespace ruvu_mcl
+{
 // forward declare
 class ParticleFilter;
 
@@ -17,3 +19,4 @@ public:
    */
   virtual bool resample(ParticleFilter * pf, int needed_particles) = 0;
 };
+}  // namespace ruvu_mcl

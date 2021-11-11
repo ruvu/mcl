@@ -14,6 +14,8 @@
 
 constexpr auto name = "split_and_merge";
 
+namespace ruvu_mcl
+{
 SplitAndMerge::SplitAndMerge(const Config & config)
 {
   ROS_INFO_NAMED(name, "Using SplitAndMerge adaptive method");
@@ -102,3 +104,4 @@ int SplitAndMerge::calc_needed_particles(const ParticleFilter & pf) const
 {
   return pf.particles.size();
 }
+}  // namespace ruvu_mcl

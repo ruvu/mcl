@@ -9,6 +9,9 @@
 #include "tf2/utils.h"
 #include "tf2_eigen/tf2_eigen.h"
 
+using ruvu_mcl::ParticleFilter;
+using ruvu_mcl::Rng;
+
 class ParticleFilterTest : public ::testing::Test
 {
 protected:

@@ -10,6 +10,8 @@
 
 constexpr auto name = "particle_filter";
 
+namespace ruvu_mcl
+{
 void ParticleFilter::normalize_weights()
 {
   double total_weight = 0;
@@ -96,3 +98,4 @@ geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covarianc
   tf2::convert(avg_q, avg_pose.pose.pose.orientation);
   return avg_pose;
 }
+}  // namespace ruvu_mcl

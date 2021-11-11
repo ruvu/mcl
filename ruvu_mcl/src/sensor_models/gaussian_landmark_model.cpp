@@ -15,6 +15,8 @@
 
 constexpr auto name = "gaussian_landmark_model";
 
+namespace ruvu_mcl
+{
 /**
  * @brief computes the probability of its argument a under a zero-centered distribution with variance var
  * @param a
@@ -166,3 +168,4 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     statistics_pub_.publish(std::move(statistics));
   }
 }
+}  // namespace ruvu_mcl

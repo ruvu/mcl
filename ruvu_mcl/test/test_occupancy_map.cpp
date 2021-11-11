@@ -7,6 +7,8 @@
 #include "ros/console.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
+using ruvu_mcl::OccupancyMap;
+
 TEST(TestSuite, testCells)
 {
   nav_msgs::OccupancyGrid msg;

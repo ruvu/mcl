@@ -22,6 +22,8 @@
 
 constexpr auto name = "mcl";
 
+namespace ruvu_mcl
+{
 std::unique_ptr<Laser> create_laser_model(
   const Config & config, const nav_msgs::OccupancyGridConstPtr & map)
 {
@@ -308,3 +310,4 @@ std::ostream & operator<<(std::ostream & out, const Mcl::MeasurementType & measu
       throw std::logic_error("unknown measurement type");
   }
 }
+}  // namespace ruvu_mcl

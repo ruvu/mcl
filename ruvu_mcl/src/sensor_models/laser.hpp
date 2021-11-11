@@ -13,6 +13,9 @@ namespace sensor_msgs
 {
 ROS_DECLARE_MESSAGE(LaserScan)
 }
+
+namespace ruvu_mcl
+{
 class ParticleFilter;
 
 class LaserData
@@ -46,3 +49,4 @@ public:
    */
   virtual void sensor_update(ParticleFilter * pf, const LaserData & data) = 0;
 };
+}  // namespace ruvu_mcl
