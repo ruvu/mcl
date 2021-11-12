@@ -9,6 +9,7 @@
 
 #include <ruvu_mcl_msgs/LandmarkList.h>
 #include <rviz/message_filter_display.h>
+
 #include <boost/shared_ptr.hpp>
 
 namespace Ogre
@@ -22,38 +23,35 @@ class ColorProperty;
 class FloatProperty;
 class IntProperty;
 class Axes;
-}
+}  // namespace rviz
 
 namespace ruvu_mcl_rviz_plugins
 {
-
-class LandmarkDisplay: public rviz::MessageFilterDisplay<ruvu_mcl_msgs::LandmarkList>
+class LandmarkDisplay : public rviz::MessageFilterDisplay<ruvu_mcl_msgs::LandmarkList>
 {
-Q_OBJECT
+  Q_OBJECT
 public:
-
-LandmarkDisplay();
-virtual ~LandmarkDisplay();
+  LandmarkDisplay();
+  virtual ~LandmarkDisplay();
 
 protected:
-virtual void onInitialize();
+  virtual void onInitialize();
 
-virtual void reset();
+  virtual void reset();
 
 private Q_SLOTS:
-void updateAxisGeometry();
+  void updateAxisGeometry();
 
 private:
-bool setTransform(std_msgs::Header const& header);
-void processMessage( const ruvu_mcl_msgs::LandmarkList::ConstPtr & msg );
+  bool setTransform(std_msgs::Header const & header);
+  void processMessage(const ruvu_mcl_msgs::LandmarkList::ConstPtr & msg);
 
-std::vector<boost::shared_ptr<rviz::Axes>> visuals_;
+  std::vector<boost::shared_ptr<rviz::Axes>> visuals_;
 
-rviz::FloatProperty* axes_length_property_;
-rviz::FloatProperty* axes_radius_property_;
-
+  rviz::FloatProperty * axes_length_property_;
+  rviz::FloatProperty * axes_radius_property_;
 };
 
-}
+}  // namespace ruvu_mcl_rviz_plugins
 
 #endif
