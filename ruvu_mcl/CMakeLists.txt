@@ -92,8 +92,11 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+# bug in erf_inv_initializer under valgrind
+# https://svn.boost.org/trac10/ticket/10005
+target_compile_definitions(${PROJECT_NAME} PRIVATE BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
 add_executable(node
   src/main.cpp
