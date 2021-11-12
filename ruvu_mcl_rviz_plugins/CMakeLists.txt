@@ -54,8 +54,9 @@ add_definitions(-DQT_NO_KEYWORDS)
 
 add_library(${PROJECT_NAME}
   src/add_landmark_tool.cpp
+  src/landmark_display.cpp
 )
-target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
+#target_compile_warnings(${PROJECT_NAME} ${EXTRA_FLAGS})
 target_link_libraries(${PROJECT_NAME} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 #############
