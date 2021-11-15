@@ -202,6 +202,19 @@ if(CATKIN_ENABLE_TESTING)
     ${GRAPHICSMAGICKCPP_LIBRARIES}
     ${PROJECT_NAME}
   )
+
+  find_package(benchmark REQUIRED)
+  add_executable(benchmark_gaussian_landmark_model
+    test/benchmark_gaussian_landmark_model.cpp
+  )
+  target_include_directories(benchmark_gaussian_landmark_model
+    SYSTEM PRIVATE
+      ${Boost_INCLUDE_DIRS}
+  )
+  target_link_libraries(benchmark_gaussian_landmark_model
+    ${PROJECT_NAME}
+    benchmark::benchmark
+  )
 endif()
 
 ## Unit tests
