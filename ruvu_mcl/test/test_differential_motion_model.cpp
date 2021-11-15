@@ -7,6 +7,8 @@
 #include "ros/node_handle.h"
 #include "tf2/utils.h"
 
+using ruvu_mcl::DifferentialMotionModel;
+
 constexpr double eps = 1e-15;
 
 TEST(TestSuite, testTrans1)

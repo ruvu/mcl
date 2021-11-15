@@ -24,6 +24,8 @@ namespace sensor_msgs
 ROS_DECLARE_MESSAGE(LaserScan)
 }
 
+namespace ruvu_mcl
+{
 class Node
 {
 public:
@@ -52,3 +54,4 @@ private:
   // internals
   MclRos filter_;
 };
+}  // namespace ruvu_mcl

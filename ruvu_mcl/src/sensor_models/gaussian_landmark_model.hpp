@@ -9,11 +9,14 @@
 #include "ros/publisher.h"
 
 // forward declare
-class GaussianLandmarkModelConfig;
 namespace ruvu_mcl_msgs
 {
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
+
+namespace ruvu_mcl
+{
+class GaussianLandmarkModelConfig;
 
 struct KDTreeNode
 {
@@ -54,3 +57,4 @@ private:
   ros::Publisher debug_pub_;
   ros::Publisher statistics_pub_;
 };
+}  // namespace ruvu_mcl

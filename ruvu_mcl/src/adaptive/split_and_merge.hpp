@@ -4,6 +4,8 @@
 #include "../config.hpp"
 #include "./adaptive_method.hpp"
 
+namespace ruvu_mcl
+{
 // forward declare
 class ParticleFilter;
 
@@ -23,3 +25,4 @@ private:
   SplitAndMergeConfig adaptive_config_;
   Config config_;
 };
+}  // namespace ruvu_mcl

@@ -8,6 +8,8 @@
 #include "../src/adaptive/utils.hpp"
 #include "ros/console.h"
 
+using ruvu_mcl::KeyHasher;
+
 /**
  * @brief Check if all elements are unique
  */

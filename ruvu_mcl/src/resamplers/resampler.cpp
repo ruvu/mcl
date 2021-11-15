@@ -2,4 +2,7 @@
 
 #include "./resampler.hpp"
 
+namespace ruvu_mcl
+{
 Resampler::~Resampler() = default;
+}

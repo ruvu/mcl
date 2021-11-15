@@ -13,6 +13,8 @@
 
 constexpr auto name = "node";
 
+namespace ruvu_mcl
+{
 Node::Node(ros::NodeHandle nh, ros::NodeHandle private_nh)
 : buffer_(std::make_shared<tf2_ros::Buffer>()),
   tf_listener_(*buffer_),
@@ -58,3 +60,4 @@ void Node::initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPt
 {
   filter_.initial_pose_cb(initial_pose);
 }
+}  // namespace ruvu_mcl

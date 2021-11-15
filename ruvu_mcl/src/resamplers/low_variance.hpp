@@ -6,6 +6,8 @@
 
 #include "./resampler.hpp"
 
+namespace ruvu_mcl
+{
 // forward declare
 class Rng;
 
@@ -23,3 +25,4 @@ public:
 private:
   std::shared_ptr<Rng> rng_;
 };
+}  // namespace ruvu_mcl

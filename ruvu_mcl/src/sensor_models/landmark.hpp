@@ -8,9 +8,6 @@
 #include "std_msgs/Header.h"
 #include "tf2/LinearMath/Transform.h"
 
-// forward declare
-class ParticleFilter;
-
 namespace sensor_msgs
 {
 ROS_DECLARE_MESSAGE(LaserScan)
@@ -19,6 +16,11 @@ namespace ruvu_mcl_msgs
 {
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
+
+namespace ruvu_mcl
+{
+// forward declare
+class ParticleFilter;
 
 struct Landmark
 {
@@ -63,3 +65,4 @@ public:
    */
   virtual void sensor_update(ParticleFilter * pf, const LandmarkList & data) = 0;
 };
+}  // namespace ruvu_mcl

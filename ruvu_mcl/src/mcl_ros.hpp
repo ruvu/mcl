@@ -12,10 +12,6 @@ namespace ros
 {
 class NodeHandle;
 }
-namespace ruvu_mcl
-{
-class AMCLConfig;
-}
 namespace tf2_ros
 {
 class Buffer;
@@ -36,6 +32,10 @@ namespace ruvu_mcl_msgs
 {
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
+
+namespace ruvu_mcl
+{
+class AMCLConfig;
 
 class MclRos
 {
@@ -64,3 +64,4 @@ private:
   tf2_ros::TransformBroadcaster transform_br_;
   geometry_msgs::TransformStamped last_tf_broadcast_;
 };
+}  // namespace ruvu_mcl

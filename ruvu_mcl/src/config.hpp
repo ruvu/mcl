@@ -8,11 +8,10 @@
 
 #include "tf2/LinearMath/Transform.h"
 
-// forward declare
 namespace ruvu_mcl
 {
+// forward declare
 class AMCLConfig;
-}
 
 struct KLDSamplingConfig
 {
@@ -104,3 +103,4 @@ struct Config
   std::string base_frame_id;
   std::string global_frame_id;
 };
+}  // namespace ruvu_mcl

@@ -5,6 +5,8 @@
 #include "ros/init.h"
 #include "ros/node_handle.h"
 
+using ruvu_mcl::Node;
+
 constexpr auto name = "main";
 
 int main(int argc, char ** argv)

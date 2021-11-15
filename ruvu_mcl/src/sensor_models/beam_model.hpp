@@ -8,6 +8,8 @@
 #include "./laser.hpp"
 #include "ros/publisher.h"
 
+namespace ruvu_mcl
+{
 // forward declare
 struct OccupancyMap;
 
@@ -33,3 +35,4 @@ private:
   ros::Publisher debug_pub_;
   ros::Publisher statistics_pub_;
 };
+}  // namespace ruvu_mcl

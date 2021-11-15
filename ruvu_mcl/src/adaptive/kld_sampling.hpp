@@ -4,6 +4,8 @@
 #include "../config.hpp"
 #include "./adaptive_method.hpp"
 
+namespace ruvu_mcl
+{
 // forward declare
 struct KLDSamplingConfig;
 class ParticleFilter;
@@ -18,3 +20,4 @@ private:
   int calc_n_particles(int n_bins) const;
   const KLDSamplingConfig config_;
 };
+}  // namespace ruvu_mcl

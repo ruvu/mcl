@@ -2,6 +2,8 @@
 
 #pragma once
 
+namespace ruvu_mcl
+{
 // forward declare
 class ParticleFilter;
 
@@ -19,3 +21,4 @@ public:
    */
   virtual int calc_needed_particles(const ParticleFilter & pf) const = 0;
 };
+}  // namespace ruvu_mcl

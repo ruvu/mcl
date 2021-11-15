@@ -10,6 +10,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
+namespace ruvu_mcl
+{
 CloudPublisher::CloudPublisher(ros::NodeHandle nh, ros::NodeHandle private_nh)
 : cloud_pub_(private_nh.advertise<visualization_msgs::Marker>("cloud", 1))
 {
@@ -53,3 +55,4 @@ void CloudPublisher::publish(const std_msgs::Header & header, const ParticleFilt
 
   cloud_pub_.publish(m);
 }
+}  // namespace ruvu_mcl

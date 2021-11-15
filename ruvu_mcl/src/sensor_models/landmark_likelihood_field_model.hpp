@@ -13,6 +13,8 @@ namespace ruvu_mcl_msgs
 ROS_DECLARE_MESSAGE(LandmarkList)
 }
 
+namespace ruvu_mcl
+{
 class LandmarkLikelihoodFieldModel : public LandmarkModel
 {
 public:
@@ -36,3 +38,4 @@ private:
   ros::Publisher debug_pub_;
   ros::Publisher statistics_pub_;
 };
+}  // namespace ruvu_mcl

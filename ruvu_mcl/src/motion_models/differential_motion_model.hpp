@@ -8,6 +8,8 @@
 #include "../config.hpp"
 #include "./motion_model.hpp"
 
+namespace ruvu_mcl
+{
 // forward declare
 class Rng;
 
@@ -44,3 +46,4 @@ private:
 
   std::shared_ptr<Rng> rng_;
 };
+}  // namespace ruvu_mcl

@@ -8,6 +8,8 @@
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "tf2/LinearMath/Transform.h"
 
+namespace ruvu_mcl
+{
 class Particle
 {
 public:
@@ -28,3 +30,4 @@ public:
   geometry_msgs::PoseWithCovarianceStamped get_pose_with_covariance_stamped(
     const ros::Time & stamp, const std::string & frame_id) const;
 };
+}  // namespace ruvu_mcl

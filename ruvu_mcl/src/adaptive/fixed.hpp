@@ -5,6 +5,8 @@
 
 #include "./adaptive_method.hpp"
 
+namespace ruvu_mcl
+{
 // forward declare
 class ParticleFilter;
 struct Config;
@@ -18,3 +20,4 @@ public:
 private:
   size_t max_particles_;
 };
+}  // namespace ruvu_mcl

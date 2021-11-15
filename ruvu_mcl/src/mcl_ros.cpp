@@ -13,6 +13,8 @@
 
 constexpr auto name = "mcl_ros";
 
+namespace ruvu_mcl
+{
 MclRos::MclRos(
   ros::NodeHandle nh, ros::NodeHandle private_nh,
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
@@ -129,3 +131,4 @@ void MclRos::broadcast_last_tf(const ros::Time & stamp)
   transform_br_.sendTransform(msg);
   last_tf_broadcast_.header.stamp = stamp;
 }
+}  // namespace ruvu_mcl

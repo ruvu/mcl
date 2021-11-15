@@ -6,6 +6,8 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "ros/console.h"
 
+using ruvu_mcl::DistanceMap;
+
 constexpr double eps = 1e-15;
 
 TEST(TestSuite, test1)

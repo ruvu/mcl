@@ -13,6 +13,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
+namespace ruvu_mcl
+{
 LikelihoodFieldModel::LikelihoodFieldModel(
   const LikelihoodFieldModelConfig & config, const std::shared_ptr<const DistanceMap> & map)
 : config_(config), map_(map)
@@ -116,3 +118,4 @@ void LikelihoodFieldModel::sensor_update(ParticleFilter * pf, const LaserData & 
     statistics_pub_.publish(std::move(statistics));
   }
 }
+}  // namespace ruvu_mcl

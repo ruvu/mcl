@@ -10,6 +10,8 @@
 #include "rosbag/view.h"
 #include "tf2_msgs/TFMessage.h"
 
+namespace ruvu_mcl
+{
 ros::Duration duration_from_bag(const rosbag::Bag & bag)
 {
   std::vector<ros::Time> ts;
@@ -37,3 +39,4 @@ BagBuffer::BagBuffer(const rosbag::Bag & bag) : Buffer(duration_from_bag(bag))
     }
   }
 }
+}  // namespace ruvu_mcl

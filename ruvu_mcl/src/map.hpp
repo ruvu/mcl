@@ -13,6 +13,8 @@ namespace nav_msgs
 ROS_DECLARE_MESSAGE(OccupancyGrid)
 }
 
+namespace ruvu_mcl
+{
 struct Map
 {
   tf2::Transform origin;
@@ -60,3 +62,4 @@ struct DistanceMap : Map
   double closest_obstacle(const tf2::Vector3 & v) const;
   bool is_valid(Eigen::Index i, Eigen::Index j) const;  // TODO(Ramon): move to baseclass
 };
+}  // namespace ruvu_mcl

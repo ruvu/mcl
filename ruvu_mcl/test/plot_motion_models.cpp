@@ -11,6 +11,11 @@
 #include "../src/rng.hpp"
 #include "ros/console.h"
 
+using ruvu_mcl::DifferentialMotionModel;
+using ruvu_mcl::MotionModel;
+using ruvu_mcl::ParticleFilter;
+using ruvu_mcl::Rng;
+
 ParticleFilter run_differential_motion_model(
   MotionModel && model, tf2::Vector3 t = tf2::Vector3{1, 0, 0})
 {

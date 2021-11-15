@@ -12,6 +12,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "visualization_msgs/Marker.h"
 
+namespace ruvu_mcl
+{
 BeamModel::BeamModel(
   const BeamModelConfig & config, const std::shared_ptr<const OccupancyMap> & map)
 : parameters_(config), map_(map)
@@ -124,3 +126,4 @@ void BeamModel::sensor_update(ParticleFilter * pf, const LaserData & data)
     statistics_pub_.publish(std::move(statistics));
   }
 }
+}  // namespace ruvu_mcl

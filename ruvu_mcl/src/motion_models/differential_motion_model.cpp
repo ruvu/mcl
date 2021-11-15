@@ -12,6 +12,8 @@
 
 constexpr auto name = "differential_motion_model";
 
+namespace ruvu_mcl
+{
 DifferentialMotionModel::DifferentialMotionModel(
   double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng)
 : rng_(rng)
@@ -81,3 +83,4 @@ std::array<double, 3> DifferentialMotionModel::calculate_deltas(const tf2::Trans
   ROS_DEBUG_NAMED(name, "delta_rot2: %f", delta_rot2);
   return {delta_rot1, delta_trans, delta_rot2};
 }
+}  // namespace ruvu_mcl
