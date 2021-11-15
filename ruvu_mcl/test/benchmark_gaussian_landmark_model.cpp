@@ -15,6 +15,12 @@
 #include "../src/sensor_models/landmark.hpp"
 #include "benchmark/benchmark.h"
 
+using ruvu_mcl::GaussianLandmarkModel;
+using ruvu_mcl::GaussianLandmarkModelConfig;
+using ruvu_mcl::LandmarkList;
+using ruvu_mcl::ParticleFilter;
+using ruvu_mcl::Rng;
+
 double prob(double a, double var) { return exp(-a * a / 2 / var); }
 
 LandmarkList random_landmarks(const std::shared_ptr<Rng> & rng, int nlandmarks)
