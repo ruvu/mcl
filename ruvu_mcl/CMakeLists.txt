@@ -7,6 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message("${PROJECT_NAME}: You did not request a specific build type: Choosing 'Release' for maximum performance")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   set(EXTRA_FLAGS -Wno-format-nonliteral)
 else()
