@@ -17,10 +17,35 @@ constexpr auto name = "mcl_ros";
 
 namespace ruvu_mcl
 {
+geometry_msgs::PoseWithCovariance to_msg(PoseWithCovariance pose_with_covariance)
+{
+  geometry_msgs::PoseWithCovariance ps;
+  tf2::toMsg(pose_with_covariance.pose.getOrigin(), ps.pose.position);
+  tf2::convert(pose_with_covariance.pose.getRotation(), ps.pose.orientation);
+  assert(pose_with_covariance.covariance.size() == ps.covariance.size());
+  std::copy(
+    pose_with_covariance.covariance.begin(), pose_with_covariance.covariance.end(),
+    ps.covariance.begin());
+  return ps;
+}
+
 MclRos::MclRos(
   ros::NodeHandle nh, ros::NodeHandle private_nh,
   const std::shared_ptr<const tf2_ros::Buffer> & buffer)
-: mcl_(nh, private_nh),
+: mcl_(),
+  buffer_(buffer),
+  transform_br_(),
+  last_tf_broadcast_(),
+  cloud_pub_(nh, private_nh),
+  count_pub_(private_nh.advertise<std_msgs::UInt32>("count", 1)),
+  pose_pub_(private_nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1))
+{
+}
+
+MclRos::MclRos(
+  ros::NodeHandle nh, ros::NodeHandle private_nh,
+  const std::shared_ptr<const tf2_ros::Buffer> & buffer, uint_fast32_t seed)
+: mcl_(seed),
   buffer_(buffer),
   transform_br_(),
   last_tf_broadcast_(),
@@ -34,7 +59,13 @@ MclRos::~MclRos() = default;
 
 void MclRos::configure(const ruvu_mcl::AMCLConfig & config) { mcl_.configure(Config{config}); }
 
-void MclRos::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
+const geometry_msgs::PoseWithCovariance MclRos::get_pose_with_covariance() const
+{
+  auto ps = mcl_.get_pose_with_covariance();
+  return to_msg(ps);
+}
+
+bool MclRos::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
 {
   tf2::Transform tf;
   {
@@ -49,7 +80,7 @@ void MclRos::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
     odom_pose = get_odom_pose(data.header.stamp);
   } catch (const tf2::TransformException & e) {
     ROS_WARN_NAMED(name, "failed to compute odom pose, skipping measurement (%s)", e.what());
-    return;
+    return false;
   }
 
   auto updated = mcl_.scan_cb(data, odom_pose);
@@ -61,9 +92,10 @@ void MclRos::scan_cb(const sensor_msgs::LaserScanConstPtr & scan)
   } else if (!last_tf_broadcast_.header.frame_id.empty()) {  // Verify last_tf_broadcast_ is set
     broadcast_last_tf(data.header.stamp);
   }
+  return updated;
 }
 
-void MclRos::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
+bool MclRos::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
 {
   tf2::Transform tf;
   {
@@ -78,7 +110,7 @@ void MclRos::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
     odom_pose = get_odom_pose(data.header.stamp);
   } catch (const tf2::TransformException & e) {
     ROS_WARN_NAMED(name, "failed to compute odom pose, skipping measurement (%s)", e.what());
-    return;
+    return false;
   }
 
   auto updated = mcl_.landmark_cb(data, odom_pose);
@@ -90,6 +122,7 @@ void MclRos::landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks)
   } else if (!last_tf_broadcast_.header.frame_id.empty()) {  // Verify last_tf_broadcast_ is set
     broadcast_last_tf(data.header.stamp);
   }
+  return updated;
 }
 
 void MclRos::map_cb(const nav_msgs::OccupancyGridConstPtr & map) { mcl_.map_cb(map); }
@@ -174,12 +207,7 @@ void MclRos::publish_data(const ros::Time & stamp, const PoseWithCovariance & po
 
   geometry_msgs::PoseWithCovarianceStamped ps;
   ps.header = header;
-  tf2::toMsg(pose_with_covariance.pose.getOrigin(), ps.pose.pose.position);
-  tf2::convert(pose_with_covariance.pose.getRotation(), ps.pose.pose.orientation);
-  assert(pose_with_covariance.covariance.size() == ps.pose.covariance.size());
-  std::copy(
-    pose_with_covariance.covariance.begin(), pose_with_covariance.covariance.end(),
-    ps.pose.covariance.begin());
+  ps.pose = to_msg(pose_with_covariance);
   pose_pub_.publish(ps);
 }
 }  // namespace ruvu_mcl

@@ -14,10 +14,6 @@
 #include "ros/time.h"
 
 // forward declare
-namespace ros
-{
-class NodeHandle;
-}  // namespace ros
 namespace tf2
 {
 class Transform;
@@ -50,7 +46,8 @@ class Rng;
 class Mcl
 {
 public:
-  Mcl(ros::NodeHandle nh, ros::NodeHandle private_nh);
+  Mcl();
+  Mcl(std::uint_fast32_t seed);
   ~Mcl();  // to handle forward declares
 
   void configure(const Config & config);
@@ -79,6 +76,8 @@ private:
   using MeasurementKey = std::tuple<MeasurementType, std::string>;
 
   friend std::ostream & operator<<(std::ostream & out, const MeasurementType & measurement_type);
+
+  Mcl(const std::shared_ptr<Rng> & rng);
 
   bool odometry_update(
     const std_msgs::Header & header, const MeasurementType & measurement_type,

@@ -34,9 +34,13 @@ std::unique_ptr<Laser> create_laser_model(
     throw std::logic_error("no laser model configured");
 }
 
-Mcl::Mcl(ros::NodeHandle nh, ros::NodeHandle private_nh)
+Mcl::Mcl() : Mcl(std::make_shared<Rng>()) {}
+
+Mcl::Mcl(uint_fast32_t seed) : Mcl(std::make_shared<Rng>(seed)) {}
+
+Mcl::Mcl(const std::shared_ptr<Rng> & rng)
 : config_(),
-  rng_(std::make_unique<Rng>()),
+  rng_(rng),
   last_odom_pose_(),
   last_filter_update_(),
   filter_(),
