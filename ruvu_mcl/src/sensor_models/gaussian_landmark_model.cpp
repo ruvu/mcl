@@ -3,6 +3,7 @@
 #include "./gaussian_landmark_model.hpp"
 
 #include <boost/math/special_functions/erf.hpp>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -88,8 +89,8 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
 
     double p = 1;
     for (const auto & measurement : data.landmarks) {
-      double pz = 0;
-
+      double pz_arg = std::numeric_limits<double>::max();
+      auto measurement_length = measurement.pose.getOrigin().length();
       // Only landmarks withing max_range around the laser have a chance to influence the particle
       // weight. We can use this to quickly prune the map with a KDTree.
       double max_range = measurement.pose.getOrigin().length() + max_confidence_range_;
@@ -114,19 +115,21 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
         auto landmark_pose_LASER = laser_pose.inverseTimes(landmark.pose);
 
         // range difference
-        auto r_hat_diff =
-          landmark_pose_LASER.getOrigin().length() - measurement.pose.getOrigin().length();
+        auto r_hat_diff = landmark_pose_LASER.getOrigin().length() - measurement_length;
 
         // bearring difference
         auto t_hat_diff = landmark_pose_LASER.getOrigin().angle(measurement.pose.getOrigin());
 
-        // likelihood of a landmark measurement
-        auto q = prob(r_hat_diff, landmark_var_r_) * prob(t_hat_diff, landmark_var_t_);
+        // Compare argument of likelihood of a landmark measurement
+        auto q = r_hat_diff * r_hat_diff / 2 / landmark_var_r_ +
+                 t_hat_diff * t_hat_diff / 2 / landmark_var_t_;
 
-        // pick the landmark with the highest probability
-        if (q > pz) pz = q;
+        // pick the landmark with the lowest probability argument
+        if (q < pz_arg) pz_arg = q;
       }
 
+      // Calculate exp() once for computational efficiency
+      double pz = exp(-pz_arg);
       pz = (1 - z_rand_) * pz + z_rand_;
 
       assert(pz <= 1.0);
