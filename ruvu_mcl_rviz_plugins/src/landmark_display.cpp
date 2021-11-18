@@ -54,6 +54,8 @@ LandmarkDisplay::LandmarkDisplay()
     "Axes Radius", 0.1, "Radius of each axis, in meters.", this, SLOT(updateAxisGeometry()), this);
 }
 
+LandmarkDisplay::~LandmarkDisplay() {}
+
 void LandmarkDisplay::onInitialize() { MFDClass::onInitialize(); }
 
 void LandmarkDisplay::reset()
@@ -103,6 +105,7 @@ void LandmarkDisplay::processMessage(const ruvu_mcl_msgs::LandmarkList::ConstPtr
       qPrintable(getName()));
     ROS_DEBUG_NAMED(
       "quaternions", "LandmarkList '%s' contains unnormalized quaternions.", qPrintable(getName()));
+    return;
   }
 
   if (!setTransform(msg->header)) {
@@ -112,9 +115,14 @@ void LandmarkDisplay::processMessage(const ruvu_mcl_msgs::LandmarkList::ConstPtr
 
   visuals_.resize(msg->landmarks.size());
   for (std::size_t i = 0; i < msg->landmarks.size(); ++i) {
+    std::shared_ptr<rviz::Axes> axes_ptr(new rviz::Axes(
+      scene_manager_, scene_node_, axes_length_property_->getFloat(),
+      axes_radius_property_->getFloat()));
+    visuals_[i] = axes_ptr;
     visuals_[i]->setPosition(vectorRosToOgre(msg->landmarks[i].pose.pose.position));
     visuals_[i]->setOrientation(quaternionRosToOgre(msg->landmarks[i].pose.pose.orientation));
   }
+  context_->queueRender();
 }
 
 }  // namespace ruvu_mcl_rviz_plugins
