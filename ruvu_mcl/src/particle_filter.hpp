@@ -5,11 +5,20 @@
 #include <array>
 #include <vector>
 
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "tf2/LinearMath/Transform.h"
 
 namespace ruvu_mcl
 {
+struct PoseWithCovariance
+{
+  PoseWithCovariance(const tf2::Transform & pose, const std::array<double, 36> & covariance)
+  : pose(pose), covariance(covariance)
+  {
+  }
+  tf2::Transform pose;
+  std::array<double, 36> covariance;
+};
+
 class Particle
 {
 public:
@@ -27,7 +36,6 @@ public:
   void normalize_weights();
   void normalize_weights(double total_weight);
   double calc_effective_sample_size() const;
-  geometry_msgs::PoseWithCovarianceStamped get_pose_with_covariance_stamped(
-    const ros::Time & stamp, const std::string & frame_id) const;
+  PoseWithCovariance get_pose_with_covariance() const;
 };
 }  // namespace ruvu_mcl

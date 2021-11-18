@@ -2,11 +2,7 @@
 
 #include "./particle_filter.hpp"
 
-#include <algorithm>
-#include <string>
-
 #include "ros/console.h"
-#include "tf2/utils.h"
 
 constexpr auto name = "particle_filter";
 
@@ -52,14 +48,10 @@ double ParticleFilter::calc_effective_sample_size() const
   return 1. / sq_weight;
 }
 
-geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covariance_stamped(
-  const ros::Time & stamp, const std::string & frame_id) const
+PoseWithCovariance ParticleFilter::get_pose_with_covariance() const
 {
   std::array<double, 36> cov = {0};
   double mean[4] = {0};
-  geometry_msgs::PoseWithCovarianceStamped avg_pose;
-  avg_pose.header.stamp = stamp;
-  avg_pose.header.frame_id = frame_id;
 
   for (const auto & particle : particles) {
     // the four components of mean are: average x position, average y position,
@@ -87,15 +79,14 @@ geometry_msgs::PoseWithCovarianceStamped ParticleFilter::get_pose_with_covarianc
 
   // Covariance in angular component
   cov[35] = -2 * log(sqrt(mean[2] * mean[2] + mean[3] * mean[3]));
-  static_assert(cov.size() == avg_pose.pose.covariance.size());
-  std::copy(cov.begin(), cov.end(), avg_pose.pose.covariance.begin());
 
   // Mean pose
-  avg_pose.pose.pose.position.x = mean[0];
-  avg_pose.pose.pose.position.y = mean[1];
+  tf2::Transform avg_pose;
+  avg_pose.getOrigin()[0] = mean[0];
+  avg_pose.getOrigin()[1] = mean[1];
   tf2::Quaternion avg_q;
   avg_q.setRPY(0, 0, atan2(mean[3], mean[2]));
-  tf2::convert(avg_q, avg_pose.pose.pose.orientation);
-  return avg_pose;
+  avg_pose.setRotation(avg_q);
+  return PoseWithCovariance{avg_pose, cov};
 }
 }  // namespace ruvu_mcl

@@ -2,12 +2,14 @@
 
 #pragma once
 
+#include <vector>
+
 #include "ros/message_forward.h"
 #include "ros/publisher.h"
 
 namespace ros
 {
-class NodeHandle;
+class Particle;
 }
 namespace std_msgs
 {
@@ -16,13 +18,13 @@ ROS_DECLARE_MESSAGE(Header)
 
 namespace ruvu_mcl
 {
-class ParticleFilter;
+class Particle;
 
 class CloudPublisher
 {
 public:
   CloudPublisher(ros::NodeHandle nh, ros::NodeHandle private_nh);
-  void publish(const std_msgs::Header & header, const ParticleFilter & pf);
+  void publish(const std_msgs::Header & header, const std::vector<Particle> & pf);
 
 private:
   ros::Publisher cloud_pub_;

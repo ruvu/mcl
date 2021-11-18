@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "./cloud_publisher.hpp"
 #include "./mcl.hpp"
 #include "ros/message_forward.h"
 #include "tf2_ros/transform_broadcaster.h"
@@ -58,10 +59,14 @@ private:
   void broadcast_tf(
     const tf2::Transform & pose, const tf2::Transform & odom_pose, const ros::Time & stamp);
   void broadcast_last_tf(const ros::Time & stamp);
+  void publish_data(const ros::Time & stamp, const PoseWithCovariance & pose_with_covariance);
 
   Mcl mcl_;
   std::shared_ptr<const tf2_ros::Buffer> buffer_;
   tf2_ros::TransformBroadcaster transform_br_;
   geometry_msgs::TransformStamped last_tf_broadcast_;
+  CloudPublisher cloud_pub_;
+  ros::Publisher count_pub_;
+  ros::Publisher pose_pub_;
 };
 }  // namespace ruvu_mcl

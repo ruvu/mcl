@@ -2,21 +2,21 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
+#include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
-#include "./cloud_publisher.hpp"
 #include "./config.hpp"
 #include "./particle_filter.hpp"
 #include "ros/message_forward.h"
-#include "ros/publisher.h"
-#include "tf2/transform_datatypes.h"
+#include "ros/time.h"
 
 // forward declare
 namespace ros
 {
 class NodeHandle;
-class Time;
 }  // namespace ros
 namespace tf2
 {
@@ -29,6 +29,10 @@ ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)
 namespace nav_msgs
 {
 ROS_DECLARE_MESSAGE(OccupancyGrid)
+}
+namespace std_msgs
+{
+ROS_DECLARE_MESSAGE(Header)
 }
 
 namespace ruvu_mcl
@@ -51,13 +55,17 @@ public:
 
   void configure(const Config & config);
   const Config & config() const { return config_; }
-  const tf2::Transform & pose() const { return last_pose_; }
+  const PoseWithCovariance get_pose_with_covariance() const
+  {
+    return filter_.get_pose_with_covariance();
+  }
+  const std::vector<Particle> & particles() const { return filter_.particles; }
 
   bool scan_cb(const LaserData & scan, const tf2::Transform & odom_pose);
   bool landmark_cb(const LandmarkList & landmarks, const tf2::Transform & odom_pose);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void landmark_list_cb(const LandmarkList & landmarks);
-  void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
+  void initial_pose_cb(const ros::Time & stamp, const PoseWithCovariance & initial_pose);
   void request_nomotion_update();
 
 private:
@@ -76,18 +84,12 @@ private:
     const std_msgs::Header & header, const MeasurementType & measurement_type,
     tf2::Transform odom_pose);
   bool should_process(const tf2::Transform & diff, const MeasurementKey & measurment_key);
-  void publish_data(const geometry_msgs::PoseWithCovarianceStamped & ps);
-
-  // data output
-  CloudPublisher cloud_pub_;
-  ros::Publisher count_pub_;
-  ros::Publisher pose_pub_;
 
   // internals
   Config config_;
   std::shared_ptr<Rng> rng_;
   std::optional<tf2::Transform> last_odom_pose_;
-  tf2::Stamped<tf2::Transform> last_pose_;
+  ros::Time last_filter_update_;
   ParticleFilter filter_;
   std::unique_ptr<MotionModel> model_;
   nav_msgs::OccupancyGridConstPtr map_;
