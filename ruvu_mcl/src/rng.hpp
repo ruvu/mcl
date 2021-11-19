@@ -11,7 +11,7 @@ class Rng : public std::enable_shared_from_this<Rng>
 {
 public:
   Rng();
-  explicit Rng(std::uint_fast32_t seed);
+  explicit Rng(uint_fast32_t seed);
 
   /**
    * @brief sample a normal_distribution once

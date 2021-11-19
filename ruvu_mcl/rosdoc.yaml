@@ -1,0 +1,2 @@
+ - builder: doxygen
+   use_mdfile_as_mainpage: README.md
