@@ -6,8 +6,6 @@
 
 #include "landmark_display.hpp"
 
-#include <memory>
-
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
 #include <rviz/ogre_helpers/axes.h>
@@ -17,6 +15,8 @@
 #include <rviz/properties/status_property.h>
 #include <rviz/validate_floats.h>
 #include <rviz/validate_quaternions.h>
+
+#include <memory>
 
 namespace ruvu_mcl_rviz_plugins
 {
