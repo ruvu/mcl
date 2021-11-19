@@ -19,4 +19,13 @@ Copyright 2021 RUVU Robotics B.V.
       Removes a landmark from the landmark server
     </description>
   </class>
+
+  <class name="ruvu_mcl_rviz_plugins/Landmark"
+         type="ruvu_mcl_rviz_plugins::LandmarkDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      Display landmarks
+    </description>
+    <message_type>ruvu_mcl_msgs/LandmarkList</message_type>
+  </class>
 </library>
