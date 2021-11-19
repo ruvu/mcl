@@ -1,4 +1,12 @@
+//
+// Copyright (c) 2021 RUVU Robotics
+//
+// @author Rokus Ottervanger
+//
+
 #include "landmark_display.hpp"
+
+#include <memory>
 
 #include <OGRE/OgreSceneManager.h>
 #include <OGRE/OgreSceneNode.h>
