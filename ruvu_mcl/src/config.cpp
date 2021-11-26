@@ -42,7 +42,7 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     model = m;
   } else {
     std::ostringstream ss;
-    ss << "motion model " << config.odom_model_type << " is not yet implemented";
+    ss << "motion model '" << config.odom_model_type << "' is not yet implemented";
     throw std::runtime_error(ss.str());
   }
 
@@ -69,7 +69,7 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     laser = c;
   } else {
     std::ostringstream ss;
-    ss << "sensor model " << config.laser_model_type << " is not yet implemented";
+    ss << "sensor model '" << config.laser_model_type << "' is not yet implemented";
     throw std::runtime_error(ss.str());
   }
 
@@ -89,7 +89,7 @@ Config::Config(const ruvu_mcl::AMCLConfig & config)
     landmark = c;
   } else {
     std::ostringstream ss;
-    ss << "sensor model " << config.laser_model_type << " is not yet implemented";
+    ss << "landmark sensor model '" << config.laser_model_type << "' is not yet implemented";
     throw std::runtime_error(ss.str());
   }
 
