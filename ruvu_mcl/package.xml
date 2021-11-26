@@ -31,4 +31,8 @@ Copyright 2021 RUVU Robotics B.V.
   <test_depend>benchmark</test_depend>
   <test_depend>roslint</test_depend>
   <test_depend>ruvu_lint</test_depend>
+
+  <export>
+    <rosdoc config="rosdoc.yaml" />
+  </export>
 </package>
