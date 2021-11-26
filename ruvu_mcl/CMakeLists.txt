@@ -251,4 +251,7 @@ if (CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_gaussian_landmark_model test/test_gaussian_landmark_model.cpp)
   target_link_libraries(test_gaussian_landmark_model ${PROJECT_NAME})
+
+  catkin_add_gtest(regression_test_large_landmark_map test/regression_test_large_landmark_map.cpp)
+  target_link_libraries(regression_test_large_landmark_map ${PROJECT_NAME})
 endif()
