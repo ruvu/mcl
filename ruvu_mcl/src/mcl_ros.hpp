@@ -19,7 +19,7 @@ class Buffer;
 }
 namespace geometry_msgs
 {
-ROS_DECLARE_MESSAGE(PoseWithCovarianceStamped)
+ROS_DECLARE_MESSAGE(PoseWithCovariance)
 }
 namespace nav_msgs
 {
@@ -44,12 +44,16 @@ public:
   MclRos(
     ros::NodeHandle nh, ros::NodeHandle private_nh,
     const std::shared_ptr<const tf2_ros::Buffer> & buffer);
+  MclRos(
+    ros::NodeHandle nh, ros::NodeHandle private_nh,
+    const std::shared_ptr<const tf2_ros::Buffer> & buffer, std::uint_fast32_t seed);
   ~MclRos();  // to handle forward declares
 
   void configure(const ruvu_mcl::AMCLConfig & config);
+  const geometry_msgs::PoseWithCovariance get_pose_with_covariance() const;
 
-  void scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
-  void landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
+  bool scan_cb(const sensor_msgs::LaserScanConstPtr & scan);
+  bool landmark_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void map_cb(const nav_msgs::OccupancyGridConstPtr & map);
   void landmark_list_cb(const ruvu_mcl_msgs::LandmarkListConstPtr & landmarks);
   void initial_pose_cb(const geometry_msgs::PoseWithCovarianceStampedConstPtr & initial_pose);
