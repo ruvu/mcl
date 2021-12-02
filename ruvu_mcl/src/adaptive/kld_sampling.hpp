@@ -10,6 +10,11 @@ namespace ruvu_mcl
 struct KLDSamplingConfig;
 class ParticleFilter;
 
+/**
+ * @brief Use KLD sampling to adapt the number of particles
+ *
+ * From the paper: KLD-Sampling: Adaptive Particle Filters
+ */
 class KLDSampling : public AdaptiveMethod
 {
 public:

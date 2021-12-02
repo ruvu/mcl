@@ -13,11 +13,14 @@ namespace ruvu_mcl
 // forward declare
 class Rng;
 
+/**
+ * @brief Motion model for a differential drive
+ */
 class DifferentialMotionModel : public MotionModel
 {
 public:
   /**
-   * @brief A diff drive constructor
+   * @brief Construct a differental drive motion model
    * @param alpha1 error parameters, see documentation
    * @param alpha2 error parameters, see documentation
    * @param alpha3 error parameters, see documentation
@@ -26,16 +29,22 @@ public:
    */
   DifferentialMotionModel(
     double alpha1, double alpha2, double alpha3, double alpha4, const std::shared_ptr<Rng> & rng);
+
+  /**
+   * @brief Construct a differental drive motion model
+   * @param config parameters
+   * @param rng random number generator
+   */
   DifferentialMotionModel(
     const DifferentialMotionModelConfig & config, const std::shared_ptr<Rng> & rng);
 
-  /**
-   * @brief Update on new odometry data
-   * @param pf The particle filter to update
-   * @param delta change in pose in odometry update
-   */
   void odometry_update(ParticleFilter * pf, const tf2::Transform & delta) override;
 
+  /**
+   * @brief Compute {delta_rot1, delta_trans, delta_rot2} from a displacement
+   * @param delta displacement
+   * @return {delta_rot1, delta_trans, delta_rot2}
+   */
   static std::array<double, 3> calculate_deltas(const tf2::Transform & delta);
 
 private:

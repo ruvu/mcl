@@ -26,6 +26,9 @@ ROS_DECLARE_MESSAGE(LaserScan)
 
 namespace ruvu_mcl
 {
+/**
+ * @brief Main ros node of the ruvu_mcl package
+ */
 class Node
 {
 public:

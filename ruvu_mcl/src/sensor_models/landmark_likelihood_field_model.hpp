@@ -15,6 +15,9 @@ ROS_DECLARE_MESSAGE(LandmarkList)
 
 namespace ruvu_mcl
 {
+/**
+ * @brief Impelements the likelihood field range finder model from Probablistic Robotics for landmark measurments
+ */
 class LandmarkLikelihoodFieldModel : public LandmarkModel
 {
 public:
@@ -24,12 +27,6 @@ public:
   LandmarkLikelihoodFieldModel(
     const LandmarkLikelihoodFieldModelConfig & config, const LandmarkList & landmarks);
 
-  /*
-   * @brief Run a sensor update on the particles with landmark data
-   * @param pf Particle filter to use
-   * @param data Landmark data to use
-   * @return if it was succesful
-   */
   void sensor_update(ParticleFilter * pf, const LandmarkList & data) override;
 
 private:

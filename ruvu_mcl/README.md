@@ -51,8 +51,28 @@ See also [BENCHMARK.md](./BENCHMARK.md) for a guide on how to compare different 
 
 ## Design
 
-The design of the MCL is split into a core library (mcl) and a ROS wrapper. This makes it easy in the future to migrate to ROS2 or other platforms.
+The design of the MCL is split into a core library (ruvu_mcl::Mcl) and a ROS wrapper (ruvu_mcl::MclRos). This makes it easy in the future to migrate to ROS2 or other platforms.
 
+### Implemented motion models
+- ruvu_mcl::DifferentialMotionModel
+
+### Implemented laser sensor models
+- ruvu_mcl::BeamModel
+- ruvu_mcl::LikelihoodFieldModel (default)
+
+### Implemented landmark sensor models
+- ruvu_mcl::GaussianLandmarkModel (default)
+- ruvu_mcl::LandmarkLikelihoodFieldModel
+
+### Implemented adaptive methods
+- ruvu_mcl::Fixed (default)
+- ruvu_mcl::KLDSampling
+- ruvu_mcl::SplitAndMerge
+
+### Implemented resamplers
+- ruvu_mcl::LowVariance
+
+### Class diagram
 ```plantuml
 class Node {
     tf2_ros::MessageFilter

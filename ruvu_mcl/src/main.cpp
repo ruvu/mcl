@@ -9,6 +9,9 @@ using ruvu_mcl::Node;
 
 constexpr auto name = "main";
 
+/**
+* @brief Main ros node of the ruvu_mcl package
+*/
 int main(int argc, char ** argv)
 {
   ros::init(argc, argv, "mcl");

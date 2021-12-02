@@ -28,6 +28,9 @@ struct KDTreeNode
 
 using KDTreeType = KDTree::KDTree<2, KDTreeNode>;
 
+/**
+ * @brief Implements the landmark model known correspondence from Probablistic Robotics
+ */
 class GaussianLandmarkModel : public LandmarkModel
 {
 public:
@@ -36,12 +39,6 @@ public:
    */
   GaussianLandmarkModel(const GaussianLandmarkModelConfig & config, const LandmarkList & map);
 
-  /*
-   * @brief Run a sensor update on the particles with landmark data
-   * @param pf Particle filter to use
-   * @param data Landmark data to use
-   * @return if it was succesful
-   */
   void sensor_update(ParticleFilter * pf, const LandmarkList & data);
 
 private:

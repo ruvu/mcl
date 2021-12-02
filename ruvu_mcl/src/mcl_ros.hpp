@@ -38,6 +38,12 @@ namespace ruvu_mcl
 {
 class AMCLConfig;
 
+/**
+ * @brief ROS wrapper for the Mcl class
+ *
+ * This class is a ROS wrapper for the Mcl class. It receives ROS messages, converts then and sends
+ * then trough. It also publishes the output of Mcl to /tf and ~pose.
+ */
 class MclRos
 {
 public:
@@ -46,7 +52,7 @@ public:
     const std::shared_ptr<const tf2_ros::Buffer> & buffer);
   MclRos(
     ros::NodeHandle nh, ros::NodeHandle private_nh,
-    const std::shared_ptr<const tf2_ros::Buffer> & buffer, std::uint_fast32_t seed);
+    const std::shared_ptr<const tf2_ros::Buffer> & buffer, uint_fast32_t seed);
   ~MclRos();  // to handle forward declares
 
   void configure(const ruvu_mcl::AMCLConfig & config);

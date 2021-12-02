@@ -11,6 +11,9 @@ namespace ruvu_mcl
 class ParticleFilter;
 struct Config;
 
+/**
+ * @brief Use a fixed amount of particles (not adaptive)
+ */
 class Fixed : public AdaptiveMethod
 {
 public:

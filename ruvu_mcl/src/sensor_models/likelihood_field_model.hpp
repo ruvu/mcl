@@ -13,6 +13,9 @@ namespace ruvu_mcl
 // forward declare
 struct DistanceMap;
 
+/**
+ * @brief Impelements the likelihood field range finder model from Probablistic Robotics
+ */
 class LikelihoodFieldModel : public Laser
 {
 public:
@@ -22,12 +25,6 @@ public:
   LikelihoodFieldModel(
     const LikelihoodFieldModelConfig & config, const std::shared_ptr<const DistanceMap> & map);
 
-  /*
-   * @brief Run a sensor update on laser
-   * @param pf Particle filter to use
-   * @param data Laser data to use
-   * @return if it was succesful
-   */
   void sensor_update(ParticleFilter * pf, const LaserData & data) override;
 
 private:
