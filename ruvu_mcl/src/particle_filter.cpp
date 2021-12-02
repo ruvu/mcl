@@ -81,12 +81,9 @@ PoseWithCovariance ParticleFilter::get_pose_with_covariance() const
   cov[35] = -2 * log(sqrt(mean[2] * mean[2] + mean[3] * mean[3]));
 
   // Mean pose
-  tf2::Transform avg_pose;
-  avg_pose.getOrigin()[0] = mean[0];
-  avg_pose.getOrigin()[1] = mean[1];
+  tf2::Vector3 agv_p{mean[0], mean[1], 0};
   tf2::Quaternion avg_q;
   avg_q.setRPY(0, 0, atan2(mean[3], mean[2]));
-  avg_pose.setRotation(avg_q);
-  return PoseWithCovariance{avg_pose, cov};
+  return PoseWithCovariance{tf2::Transform{avg_q, agv_p}, cov};
 }
 }  // namespace ruvu_mcl
