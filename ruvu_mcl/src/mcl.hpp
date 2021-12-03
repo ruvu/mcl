@@ -43,11 +43,17 @@ class ParticleFilter;
 class Resampler;
 class Rng;
 
+/**
+ * @brief Main class for monte-carlo localization.
+ *
+ * This class takes in measurments and outputs the position estimate of the robot. It can be
+ * configured with different sensor and motion models.
+ */
 class Mcl
 {
 public:
   Mcl();
-  Mcl(std::uint_fast32_t seed);
+  Mcl(uint_fast32_t seed);
   ~Mcl();  // to handle forward declares
 
   void configure(const Config & config);

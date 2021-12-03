@@ -9,6 +9,12 @@ namespace ruvu_mcl
 // forward declare
 class ParticleFilter;
 
+/**
+ * @brief Use split & merge to adapt the number of particles
+ *
+ * From the paper: Monte Carlo localization for mobile robot using adaptive particle merging and
+ * splitting technique
+ */
 class SplitAndMerge : public AdaptiveMethod
 {
 public:
@@ -18,7 +24,14 @@ public:
   void after_sensor_update(ParticleFilter * pf) const override { split_particles(pf); }
   int calc_needed_particles(const ParticleFilter & pf) const override;
 
+  /**
+   * @brief Merge particles that are close together
+   */
   void merge_particles(ParticleFilter * pf) const;
+
+  /**
+   * @brief Split particles that have a high weight
+   */
   void split_particles(ParticleFilter * pf) const;
 
 private:

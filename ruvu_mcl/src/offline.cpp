@@ -25,6 +25,9 @@ using ruvu_mcl::MclRos;
 
 constexpr auto name = "offline";
 
+/**
+ * @brief Executable for offline playback of the particle filter on ros bagfiles
+ */
 int main(int argc, char ** argv)
 {
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {

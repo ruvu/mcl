@@ -14,7 +14,7 @@ namespace ruvu_mcl
 {
 LowVariance::LowVariance(const std::shared_ptr<Rng> & rng) : rng_(rng) {}
 
-bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
+void LowVariance::resample(ParticleFilter * pf, int needed_particles)
 {
   assert(!pf->particles.empty());
   ROS_DEBUG_NAMED(name, "resample");
@@ -37,6 +37,5 @@ bool LowVariance::resample(ParticleFilter * pf, int needed_particles)
   }
   pf_resampled.normalize_weights();
   *pf = pf_resampled;
-  return true;
 }
 }  // namespace ruvu_mcl

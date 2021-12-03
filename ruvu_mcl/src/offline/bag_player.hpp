@@ -45,24 +45,35 @@ using BagCallbackT = std::function<void(const boost::shared_ptr<const T> &)>;
 
 using BagCallback = std::function<void(const rosbag::MessageInstance &)>;
 
-/* A class for playing back bag files at an API level. It supports
-   relatime, as well as accelerated and slowed playback. */
+/**
+ * @brief A class for playing back bag files
+ *
+ * It supports relatime, as well as accelerated and slowed playback.
+ */
 class BagPlayer
 {
 public:
-  /* Constructor expecting the filename of a bag */
+  /**
+   * @brief Constructor expecting the filename of a bag
+   */
   explicit BagPlayer(const std::string & filename);
 
-  /* Register a callback for a specific topic and type */
+  /**
+   * @brief Register a callback for a specific topic and type
+   */
   template <class T>
   void register_callback(const std::string & topic, BagCallbackT<T> cb);
 
-  /* Set the speed to playback.  1.0 is the default.
-   * 2.0 would be twice as fast, 0.5 is half realtime.  */
+  /**
+   * @brief Set the speed to playback.
+   *
+   * 1.0 is the default. 2.0 would be twice as fast, 0.5 is half realtime.
+   */
   void set_playback_speed(double scale);
 
-  /* Start playback of the bag file using the parameters previously
-     set */
+  /**
+   * @brief Start playback of the bag file using the parameters previously set
+   */
   void start_play();
 
   // The bag file interface loaded in the constructor.

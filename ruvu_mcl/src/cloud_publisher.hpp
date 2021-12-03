@@ -20,6 +20,9 @@ namespace ruvu_mcl
 {
 class Particle;
 
+/**
+ * @brief Publishes a vector of particles as a visualization_msgs::Marker
+ */
 class CloudPublisher
 {
 public:

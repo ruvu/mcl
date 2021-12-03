@@ -53,6 +53,20 @@ GaussianLandmarkModel::GaussianLandmarkModel(
 {
   assert(config.z_rand >= 0 && config.z_rand <= 1);
 
+  /**
+   * Our original algorithm scaled linearly with the size of the landmark map. This meant that for
+   * maps in the range of 1000 landmarks, our algorithm quickly became unresponsive. We needed to
+   * find a way to quickly discard landmarks in the landmark map that don't contribute to the
+   * particle weight.
+   *
+   * The chance that a measurment has a smaller distance than max_confidence_range_ is
+   * landmark_max_r_confidence. Suppose this confidence range is 99%. If we skip measurments that
+   * are bigger than this distance, then we skip only 1% of each measurments. This means the
+   * particle update stays approximately the same.
+   *
+   * We can then use a KD tree to only evaluate landmarks that are within this
+   * max_confidence_range_.
+   */
   max_confidence_range_ = config.landmark_sigma_r * F_inv(config.landmark_max_r_confidence);
   ROS_INFO_NAMED(
     name, "%f confidence is %f meter (%f sigma)", config.landmark_max_r_confidence,
@@ -91,9 +105,10 @@ void GaussianLandmarkModel::sensor_update(ParticleFilter * pf, const LandmarkLis
     for (const auto & measurement : data.landmarks) {
       double pz_arg = std::numeric_limits<double>::max();
       auto measurement_length = measurement.pose.getOrigin().length();
-      // Only landmarks withing max_range around the laser have a chance to influence the particle
-      // weight. We can use this to quickly prune the map with a KDTree.
-      double max_range = measurement.pose.getOrigin().length() + max_confidence_range_;
+      // Only landmarks withing max_range around the laser can have a r_hat_diff that is smaller
+      // than max_confidence_range_. Only these landmarks have a chance to influence the particle
+      // weight. We use this fact to quickly prune the map with a KDTree.
+      double max_range = measurement_length + max_confidence_range_;
       const auto & l = laser_pose.getOrigin();
       std::vector<KDTreeNode> results;
       KDTreeNode node{Landmark{tf2::Transform{

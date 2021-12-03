@@ -11,6 +11,9 @@ class Bag;
 
 namespace ruvu_mcl
 {
+/**
+ * @brief Load all tf messages from a rosbag into a tf2_ros::Buffer
+ */
 class BagBuffer : public tf2_ros::Buffer
 {
 public:

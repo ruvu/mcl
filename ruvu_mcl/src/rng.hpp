@@ -7,10 +7,24 @@
 
 namespace ruvu_mcl
 {
+/**
+ * @brief Utility class for generating random numbers
+ */
 class Rng : public std::enable_shared_from_this<Rng>
 {
 public:
+  /**
+   * @brief Construct Rng class with a random seed
+   */
   Rng();
+
+  /**
+   * @brief Construct Rng class with a fixed seed
+   *
+   * This means that the class produces random numbers that are deterministic. Two classes with the
+   * same seed produce the same sequence of random numbers. This can be used for example in CI to
+   * create test cases that deterministic (i.e. not flaky).
+   */
   explicit Rng(uint_fast32_t seed);
 
   /**
