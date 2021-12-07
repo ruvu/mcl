@@ -2,6 +2,6 @@
 Changelog for package ruvu_mcl_rviz_plugins
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2021-12-07)
-------------------
+Forthcoming
+-----------
 * First version

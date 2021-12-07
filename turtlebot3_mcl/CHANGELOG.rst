@@ -2,6 +2,6 @@
 Changelog for package turtlebot3_mcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.0 (2021-12-07)
-------------------
+Forthcoming
+-----------
 * First version
