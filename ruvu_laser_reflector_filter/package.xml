@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>ruvu_laser_reflector_filter</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>A package to filter laser data based on intensities.</description>
 
   <maintainer email="rokus@ruvu.nl">Rokus Ottervanger</maintainer>

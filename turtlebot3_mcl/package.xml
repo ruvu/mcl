@@ -5,7 +5,7 @@ Copyright 2021 RUVU Robotics B.V.
 
 <package format="2">
   <name>turtlebot3_mcl</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>Demonstrates ruvu_mcl running on a turtlebot in simulation.</description>
 
   <maintainer email="paul@ruvu.nl">Paul Verhoeckx</maintainer>

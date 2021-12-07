@@ -2,6 +2,6 @@
 Changelog for package ruvu_mcl
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2021-12-07)
+------------------
 * First version

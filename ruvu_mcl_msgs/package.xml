@@ -5,7 +5,7 @@ Copyright 2021 RUVU Robotics B.V.
 
 <package format="2">
   <name>ruvu_mcl_msgs</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The ruvu_mcl_msgs package</description>
 
   <maintainer email="paul@ruvu.nl">Paul Verhoeckx</maintainer>
